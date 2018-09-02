@@ -1,0 +1,34 @@
+{
+  "name": "mongooserelationtypes",
+  "version": "0.1.0",
+  "description": "Wrapper enhancements for mongoose, that allow for populate and deep populate method to automatically replace the oid/id with the right hand side of the relationship",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "mocha -r ts-node/register src/**/*.spec.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wesleyolis/mongooseRelationalTypes.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wesleyolis/mongooseRelationalTypes/issues"
+  },
+  "homepage": "https://github.com/wesleyolis/mongooseRelationalTypes#readme",
+  "dependencies": {
+    "@types/mongoose": "^5.2.9",
+    "mongoose": "^5.2.12",
+    "npm": "^6.4.1",
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.4",
+    "@types/mocha": "^5.2.5",
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "mongo-in-memory": "0.0.5",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.1.0-dev.20180901"
+  }
+}
