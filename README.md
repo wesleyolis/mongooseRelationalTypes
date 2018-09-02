@@ -24,7 +24,7 @@ export interface RightSchema {
     B : Ref<'12B-A','12B-B'>
 }
 
-``
+```
 
 ### Using the following command, the following projections will be produced before.
 
@@ -35,7 +35,7 @@ const value2 = results.ItemD.ItemDE;
 const value3 = results.ItemA.ItemAC;
 });
 ```
-AS of current waiting on support for type inferance of string literals for and array<array<string> for functions, otherwise one must spesify
+As of current waiting on support for type inferance of string literals for and array<array<string> for functions, otherwise one must spesify
 this as generic input and then also as runtime value.
 https://github.com/Microsoft/TypeScript/issues/26841
 
