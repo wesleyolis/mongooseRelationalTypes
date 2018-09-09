@@ -208,12 +208,14 @@ let caseAllJoined : SchemaCaseAllJoined = {
 
 // Items a should be missign from Item0.ItemA.a
 let caseAllJoinedFail : SchemaCaseAllJoined = {
+   // a : 1,
     Item0 : {
         Item1 : {Item2 : true},
         Item11 : {Item12 : '12-A'},
         
         ItemA : {
-            ItemB : 'AB-A'
+            ItemB : 
+            'AB-A'
             // Missing the right hand side join
             //{a:234,B:'12B-B'},    
         },
@@ -225,7 +227,6 @@ let caseAllJoinedFail : SchemaCaseAllJoined = {
 
 
 /////////////////Keys as Paths
-
 
 interface structKeyLeft
 {
@@ -249,26 +250,24 @@ simple = {
     a : 234,
     b : 'sdf',
     c : {A:'a', 
-        //b: 'c'
-        b: {A:'a', b: 'b'}
+        //b: 'c',
+        b: {A:'a',
+         b: 'b'
+        }
         },
     d : true
 }
 
-type ExtendsObject<T extends any> = T ['o'] extends void ? 'T' : 'F'
-type result = ExtendsObject<{'o':void}>
-
-
-
-
-// Good only let primary keys, fail
-let caseNoJoinskeys : ExtractRelationshipTypeKey<LeftSchema, {}> = {
-    a : '1',
-    Item0 : {
+// Good only let primary keys, fail, however, typically don't used populate inthe first place.
+// so at the end of the day, its all good.
+let caseNoJoinskeys : ExtractRelationshipTypeKey<LeftSchema,{}> = {
+    a : 1,
+    Item0 : 
+    {
         Item1 : {Item2 : '234'},
          Item11 : {Item12 : '12-A'},
          ItemA : {    ItemB : 
-            'AB-A'
+            'AB-B'
         },
         b : true, 
         c : "string",
@@ -285,7 +284,7 @@ let caseItem0JoinedNoFalsePositivesAKey : ExtractRelationshipTypeKey<LeftSchema,
 }> = {
     a : 1,
     Item0 : {
-        b :'',
+       // b :'',
         Item1 : {Item2 : '234'},
          Item11 : {Item12 : '12-A'},
          ItemA : {    ItemB : 
@@ -298,7 +297,7 @@ let caseItem0JoinedNoFalsePositivesAKey : ExtractRelationshipTypeKey<LeftSchema,
 }
 
 // Good only right hand keys, no fails positives.
-let caseItem0JoinedNoFalsePositivesB : ExtractRelationshipType<LeftSchema, [['Item0'],['Item0','f'],['Item0','Item11'],['Item0','Item11','d']]> = {
+let caseItem0JoinedNoFalsePositivesBKeys : ExtractRelationshipType<LeftSchema, {Item0:{f:'', Item11 :{d:''}}}> = {
     a : 1,
     Item0 : {
         Item1 : {Item2 : '234'},
@@ -312,12 +311,15 @@ let caseItem0JoinedNoFalsePositivesB : ExtractRelationshipType<LeftSchema, [['It
     }
 }
 
+
+
 //Fails item0Item11.Item12 fails, should be left hand key
-let caseItem0Item11Item12JoinedNoFalsePositivesB : ExtractRelationshipType<LeftSchema, [['Item0'],['Item0','f'],['Item0','Item11'],['Item0','Item11','d']]> = {
+let caseItem0Item11Item12JoinedNoFalsePositivesBKeys : ExtractRelationshipTypeKey<LeftSchema,
+{Item0:{f:'', Item11 : {d:''}}}> = {
     a : 1,
     Item0 : {
         Item1 : {Item2 : '234'},
-         Item11 : {Item12 : '12-B'},
+         Item11 : {Item12 : '12-A'},
          ItemA : {    ItemB : 
             'AB-A'
         },
@@ -328,7 +330,10 @@ let caseItem0Item11Item12JoinedNoFalsePositivesB : ExtractRelationshipType<LeftS
 }
 
 // Good no fail positives.
-let caseItem0Item11Item12 : ExtractRelationshipType<LeftSchema, [['Item0'],['Item0','f'],['Item0','Item11'],['Item0','Item11','Item12']]> = {
+let caseItem0Item11Item12Keys : ExtractRelationshipTypeKey<LeftSchema, 
+{
+    Item0 : {f :'', Item11 : {Item12 : ''}}
+}> = {
     a : 1,
     Item0 : {
         Item1 : {Item2 : '234'},
@@ -343,12 +348,23 @@ let caseItem0Item11Item12 : ExtractRelationshipType<LeftSchema, [['Item0'],['Ite
 }
 
 
-type JoinPaths = [['Item0','e'],['Item0', 'Item1', 'Item2'], ['Item0', 'Item11', 'Item12'],['Item0','ItemA','ItemB','B']];
+type JoinPathsKey = 
+{
+    Item0 : {
+        e:'',
+        Item1 : {Item2:''},
+        Item11 : {Item12 : ''},
+        ItemA : {ItemB : {B:''}}
+    }
+}
+//[['Item0','e'],['Item0', 'Item1', 'Item2'], ['Item0', 'Item11', 'Item12'],['Item0','ItemA','ItemB','B']];
 
-type SchemaCaseAllJoined = ExtractRelationshipType<LeftSchema, JoinPaths>
+
+
+type SchemaCaseAllJoinedKey = ExtractRelationshipTypeKey<LeftSchema, JoinPathsKey>
 
 // Good all the right keys.
-let caseAllJoined : SchemaCaseAllJoined = {
+let caseAllJoinedKeys : SchemaCaseAllJoinedKey = {
     a : 1,
     Item0 : {
         Item1 : {Item2 : 234},
@@ -364,18 +380,65 @@ let caseAllJoined : SchemaCaseAllJoined = {
 }
 
 // Items a should be missign from Item0.ItemA.a
-let caseAllJoinedFail : SchemaCaseAllJoined = {
-    Item0 : {
-        Item1 : {Item2 : true},
+let caseAllJoinedFailKeys : SchemaCaseAllJoinedKey = {
+    a:1,
+    Item0 : {        
+        Item1 : {Item2 : 34},
         Item11 : {Item12 : '12-A'},
         
         ItemA : {
-            ItemB : 'AB-A'
+            ItemB :
+            // 'AB-A'
             // Missing the right hand side join
-            //{a:234,B:'12B-B'},    
+            {a:234,B:'12B-B'},    
         },
         b : true, 
         c : "string",
         d : 234
     }
 }
+
+
+// Items a should be missign from Item0.ItemA.Item2.number
+let caseAllJoinedFailKeysB : SchemaCaseAllJoinedKey = {
+    a:1,
+    Item0 : {        
+        Item1 : {Item2 : 34},
+        Item11 : {Item12 : '12-A'},
+        
+        ItemA : {
+            ItemB :
+            // 'AB-A'
+            // Missing the right hand side join
+            {a:234,B:'12B-B'},    
+        },
+        b : true, 
+        c : "string",
+        d : 234
+    }
+}
+
+
+// Items a should be missign from Item0.ItemA.a
+let caseAllJoinedFailKeys : SchemaCaseAllJoinedKey = {
+    a:1,
+    Item0 : {        
+        Item1 : {Item2 : 34},
+        Item11 : {Item12 : '12-A'},
+        
+        ItemA : {
+            ItemB :
+            // 'AB-A'
+            // Missing the right hand side join
+            {a:234,B:'12B-B'},    
+        },
+        b : true, 
+        c : "string",
+        d : 234
+    }
+}
+
+
+type test<T> = T extends void ? 'T' : 'F'
+
+type results = test<number>

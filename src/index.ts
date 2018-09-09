@@ -58,13 +58,28 @@ export type ExtractMongooseSchema<T> = ExtractRelationshipType<T, Array<never>>
 ObjectOmit<T, keyof Mongoose.Document>
 //_ExtractRelationshipType<ObjectOmit<T, keyof Mongoose.Document>, Paths, Depth, iterate>
 */
+/*
+
+// There are two alternative ways to look at fixing things with partial items matcing.
+// like radial sort, can't work backwards as information is only foward iteratable.
+// looking at taking advantage of union of types
+// the other is passing in the path item that matched, so we only check that.
+
+export type ExtractRelationShipTypeFromArray<T extends any, Paths extends {[index:string] : any}, Depth extends string = '0'>
+ = T extends Array<infer I> ? 
+    ExtractRelationshipType<I, Paths, Depth>  []
+    :
+    ExtractRelationshipType<T, Paths, Depth>
+
+
+// Need to add array iteration support.
 export type ExtractRelationshipType<T extends any, Paths extends {[index:string] : any}, Depth extends string = '0', iterate extends {[index:string] : string} = itemElements> = 
 {
     [K in keyof T] :
 
         KeyInPathsAtDepth<K, T, Paths, Depth> extends void ? 
             T[K] extends Ref<any, any> ? T[K]['RefId'] :
-            ExtractRelationshipType<T[K], Paths, iterate[Depth]> 
+            ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth]> // could be an array still.
         : 
     (
     {        
@@ -72,15 +87,238 @@ export type ExtractRelationshipType<T extends any, Paths extends {[index:string]
     
         ObjectHasKey<Paths[Path], Depth> extends 'T' ? 
             Paths[Path][Depth] extends K ? 
+                // Reduce paths to all those that match.
+
+                
 
                 T[K] extends Ref<any, any> ? 
-                    ExtractRelationshipType<T[K]['RefImplem'], Paths, iterate[Depth]> :
-                    ExtractRelationshipType<T[K], Paths, iterate[Depth]>
+                ExtractRelationShipTypeFromArray<T[K]['RefImplem'], Paths, iterate[Depth]> :
+                ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth]>
             : 
-            T[K] extends Ref<any, any> ? void: ExtractRelationshipType<T[K], Paths, iterate[Depth]>            
+            T[K] extends Ref<any, any> ? void: ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth]>            
         : void
     })[keyof ExtractArrayItems<Paths>] 
 }
+
+*/
+
+export type KeyInPathsAtDepth_2<K extends string, T, Paths extends {[index:string]:any}, Depth extends string, PathKeys extends string = keyof ExtractArrayItems<Paths>> =
+{
+    [Path in PathKeys] :
+
+        ObjectHasKey<Paths[Path], Depth> extends 'T' ? 
+            Paths[Path][Depth] extends K ? 
+                'T'
+            : void
+        : void
+}[PathKeys]
+
+export type ExtractRelationShipTypeFromArray_<T extends any, Paths extends {[index:string] : any}, Depth extends string = '0', PathKeys extends string = keyof ExtractArrayItems<Paths>>
+ = T extends Array<infer I> ? 
+    ExtractRelationshipType<I, Paths, Depth, PathKeys>  []
+    :
+    ExtractRelationshipType<T, Paths, Depth, PathKeys>
+
+
+export type NarrowsPathKeys<K extends string, Paths extends {[index:string] : any}, Depth extends string, Keys extends string> = ({
+[Path in Keys] :
+        ObjectHasKey<Paths[Path], Depth> extends 'T' ? 
+            Paths[Path][Depth] extends K ? 
+                Path
+            : ''
+        : ''
+}
+&
+{
+    [index:string] : ''
+})[Keys]
+
+type uu =  NarrowsPathKeys<'b', [['b']], '0', '0'>
+
+
+
+/*
+{
+    [K in keyof T] :
+    
+    ({
+        [Path in PathKeys] :
+            ObjectHasKey<Paths[Path], Depth> extends 'T' ? 
+                Paths[Path][Depth] extends K ? 
+                    Path
+                : never
+            : never
+    })[PathKeys]
+    // If there are not more path keys, then just do simple extraction for Ref,
+    // if there are path keys then we need to evaluate the next level.
+         
+        KeyInPathsAtDepth<K, T, Paths, Depth> extends void ? 
+            T[K] extends Ref<any, any> ? 
+                T[K]['RefId'] :
+               //'F'
+               ExtractRelationshipType<T[K], Paths, iterate[Depth], PathKeys> // could be an array still.
+        : 
+        
+    {
+
+        
+
+        // Could attempt to narrow all the paths first..
+        [Path in PathKeys] :
+            (ObjectHasKey<Paths[Path], Depth> extends 'T' ? 
+                Paths[Path][Depth] extends K ?
+                    T[K] extends Ref<any, any> ? 
+                        '1'
+                        //ExtractRelationShipTypeFromArray<T[K]['RefImplem'], Paths, iterate[Depth], Path> 
+                        : '2'//ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth], Path>
+                :
+                '3'
+                // void //
+            : 
+            '4'
+            //void
+        )
+    }[PathKeys]
+}*/
+
+// doesn't work wrapping 'w' issues, works at top level, because I am alreayd wrapping arrrays..
+// how to fix this..
+export type ExtractRelationShipTypeFromArray<T extends any, Paths extends {[index:string] : any}, Depth extends string, PathKeys extends string>
+ = T extends Array<infer I> ? 
+    I extends Record<string, any> ? 
+        ExtractRelationshipType<I, Paths, Depth, PathKeys> [] :
+        ExtractRelationshipTypeItem<I, Paths, Depth, PathKeys> []        
+    :
+    ExtractRelationshipType<T, Paths, Depth, PathKeys>
+
+export type ExtractRelationshipTypeItem<K extends string, T extends any, Paths extends {[index:string] : any}, Depth extends string = '0', Keys extends string = keyof ExtractArrayItems<Paths>, iterate extends {[index:string] : string} = itemElements> = 
+    
+    NarrowsPathKeys<K, Paths, Depth, Keys> extends '' ?         
+        Depth extends '2' ? K & 'T' & T[K] :    
+        T[K] extends Ref<any, any> ?
+            T[K]['RefId'] 
+        : ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth], ''>
+        
+    :
+    T[K] extends Ref<any, any> ? 
+        ExtractRelationShipTypeFromArray<T[K]['RefImplem'], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> 
+    : ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> 
+
+
+// Need to add array iteration support, add  supports for arrays..
+export type ExtractRelationshipType<T extends any, Paths extends {[index:string] : any}, Depth extends string = '0', Keys extends string = keyof ExtractArrayItems<Paths>, iterate extends {[index:string] : string} = itemElements> = 
+{
+    [K in keyof T] : ExtractRelationshipTypeItem<K, T, Paths, Depth, Keys>
+/*
+
+    NarrowsPathKeys<K, Paths, Depth, Keys> extends '' ?         
+        Depth extends '2' ? K & 'T' & T[K] :    
+        T[K] extends Ref<any, any> ?
+            //K & 'T' & T[K]
+            T[K]['RefId'] 
+        : ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth], ''>
+        
+    :
+    T[K] extends Ref<any, any> ? 
+        ExtractRelationShipTypeFromArray<T[K]['RefImplem'], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> 
+    : ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> */
+}
+
+type SchemaArrayTest = {
+    e : 'e'    
+}
+
+type SchemaArray = {
+    //a : number,
+  /*  b : { 
+        e: Ref<'B-E', SchemaArrayTest>
+    },*/
+    c : {
+        e: Ref<'C-E', SchemaArrayTest> []
+    }
+}
+
+type rrr = ExtractRelationshipType<SchemaArray, [['b','e']
+//,['c','e']
+]>
+
+const mm : rrr = {
+   // a : 1,
+    /*b : {
+        e :
+        //'B-E'
+        {
+            e :
+            'e'
+        }
+    },*/
+    c : {
+        e:
+        'C-E'
+       /* {
+            e :
+            'e'
+        }*/
+    }
+}
+
+/*
+
+Attemt another simpler method first.
+
+export type NarrowPaths<K extends string, Paths extends {[index:string] : any}, Depth extends string = '0'> = 
+
+({[Path in keyof ExtractArrayItems<Paths>] : 
+    ObjectHasKey<Paths[Path], Depth> extends 'T' ? 
+        Paths[Path][Depth] extends K ? Paths[Path] : never
+    : never
+                    
+})[keyof ExtractArrayItems<Paths>]
+
+
+
+export type ExtractRelationShipTypeFromArray<T extends any, Paths extends {[index:string] : any}, Depth extends string = '0'>
+ = T extends Array<infer I> ? 
+    ExtractRelationshipType<I, Paths, Depth>  []
+    :
+    ExtractRelationshipType<T, Paths, Depth>
+
+
+// Need to add array iteration support.
+export type ExtractRelationshipType<T extends any, Paths extends {[index:string] : any}, Depth extends string = '0', iterate extends {[index:string] : string} = itemElements> = 
+{
+    [K in keyof T] :
+
+        KeyInPathsAtDepth<K, T, Paths, Depth> extends void ? 
+            T[K] extends Ref<any, any> ? T[K]['RefId'] :
+            ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth]> // could be an array still.
+        : 
+
+    NarrowPaths<K, Paths, Depth>    // ['a','b'] | ['a','c'], but write the code as if we extending one of them, may need this to be void not never, since resuilts is anded. know has to be void
+    T[K] extends Ref<any, any> ? 
+    ExtractRelationShipTypeFromArray<T[K]['RefImplem'], Paths, iterate[Depth]> :
+    ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth]>
+
+    
+    (
+    {        
+    [Path in keyof ExtractArrayItems<Paths>] :
+    
+        ObjectHasKey<Paths[Path], Depth> extends 'T' ? 
+            Paths[Path][Depth] extends K ? 
+                // Reduce paths to all those that match.
+
+                
+
+                T[K] extends Ref<any, any> ? 
+                ExtractRelationShipTypeFromArray<T[K]['RefImplem'], Paths, iterate[Depth]> :
+                ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth]>
+            : 
+            T[K] extends Ref<any, any> ? void: ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth]>            
+        : void
+    })[keyof ExtractArrayItems<Paths>] 
+}
+*/
 
 export type Ref<RefId, RefImplem> = {
     RefId : RefId,
@@ -153,10 +391,10 @@ export type ObjectOmit<T, K extends string> = {
 };
 
 
-export type KeyInPathsAtDepthKey<K extends string, Paths extends {[index:string]:any}> =
+export type KeyInPathsAtDepthKey<K extends string, Paths extends {[index:string]:any} | ''> =
 {
     [Path in keyof Paths] : Path extends K ? 'T' : void        
-}[keyof ExtractArrayItems<Paths>]
+}[keyof Paths]
 
 
 export type ExtractRelationshipTypeKeyRefIf<T extends any> = 
@@ -165,14 +403,33 @@ export type ExtractRelationshipTypeKeyRefIf<T extends any> =
 
 }
 
+export type HasKeys<T extends any> = 
+({
+    [K in keyof T] : 'T'
+}
+&
+{
+    [index:string] : 'F'
+}
+&
+{
+    never : 'F'
+}
+)[keyof T]
+
+
+
+
 // The flaw here is that I only iterate the given keys I need to iterate everything to strip ref from every where.
 export type ExtractRelationshipTypeKey<T extends any, Paths extends {[index:string] : any}> = 
-Paths extends '' ? ExtractRelationshipTypeKeyRefIf<T> :       
-{
+//T extends '' ? 'T' :'F'
+// ExtractRelationshipTypeKeyRefIf<T> : 'sdf'
+Paths extends '' ? ExtractRelationshipTypeKeyRefIf<T>
+: {
     [K in keyof T] :        
-        KeyInPathsAtDepthKey<K, Paths> extends void ? 
+        KeyInPathsAtDepthKey<K, Paths> extends void ?
             T[K] extends Ref<any, any> ? T[K]['RefId']             
-                : ExtractRelationshipTypeKeyRefIf<T[K]>       
+              : ExtractRelationshipTypeKeyRefIf<T[K]>       
         :                             
     ({        
     [Path in keyof Paths] :
@@ -184,3 +441,38 @@ Paths extends '' ? ExtractRelationshipTypeKeyRefIf<T> :
     }
     )[keyof Paths] 
 }
+
+
+const MongooseTypes = {
+    String : () => void,
+    Boolean : () => void
+}
+
+var schema = new Schema({
+    name:    String,
+    binary:  Buffer,
+    living:  Boolean,
+    updated: { type: Date, default: Date.now },
+    age:     { type: Number, min: 18, max: 65 },
+    mixed:   Schema.Types.Mixed,
+    _someId: Schema.Types.ObjectId,
+    decimal: Schema.Types.Decimal128,
+    array: [],
+    ofString: [String],
+    ofNumber: [Number],
+    ofDates: [Date],
+    ofBuffer: [Buffer],
+    ofBoolean: [Boolean],
+    ofMixed: [Schema.Types.Mixed],
+    ofObjectId: [Schema.Types.ObjectId],
+    ofArrays: [[]],
+    ofArrayOfNumbers: [[Number]],
+    nested: {
+      stuff: { type: String, lowercase: true, trim: true }
+    },
+    map: Map,
+    mapOfString: {
+      type: Map,
+      of: String
+    }
+  })
