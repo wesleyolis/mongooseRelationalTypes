@@ -1,4 +1,4 @@
-import {ExtractRelationshipType, ExtractArrayItems} from './index'
+import {ExtractRelationshipType, ExtractArrayItems, itemElements} from './index'
 import {Schema, SchemaDefinition, SchemaOptions, SchemaTypeOpts, SchemaType} from 'mongoose'
 import {If, ObjectHasKey, ObjectOptional, ObjectOmit, ObjectClean, Bool, StringOmit, StringEq, ObjectOverwrite} from 'typelevel-ts';
 import { StringContains, ObjectDiff } from './tstypelevel';
@@ -52,7 +52,7 @@ type MObjectId = MongooseTSType<ObjectId> & Schema.Types.ObjectId
 type MBuffer = MongooseTSType<string> & Schema.Types.Buffer
 type MArray<T> = MongooseTSType<T, 'A', 'W'> & Schema.Types.Array
 type MObject<T> = MongooseTSType<T, 'O'>
-type MRef<RefId extends MTypes, RefImplem extends MSchema<any>> = MongooseTSType<Ref<RefId, RefImplem>, 'O'>
+type MRef<RefId extends MTypes, RefImplem extends MSchema<any>> = MongooseTSType<Ref<{w:RefId}, {w:RefImplem}>, 'R','W'>
 type MDecimal128 = MongooseTSType<number> & Schema.Types.Decimal128
 
 
@@ -121,32 +121,32 @@ const arrayTest = MTypes.Array(MTypes.Object({
     e : MTypes.Boolean(),
     f : MTypes.Number(),
     h : MTypes.String(),
-    Ref : MTypes.Ref(MTypes.String(), mMumberSchema),
+    Ref2 : MTypes.Ref(MTypes.String(), mMumberSchema),
 }));
 
 const mSchema = new MSchema({
-    tBoolean : MTypes.Boolean(),
+  /*  tBoolean : MTypes.Boolean(),
     tNumber : MTypes.Number(),
     tString : MTypes.String(),
     //tDate : MTypes.Date(),
     tObjectId : MTypes.ObjectId(),
     tBuffer : MTypes.Buffer(),
     tDecimal : MTypes.Decimal128(),
-   
+   */
     //tArrayPBoolean : MTypes.Array(MTypes.Boolean()),
     //tArrayPNumber : MTypes.Array(MTypes.Number()),
     tArrayObject : arrayTest,
     //MTypes.Array(arrayTest),
     //tArrayMixedArray : MTypes.Array(mnumberSchema),
    
-    Ref : MTypes.Ref(MTypes.String(), mMumberSchema),
-    object : MTypes.Object({
+    //Ref : MTypes.Ref(MTypes.String(), mMumberSchema),
+  /*  object : MTypes.Object({
         a : MTypes.Number(),
         b : MTypes.String(),
         c : MTypes.Boolean(),
         Ref : MTypes.Ref(MTypes.String(), mMumberSchema),
     }),
-    schema : MTypes.Schema(mMumberSchema)
+    schema : MTypes.Schema(mMumberSchema)*/
 })
 
 
@@ -155,6 +155,85 @@ const mSchema = new MSchema({
 // type ExtractTypeTSSchema<T extends MongooseTSType<any>> = {
 //     [K in keyof T['__tsType']] : T[K] extends {'__tsType' : infer T} ? T : 'missing'
 // }
+
+export type NarrowsPathKeys<K extends string, Paths extends {[index:string] : any}, Depth extends string, Keys extends string> = ({
+    [Path in Keys] :
+            ObjectHasKey<Paths[Path], Depth> extends 'T' ? 
+                Paths[Path][Depth] extends K ? 
+                    Path
+                : ''
+            : ''
+    }
+    &
+    {
+        [index:string] : ''
+    }
+    )[Keys]
+   
+   // Need to add array iteration support, add  supports for arrays..
+type ExtractRelationshipType<T extends {[index:string] : MongooseTSType<any, any, any>}, Paths extends {[index:string] : any}, Depth extends string = '0', Keys extends string = keyof ExtractArrayItems<Paths>, iterate extends {[index:string] : string} = itemElements> = {
+    [P in keyof T] : 
+    
+    ({
+        'T' : ExtractType<T[P]>
+        'O' : 
+        ExtractRelationshipTypeItem<P, T[P], Paths, Depth, Keys>
+        //ExtractType<T[P]>
+        'A' : //ExtractFormat<T[P],ExtractType<T[P]>>
+        (
+            ExtractFormat<T[P],
+            ExtractRelationshipTypeItem<P,T[P], Paths, Depth, Keys>
+            >
+            )//[]
+        //(ExtractFormat<T[P],ExtractRelationshipType<T[P], Paths, Depth, Keys>>)
+        'R' : ExtractFormat<T[P],ExtractRelationshipTypeItem<P,T[P], Paths, Depth, Keys>> // might want a different formate here.      
+    })[T[P]['__ID']]
+}
+type ExtractRelationshipTypeItem<K extends string, T extends MongooseTSType<any, any, any>,
+ Paths extends {[index:string] : any}, Depth extends string = '0',
+  Keys2 extends string = 'pp'
+  // = keyof ExtractArrayItems<Paths>,
+  ,
+   iterate extends {[index:string] : string} = itemElements,
+ TD extends any = T extends MongooseTSType<{w: infer A},any,any> ? A : ExtractType<T>> = 
+
+    // I need to preserve the format, because that is the only way I can extract and detect an array.
+    // T[K] is another MongooseTSType, so have to extract the type to evaluate its contents.
+    // I am probably going to have to change the MRef type, to be encapsulated in mongooseTSType.
+    // Otherwise I will be breaking the pattern!
+    // The problem is there is now another level of abstraction before RefID and RefIMplemtation
+    //  MRef<MType.Bool
+
+    // I think that Ref is going to need a wrapper just like the other stuff.
+    // I think I will also need to strip the format off here as well.
+
+    // With an array being wrapped in a w, there is a problem that we can't evalute the internals,
+    // because they are not hidden away by w, so if not hidden by w then, be able to evalue it
+    // and when go back into the object call we have a problem, because the patter doesn match
+    // we required w match w match w match, so how to do this.
+    // the next type down needs to be nested in a w.., Which is a big problem.
+    // We have iterate type and logical type, just duplicated and have both for A R    
+    
+
+     NarrowsPathKeys<K, Paths, Depth, Keys2> extends '' ?                 
+        TD extends Ref<any, any> ?
+            ExtractRelationshipType<TD['RefId'], Paths, iterate[Depth], ''>   // Both side of the referance types have now been abstracted.
+        :
+         //{w:'T'}
+         ExtractRelationshipType<ExtractType<T>, Paths, iterate[Depth], ''>
+        
+    :
+    //{w:'F'}
+    
+    TD extends Ref<any, any> ? 
+        {w:'I'}
+        //ExtractRelationshipType<TD['RefImplem'], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> 
+    :
+        {w: 'H' &  NarrowsPathKeys<K, Paths, Depth, Keys2> extends '' ? 'T' : 'F'}
+        //{w:'H' & K & '--' & Keys2 & ':' & Paths} 
+    //ExtractRelationshipType<ExtractType<T>, Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> // Going to have a problem here because there are two different formats still
+
+   
 
 export type ExtractType<T extends any> = T['__tsType']
 
@@ -180,28 +259,41 @@ type _ExtractFromObject<T extends {[index:string] : MongooseTSType<any, any, any
 type t =  MSchema<{[index:string] : MongooseTSType<any, any, any>}>
 type tt = t['__tsType']
 
+
+type ExtractTSSchemaType<T extends MSchema<any>, Paths extends {[index:string] : any} = [['tArrayObject','sdf']]> = ExtractRelationshipType<ExtractType<T>, Paths>
 type ExtractTSSchema<T extends MSchema<any>> = _ExtractFromObject<ExtractType<T>>
 
-type test = ExtractTSSchema<typeof mSchema>
+type test = ExtractTSSchemaType<typeof mSchema>
 
+type Paths__ = [['tArrayObject','sdf']];
+type dduu = keyof ExtractArrayItems<Paths__>
+type pp = NarrowsPathKeys<'tArrayObject', Paths__,'0', '0'>
+// Empty doesn't work it is a problem.
 const test : test = {
-    tBoolean : true,
+  /*  tBoolean : true,
     tNumber : 345,
     tObjectId : 'sdf',
     tString : 'sdf',
     tBuffer : 'sdf',
-    tDecimal : 123,
+    tDecimal : 123,*/
     //tArrayPBoolean : [true, false],
     //tArrayPNumber : [1,2,3,4,5],
-    tArrayObject : [{e : true, f : 234, h : "sdf", Ref : {RefId:'sdf', RefImplem : {a : 1}}}],
-    Ref :  {RefId:'sdf', RefImplem : {a : 1}},
-    object : {
+    tArrayObject : {e : true, f : 234, h : "sdf", Ref2 :
+     234
+    //"kkk"
+    //{RefId:'sdf', RefImplem : {a : 1}}
+},
+   // Ref : {a:1}
+    //"dsf"
+    //{RefId:'sdf', RefImplem : {a : 1}},
+   /* object : {
         a : 1,
         b : 'sdf',
         c: true,
         Ref : {RefId:'sdf', RefImplem : {a : 1}},
     },
     schema : { a : 1}
+    */
 }
 
 
@@ -209,7 +301,7 @@ const test : test = {
 // need to figure out why things are falling over.
 // Bug seem to be fixed in version 3.1
 
-const test2 : ExtractRelationshipType<test,[['Ref'], ["tArrayObject"]]> = {
+const test2 : ExtractTSSchemaType<typeof mSchema,[['Ref'], ["tArrayObject"]]> = {
     tBoolean : true,
     tNumber : 345,
     tObjectId : 'sdf',

@@ -186,8 +186,10 @@ type uu =  NarrowsPathKeys<'b', [['b']], '0', '0'>
 export type ExtractRelationShipTypeFromArray<T extends any, Paths extends {[index:string] : any}, Depth extends string, PathKeys extends string>
  = T extends Array<infer I> ? 
     I extends Record<string, any> ? 
-        ExtractRelationshipType<I, Paths, Depth, PathKeys> [] :
-        ExtractRelationshipTypeItem<I, Paths, Depth, PathKeys> []        
+        ExtractRelationshipType<I, Paths, Depth, PathKeys> [] 
+        :  
+        //ExtractRelationshipTypeItem<'', {}, [[]], '0', ''> []
+        
     :
     ExtractRelationshipType<T, Paths, Depth, PathKeys>
 
