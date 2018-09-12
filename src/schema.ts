@@ -1,6 +1,6 @@
-import {ExtractRelationshipType, ExtractArrayItems, itemElements} from './index'
+import {ExtractArrayItems, itemElements} from './index'
 import {Schema, SchemaDefinition, SchemaOptions, SchemaTypeOpts, SchemaType} from 'mongoose'
-import {If, ObjectHasKey, ObjectOptional, ObjectOmit, ObjectClean, Bool, StringOmit, StringEq, ObjectOverwrite} from 'typelevel-ts';
+import {If, ObjectHasKey, ObjectOptional, ObjectOmit, ObjectClean, Bool, StringOmit, StringEq, ObjectOverwrite} from './tstypelevel';
 import { StringContains, ObjectDiff } from './tstypelevel';
 
 interface MSchemaDefinition extends SchemaDefinition
@@ -156,13 +156,13 @@ const mSchema = new MSchema({
 //     [K in keyof T['__tsType']] : T[K] extends {'__tsType' : infer T} ? T : 'missing'
 // }
 
-export type NarrowsPathKeys<K extends string, Paths extends {[index:string] : any}, Depth extends string, Keys extends string> = ({
-    [Path in Keys] :
+export type NarrowsPathKeys<K extends string, Paths extends {[index:string] : any}, Depth extends string, Keys extends string> =({
+    [Path in Keys] : 
             ObjectHasKey<Paths[Path], Depth> extends 'T' ? 
                 Paths[Path][Depth] extends K ? 
                     Path
-                : ''
-            : ''
+                : never
+            : never
     }
     &
     {
@@ -265,9 +265,25 @@ type ExtractTSSchema<T extends MSchema<any>> = _ExtractFromObject<ExtractType<T>
 
 type test = ExtractTSSchemaType<typeof mSchema>
 
-type Paths__ = [['tArrayObject','sdf']];
+type Paths__ = [['tArrayObject','sdf'], ['tArrayObject','K2']];
 type dduu = keyof ExtractArrayItems<Paths__>
-type pp = NarrowsPathKeys<'tArrayObject', Paths__,'0', '0'>
+
+// Same old story as before of needing to handle the cases of when there is absolutely no match at all.
+// the same issues as before, which makes use of this function to resolve that issues one layer up.
+// will have to look at employing that here too.
+// Basically if there is no match at all, then ..
+// can't I program empty key, problem is that I need to evalute the results and results of union type is both code paths.
+// which creates more complexity and permutations to evaluate, which is a problem.
+type pp = NarrowsPathKeys<'K', Paths__,'1', '0' | '1'>
+
+
+// Problem here is that still can't make logical decissin  based onthe results,
+// unless write some logic that does some explicty '' or other
+// I could do that possible but I am going to have to think about that and draw up a truth table,
+// so that I can get it to work.
+type uuuuu = {'':'T'} & {[index:string] : 'F'}
+type rr = uuuuu['g']
+
 // Empty doesn't work it is a problem.
 const test : test = {
   /*  tBoolean : true,
