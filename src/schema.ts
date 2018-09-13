@@ -1,4 +1,4 @@
-import {ExtractArrayItems, itemElements} from './index'
+import {ExtractArrayItems, itemElements, KeyInPathsAtDepthKey} from './index'
 import {Schema, SchemaDefinition, SchemaOptions, SchemaTypeOpts, SchemaType} from 'mongoose'
 import {If, ObjectHasKey, ObjectOptional, ObjectOmit, ObjectClean, Bool, StringOmit, StringEq, ObjectOverwrite} from './tstypelevel';
 import { StringContains, ObjectDiff } from './tstypelevel';
@@ -156,20 +156,33 @@ const mSchema = new MSchema({
 //     [K in keyof T['__tsType']] : T[K] extends {'__tsType' : infer T} ? T : 'missing'
 // }
 
-export type NarrowsPathKeys<K extends string, Paths extends {[index:string] : any}, Depth extends string, Keys extends string> =({
+export type KeysInPath<T extends any, K extends string> = ({
+    [K in keyof T] : 'T'
+}
+&
+{
+    [index:string] : 'F'
+})[K]
+
+export type NarrowsPathKeys<K extends string, Paths extends {[index:string] : any}, Depth extends string, Keys extends string> =
+KeysInPath<Paths, Keys> extends 'T' ?
+({
     [Path in Keys] : 
             ObjectHasKey<Paths[Path], Depth> extends 'T' ? 
                 Paths[Path][Depth] extends K ? 
                     Path
-                : never
-            : never
+                : ''
+            : ''
     }
     &
     {
-        [index:string] : ''
+        [index:string] : '' // This here doens't really matter since all the keys should exist anyways.
     }
     )[Keys]
+: ''
    
+// I need to figure out how to simply determine how to increment the key level.
+
    // Need to add array iteration support, add  supports for arrays..
 type ExtractRelationshipType<T extends {[index:string] : MongooseTSType<any, any, any>}, Paths extends {[index:string] : any}, Depth extends string = '0', Keys extends string = keyof ExtractArrayItems<Paths>, iterate extends {[index:string] : string} = itemElements> = {
     [P in keyof T] : 
@@ -177,7 +190,7 @@ type ExtractRelationshipType<T extends {[index:string] : MongooseTSType<any, any
     ({
         'T' : ExtractType<T[P]>
         'O' : 
-        ExtractRelationshipTypeItem<P, T[P], Paths, Depth, Keys>
+        ExtractRelationshipType<ExtractType<T[P]>, Paths, Depth, Keys>
         //ExtractType<T[P]>
         'A' : //ExtractFormat<T[P],ExtractType<T[P]>>
         (
@@ -185,6 +198,7 @@ type ExtractRelationshipType<T extends {[index:string] : MongooseTSType<any, any
             ExtractRelationshipTypeItem<P,T[P], Paths, Depth, Keys>
             >
             )//[]
+        
         //(ExtractFormat<T[P],ExtractRelationshipType<T[P], Paths, Depth, Keys>>)
         'R' : ExtractFormat<T[P],ExtractRelationshipTypeItem<P,T[P], Paths, Depth, Keys>> // might want a different formate here.      
     })[T[P]['__ID']]
@@ -215,6 +229,8 @@ type ExtractRelationshipTypeItem<K extends string, T extends MongooseTSType<any,
     // We have iterate type and logical type, just duplicated and have both for A R    
     
 
+    //*** What I could do for arrays and that to as all I need is the formate ,is forward extract that information, so now I have 2 alternatives approaches to this. */
+
      NarrowsPathKeys<K, Paths, Depth, Keys2> extends '' ?                 
         TD extends Ref<any, any> ?
             ExtractRelationshipType<TD['RefId'], Paths, iterate[Depth], ''>   // Both side of the referance types have now been abstracted.
@@ -226,12 +242,16 @@ type ExtractRelationshipTypeItem<K extends string, T extends MongooseTSType<any,
     //{w:'F'}
     
     TD extends Ref<any, any> ? 
-        {w:'I'}
-        //ExtractRelationshipType<TD['RefImplem'], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> 
+        //{w:'I'}
+        ExtractRelationshipType<TD['RefImplem'], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys2>> 
     :
-        {w: 'H' &  NarrowsPathKeys<K, Paths, Depth, Keys2> extends '' ? 'T' : 'F'}
+      //  {w: 'H' & Depth & K}
+      // &  NarrowsPathKeys<K, Paths, Depth, Keys2> extends '' ? 'T' : 'F'}
         //{w:'H' & K & '--' & Keys2 & ':' & Paths} 
-    //ExtractRelationshipType<ExtractType<T>, Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> // Going to have a problem here because there are two different formats still
+        // carray on on level down were the issues would be, not on this true false evaluation.
+    
+    
+     ExtractRelationshipType<ExtractType<T>, Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys2>> // Going to have a problem here because there are two different formats still
 
    
 
@@ -260,7 +280,7 @@ type t =  MSchema<{[index:string] : MongooseTSType<any, any, any>}>
 type tt = t['__tsType']
 
 
-type ExtractTSSchemaType<T extends MSchema<any>, Paths extends {[index:string] : any} = [['tArrayObject','sdf']]> = ExtractRelationshipType<ExtractType<T>, Paths>
+type ExtractTSSchemaType<T extends MSchema<any>, Paths extends {[index:string] : any} = [['tArrayObject','Ref22']]> = ExtractRelationshipType<ExtractType<T>, Paths>
 type ExtractTSSchema<T extends MSchema<any>> = _ExtractFromObject<ExtractType<T>>
 
 type test = ExtractTSSchemaType<typeof mSchema>
@@ -274,13 +294,17 @@ type dduu = keyof ExtractArrayItems<Paths__>
 // Basically if there is no match at all, then ..
 // can't I program empty key, problem is that I need to evalute the results and results of union type is both code paths.
 // which creates more complexity and permutations to evaluate, which is a problem.
-type pp = NarrowsPathKeys<'K', Paths__,'1', '0' | '1'>
+type pp = NarrowsPathKeys<'K2', Paths__,'1', '0' | '1'>
 
+type mm = pp extends '' ? 'NoMatches' :'HaveMatches'
 
 // Problem here is that still can't make logical decissin  based onthe results,
 // unless write some logic that does some explicty '' or other
 // I could do that possible but I am going to have to think about that and draw up a truth table,
 // so that I can get it to work.
+// Actually I can't do anything about this 2 values will always remain two values.. of unions, I can reduce them.. reduce to true and never, which is true.
+// which means I can do it for the other combination as well.
+// complex thing is I can never test for a never, which is a really big problem.
 type uuuuu = {'':'T'} & {[index:string] : 'F'}
 type rr = uuuuu['g']
 
@@ -295,9 +319,11 @@ const test : test = {
     //tArrayPBoolean : [true, false],
     //tArrayPNumber : [1,2,3,4,5],
     tArrayObject : {e : true, f : 234, h : "sdf", Ref2 :
-     234
-    //"kkk"
+    // 234
+    //true
+    "kkk"
     //{RefId:'sdf', RefImplem : {a : 1}}
+    //{a:1}
 },
    // Ref : {a:1}
     //"dsf"
