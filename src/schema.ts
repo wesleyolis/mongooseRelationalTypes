@@ -3,19 +3,136 @@ import {Schema, SchemaDefinition, SchemaOptions, SchemaTypeOpts, SchemaType} fro
 import {If, ObjectHasKey, ObjectOptional, ObjectOmit, ObjectClean, Bool, StringOmit, StringEq, ObjectOverwrite} from './tstypelevel';
 import { StringContains, ObjectDiff } from './tstypelevel';
 
-interface MSchemaDefinition extends SchemaDefinition
+// SchemaFormats
+// -------------------------------------
+// Id           =>  Basically _id, optional on New, readonly means, only appears on, new and mod. 
+// ResultMod    =>  All modifiable parameters, and Id Schema, and ReadOnly. (SchemaMod, ReadOnly)
+// UpdateMod    =>  All modifiable parameters are optional. (SchemaMod)
+// New          => Defaults are now optional,Readonly are required, all non mod parameters that optional are pressent as is. ()
+// --------------------------------------
+// individual schemas required to build up the compositions above, by only apply a single operator.
+// Some that is optional will always remain optional, its only the required fields which are a problem.
+// SchemaMod = Optional = any & Readonly = false & Default = false           // Typicall implicity has optional
+// DefaultsOptional = Optional = false & Readonly = false & Default = true    //  these would typically be optional.
+// ReadOnlyRequired = Optional = false & ReadOnly = true & Default = false
+// ReadOnlyOptional = Optional = false & ReadOnly = true & Default = true
+// Default          = Optional = true & ReadOnly = any & Default = true
+// InvalidDBHack = Optional = true & ReadOnly = any & Default = true    // As it is always going to be there, disable this combination.
+                                                                        // Will disable this at schema definition time.
+// Somthing that is optional and has a default, can't be optional, it is impossible.
+// --------------------------------------------------
+// Alias
+// --------------------------------------------------
+// ReadOnly = Readonly = true & Default = any => ReadOnlyRequired & Partial<ReadOnlyOptional>
+// New = (Default & Partial<DefaultsOptional>)*[SchemaNew] & ReadonlyRequired & Partial<ReadOnlyOptional> & Partial<SchemaMod>
+// ModUpdate = Partial<SchemaMod>
+// ModResults = SchemaMod & ReadOnlyRequired & RequiredOnlyOptional
+// ...........................
+// Overall,  we need Default, DefaultsOptional, ReadonlyRequired, ReadonlyOptoinal, Schemamod, which is 5 variants, in which to file the schema creations.
+// ----------------------------------
+// How to deal with any field type: Typically have type check to detect that some should have called modified.
+// -----------------------------------
+// We only wrap with a parameter, which means we need to change the input form.
+// What we can do is have a function that returns the type as a wrapper, but its actually not, its been faked.
+// Then that addeds a control parameter, which setModified works with, by recording a list of keys.
+// which it then can use to generate the update schema, which includes modified results for this field.
+// Which means, that field must by default have structure, that includes a type __SetModified, yet to be called.
+// When setMOdified is call on the class, the update type that is generate, would be modified.
+// This can work, we are doing it already, just means that setModified, is required to  be called before hand.
+// the other is that save, can't be called or is not avaliable, if yet modifier is missing, in which
+// can do like if statment Extract all fields, which keys provided and that there needs to be setModified,
+// then check internal list if they all contained on that list. otherwise the save type is an error.
+// but that make that type rather complex.
+// I would prefer that I would rather use the builder pattern, that doesn't return the new instance,
+// until with save, until set Modified is called for all the keys.
+// Should also be able to do this pattern in old school format, with out having to use extends.
+
+
+interface MSchemaDefinition<> extends SchemaDefinition
 {
     [path: string]: MongooseTSType<any, any, any>;//MoggooseType<any,any,MongooseTSType<any>>;
 }
 
-class MSchema<T extends MSchemaDefinition> extends Schema implements MongooseTSType<T, 'O', 'P'>
+type MongooseType = any;
+
+interface MSchemaId<ID extends MongooseType>
+{
+    __id: ID
+}
+
+interface MTypeModifiers<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends MongooseType | undefined> {
+    __Optional : Optional
+    __Readonly : Readonly   // Complications I can't detect readonly, so has to be explicity file mm.. How to create teh constructors for this.., I think only in 3.1, which make dynamic name for variable.
+    __Default : Default
+}
+
+
+interface MSchemaModifiers<
+    Optional extends 'Req' | 'Op',
+    Readonly extends 'Get' | 'Set',
+    Default extends MongooseType | undefined>
+{
+    [path: string]: MTypeModifiers<Optional, Readonly, Default>;//MoggooseType<any,any,MongooseTSType<any>>;
+}
+
+type ExtractSchemaValidation<T, SchemaModifiers extends MTypeModifiers<any, any, any>> = {
+    [K in keyof T] : 
+        T[K] extends MTypeModifiers<any, any, any> ? 
+            T[K] extends SchemaModifiers ? 
+                T[K] : 'Invalid Type for Key:' & K
+            : T[K] extends Record<string, any> ?
+                // Recurses here.
+            : 'Invalid type.'
+}
+
+interface SchemaTypeID<ID extends MTypeModifiers<'Req', 'Set', undefined>>
+{
+    _id : ID
+}
+// DefaultsOptional = Optional = false & Readonly = false & Default = true    //  these would typically be optional.
+// ReadOnlyRequired = Optional = false & ReadOnly = true & Default = false
+// ReadOnlyOptional = Optional = false & ReadOnly = true & Default = true
+// Default          = Optional = true & ReadOnly = any & Default = false
+// How to design the filing logic for this to be done automatically.
+// it can be done, with keys things
+// Look at using Object.assign(), to merge all the in dividual interface definitions into one.
+// I could look at using the builder patter, but then gong to be alot of intersections,
+// which will not be simplified.
+// The best I can really do is write Record schema formate, so that the input is validated.
+interface MongooseSchemas<
+    Id extends SchemaTypeID<any>,
+    Mod extends MTypeModifiers<any, 'Set', undefined>,
+    NonOpReadDefault extends MTypeModifiers<'Req', 'Get', undefined>,
+    NonOpROptional extends MTypeModifiers<'Req', 'Get', any>,
+    NDefault extends MTypeModifiers<'Op', any, MongooseType>,
+    >
+{
+    __Id : Id
+    __Mod : Mod
+    __NonOpReadDefault : NonOpReadDefault
+    __NonOpROptoinal : NonOpROptional
+    __NDefault : NDefault
+}
+
+
+class MSchema<
+ModSchema extends MSchemaDefinition, 
+ModSchema extends MSchemaDefinition, 
+T extends MSchemaDefinition> extends Schema implements MongooseTSType<T, 'O', 'P'>
 {
     __tsType : T;
     __ID : 'O' = 'O';
     __InputForm : 'P' = 'P';
 
-    constructor(definition: T, options?: SchemaOptions)
+    __SchemaMod;
+
+    constructor(modSchema :
+        
+        definition: T, options?: SchemaOptions)
     {        
+
+        const combinedSchema = 
+
         super(definition, options);
 
         this.__tsType = definition;
