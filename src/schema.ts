@@ -1,6 +1,6 @@
 import {ExtractArrayItems, itemElements, KeyInPathsAtDepthKey} from './index'
 import {Schema, SchemaDefinition, SchemaOptions, SchemaTypeOpts, SchemaType} from 'mongoose'
-import {If, ObjectHasKey, ObjectOptional, ObjectOmit, ObjectClean, Bool, StringOmit, StringEq, ObjectOverwrite} from './tstypelevel';
+import {If, ObjectHasKey, ObjectOptional, ObjectOmit, ObjectClean, Bool, StringOmit, StringEq, ObjectOverwrite, Option} from './tstypelevel';
 import { StringContains, ObjectDiff } from './tstypelevel';
 
 // SchemaFormats
@@ -48,36 +48,61 @@ import { StringContains, ObjectDiff } from './tstypelevel';
 // Should also be able to do this pattern in old school format, with out having to use extends.
 
 
-interface MSchemaDefinition<> extends SchemaDefinition
+interface IMSchemaDefinition<> extends SchemaDefinition
 {
-    [path: string]: MongooseTSType<any, any, any>;//MoggooseType<any,any,MongooseTSType<any>>;
+    [path: string]: IMongooseTSType<any, any, any>;//MoggooseType<any,any,MongooseTSType<any>>;
 }
 
-type MongooseType = any;
+type MongooseTypes = any;
 
-interface MSchemaId<ID extends MongooseType>
+interface IMSchemaId<ID extends MongooseTypes>
 {
     __id: ID
 }
 
-interface MTypeModifiers<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends MongooseType | undefined> {
+type MTypeModifiersDefaultRecord<TSType extends TsTypesPrimatives, Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends TSType | undefined> =
+Record<string, IMongooseTSType<any,any,any> & IMTypeModifiersDefault<TSType, Optional, Readonly, Default>>
+
+interface IMTypeModifiersDefault<TSType extends TsTypesPrimatives, Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends TSType | undefined>
+extends IMTypeModifiers<Optional, Readonly, Default>
+{
     __Optional : Optional
     __Readonly : Readonly   // Complications I can't detect readonly, so has to be explicity file mm.. How to create teh constructors for this.., I think only in 3.1, which make dynamic name for variable.
     __Default : Default
+}
+
+type MTypeModifiersRecord<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends TsTypesPrimatives | Array<any> | undefined> = 
+Record<string, IMongooseTSType<any,any,any> & IMTypeModifiers<Optional, Readonly, Default>>
+
+interface IMTypeModifiers<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends TsTypesPrimatives | Array<any> | undefined> {
+    __Optional : Optional
+    __Readonly : Readonly   // Complications I can't detect readonly, so has to be explicity file mm.. How to create teh constructors for this.., I think only in 3.1, which make dynamic name for variable.
+    __Default : Default
+}
+
+type MRefTypeModifiersRecord<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends TsTypesPrimatives | Array<any> | undefined, RefType extends IMongooseSchemas<any,any,any,any,any,any,any>> =
+Record<string, IMongooseTSType<any,any,any> & IMRefTypeModifiers<Optional, Readonly, Default, RefType>>
+
+// Problem with this referance type is that it is not perfectly recusive...
+// as it addes on options, but from to level its fine actually, because constaint is actually at a top level.
+interface IMRefTypeModifiers<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends TsTypesPrimatives | Array<any> | undefined, RefType extends IMongooseSchemas<any,any,any,any,any,any,any>>
+extends IMTypeModifiers<Optional, Readonly, Default>
+{
+    __RefType : IMongooseSchemas<any, any, any,any, any, any, any>
 }
 
 
 interface MSchemaModifiers<
     Optional extends 'Req' | 'Op',
     Readonly extends 'Get' | 'Set',
-    Default extends MongooseType | undefined>
+    Default extends MongooseTypes | undefined>
 {
-    [path: string]: MTypeModifiers<Optional, Readonly, Default>;//MoggooseType<any,any,MongooseTSType<any>>;
+    [path: string]: IMTypeModifiers<Optional, Readonly, undefined>;//MoggooseType<any,any,MongooseTSType<any>>;
 }
 
-type ExtractSchemaValidation<T, SchemaModifiers extends MTypeModifiers<any, any, any>> = {
+type ExtractSchemaValidation<T, SchemaModifiers extends IMTypeModifiers<any, any, any>> = {
     [K in keyof T] : 
-        T[K] extends MTypeModifiers<any, any, any> ? 
+        T[K] extends IMTypeModifiers<any, any, any> ? 
             T[K] extends SchemaModifiers ? 
                 T[K] : 'Invalid Type for Key:' & K
             : T[K] extends Record<string, any> ?
@@ -85,7 +110,7 @@ type ExtractSchemaValidation<T, SchemaModifiers extends MTypeModifiers<any, any,
             : 'Invalid type.'
 }
 
-interface SchemaTypeID<ID extends MTypeModifiers<'Req', 'Set', undefined>>
+interface SchemaTypeID<ID extends IMongooseTSType<any,any,any> & IMTypeModifiers<'Req', 'Set', undefined>>
 {
     _id : ID
 }
@@ -99,13 +124,15 @@ interface SchemaTypeID<ID extends MTypeModifiers<'Req', 'Set', undefined>>
 // I could look at using the builder patter, but then gong to be alot of intersections,
 // which will not be simplified.
 // The best I can really do is write Record schema formate, so that the input is validated.
-interface MongooseSchemas<
+interface IMongooseSchemas<
     Id extends SchemaTypeID<any>,
-    Mod extends MTypeModifiers<any, 'Set', undefined>,
-    NonOpReadDefault extends MTypeModifiers<'Req', 'Get', undefined>,
-    NonOpROptional extends MTypeModifiers<'Req', 'Get', any>,
-    NDefault extends MTypeModifiers<'Op', any, MongooseType>,
-    >
+    Mod extends MTypeModifiersRecord<any, 'Set', undefined>,
+    ModRef extends MRefTypeModifiersRecord<any, 'Set', undefined, any>,
+    NonOpReadDefault extends MTypeModifiersRecord<'Req', 'Get', undefined>,
+    NonOpROptional extends MTypeModifiersRecord<'Req', 'Get', any>,
+    NDefault extends MTypeModifiersRecord<'Op', any, MongooseTypes>,
+    NeastedSchemas extends IMongoosePartialSchemaRecord<any, any, any, any, any, any>
+    > extends IMongoosePartialSchema<Mod, ModRef, NonOpReadDefault, NonOpROptional, NDefault, NeastedSchemas>
 {
     __Id : Id
     __Mod : Mod
@@ -114,44 +141,114 @@ interface MongooseSchemas<
     __NDefault : NDefault
 }
 
+type IMongoosePartialSchemaRecord<
+Mod extends MTypeModifiersRecord<any, 'Set', undefined>,
+ModRef extends MRefTypeModifiersRecord<any, 'Set', undefined, any>,
+NonOpReadDefault extends MTypeModifiersRecord<'Req', 'Get', undefined>,
+NonOpROptional extends MTypeModifiersRecord<'Req', 'Get', any>,
+NDefault extends MTypeModifiersRecord<'Op', any, MongooseTypes>,
+NeastedSchemas extends IMongoosePartialSchemaRecord<any, any, any, any, any, any>
+> = Record<string, IMongoosePartialSchema<Mod, ModRef, NonOpReadDefault, NonOpROptional, NDefault, NeastedSchemas>>
 
-class MSchema<
-ModSchema extends MSchemaDefinition, 
-ModSchema extends MSchemaDefinition, 
-T extends MSchemaDefinition> extends Schema implements MongooseTSType<T, 'O', 'P'>
+interface IMongoosePartialSchema<
+    Mod extends MTypeModifiersRecord<any, 'Set', undefined>,
+    ModRef extends MRefTypeModifiersRecord<any, 'Set', undefined, any>,
+    NonOpReadDefault extends MTypeModifiersRecord<'Req', 'Get', undefined>,
+    NonOpROptional extends MTypeModifiersRecord<'Req', 'Get', any>,
+    NDefault extends MTypeModifiersRecord<'Op', any, MongooseTypes>,
+    NeastedSchemas extends IMongoosePartialSchemaRecord<MTypeModifiersRecord<any, 'Set', undefined>, any, any, any, any, any>
+    >
 {
-    __tsType : T;
-    __ID : 'O' = 'O';
-    __InputForm : 'P' = 'P';
+    __Mod : Mod
+    __ModRef : ModRef
+    __NeastedSchema : NeastedSchemas
+    __NonOpReadDefault : NonOpReadDefault
+    __NonOpROptoinal : NonOpROptional
+    __NDefault : NDefault
+}
 
-    __SchemaMod;
+// Test the assume structure of the schema.
+type testSchema = IMongoosePartialSchema<{},{},{},{},{},{neasted : IMongoosePartialSchema<{a : IMongooseTSType<''> & IMTypeModifiers<"Op","Set",undefined>},{},{},{},{},{neasted : IMongooseSchemas<{_id:IMongooseTSType<''> & IMTypeModifiers<"Req","Set", undefined>},{a : IMongooseTSType<''> & IMTypeModifiers<"Op","Set",undefined>},{},{},{},{},{}>}>}>
 
-    constructor(modSchema :
-        
-        definition: T, options?: SchemaOptions)
-    {        
+/*
+var numberSchema = new Schema({
+  integerOnly: {
+    type: Number,
+    get: v => Math.round(v),
+    set: v => Math.round(v),
+    alias: 'i'
+  }
+});
 
-        const combinedSchema = 
+var Number = mongoose.model('Number', numberSchema);
 
-        super(definition, options);
+var doc = new Number();
+doc.integerOnly = 2.001;
+doc.integerOnly; // 2
+doc.i; // 2
+doc.i = 3.001;
+doc.integerOnly; // 3
+doc.i; // 3
+*/
 
-        this.__tsType = definition;
-    }   
+class MSchema implements MSchema
+{
 }
 
 interface ObjectId extends String
 {
 }
 
+type TsTypesPrimatives = boolean | number | string | Date;  // this should actually be the IMongooseTsType constaint.
+type RecordInputTypeFormat = Record<string, TsTypesPrimatives>;
+type ArrayInputTypeFormat = {w: RecordInputTypeFormat};
+type RefInputTypeFormat = {w: IMongooseSchemas<any,any,any,any,any,any,any>}
+
+type TsHybridTypesFormat = TsTypesPrimatives | RecordInputTypeFormat | ArrayInputTypeFormat | RefInputTypeFormat
+
 type ID = 'T' |'O' | 'A' | 'R' | 'S'
 type InputForm = 'P' | 'W'
 
-interface MongooseTSType<T , I extends ID = 'T', F extends InputForm = 'P'>
+interface IMongooseTSType<T extends TsHybridTypesFormat, I extends ID = 'T', F extends InputForm = 'P'>
 {
-    __tsType : T;
+    __tsType : T;   // Mostly everything has a tsType so it is here by default.
     __ID: I;
     __InputForm : F;
 }
+
+interface MongooseTypePrimative<T extends TsTypesPrimatives,
+Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends T | undefined,
+I extends ID = 'T', F extends InputForm = 'P', 
+> extends IMongooseTSType<T, I, F>, IMTypeModifiersDefault<T, Optional, Readonly, Default>
+{
+
+}
+// There are two types of arrays Primatives and Objects or Arrays of Arrays.
+interface MongooseTypeArray<T extends ArrayInputTypeFormat,
+Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends Array<any> | undefined,
+InputForm extends 'T' |'W' = 'W'
+> extends IMongooseTSType<{w:T}, 'A', InputForm>, IMTypeModifiers<Optional, Readonly, Default>
+{
+
+}
+
+interface MongooseTypeObject<T extends RecordInputTypeFormat,
+Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends Array<any> | undefined
+> extends IMongooseTSType<T, 'O', 'W'>, IMTypeModifiers<Optional, Readonly, Default>
+{
+
+}
+
+interface MongooseTypeRef<Ref extends TsTypesPrimatives, RefImpl extends IMongooseSchemas<any, any, any, any, any, any, any>,
+Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends Array<any> | undefined
+> extends IMongooseTSType<Ref, 'R', 'W'>, IMRefTypeModifiers<Optional, Readonly, Default, RefImpl>
+{
+
+}
+
+// Hybrid type, since we don't want to use the extends keyword, to check for the differance in structure between
+// a schema and and just a plain type. 
+ 
 
 type MTypes = MBoolean | MNumber | MString | MDate | MObjectId | MBuffer | MArray<any> | MMixed;
 
@@ -160,16 +257,45 @@ export type Ref<RefId, RefImplem> = {
     RefImplem : RefImplem
 }
 
+// New set of Primatives
+type MBoolean<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends boolean | undefined> = 
+MongooseTypePrimative<boolean, Optional, Readonly, Default> & Schema.Types.Boolean;
+
+type MNumber<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends number | undefined> = 
+MongooseTypePrimative<number, Optional, Readonly, Default> & Schema.Types.Number;
+
+type MString<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends string | undefined> = 
+MongooseTypePrimative<string, Optional, Readonly, Default> & Schema.Types.String;
+
+type MDate<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends Date | undefined> = 
+MongooseTypePrimative<Date, Optional, Readonly, Default> & Schema.Types.Date;
+
+type MObjectId<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set'> = 
+MongooseTypePrimative<string, Optional, Readonly, undefined> & Schema.Types.ObjectId;
+
+// Potentially we can make the ts type for the buffer the true node.js type instead of string.
+type MBuffer<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set'> = 
+MongooseTypePrimative<string, Optional, Readonly, undefined> & Schema.Types.Buffer;
+
+type MArray<Arr extends ArrayInputTypeFormat,Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', InputForm extends 'T' | 'W' = 'W'> = 
+MongooseTypeArray<Arr, Optional, Readonly, undefined, InputForm> & Schema.Types.Array;
+
+type MObject<Arr extends RecordInputTypeFormat,Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set'> = 
+MongooseTypeObject<Arr, Optional, Readonly, undefined>;
+
+type MRef<Ref extends TsTypesPrimatives, RefType extends IMongooseSchemas<any,any,any,any,any,any,any>, Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set'> = 
+MongooseTypeRef<Ref, RefType, Optional, Readonly, undefined>;
+
 // Primatives
-type MBoolean = MongooseTSType<boolean> & Schema.Types.Boolean
-type MNumber = MongooseTSType<number> & Schema.Types.Number
-type MString = MongooseTSType<string> & Schema.Types.String
-type MDate = MongooseTSType<string | number> & Schema.Types.Date
-type MObjectId = MongooseTSType<ObjectId> & Schema.Types.ObjectId
-type MBuffer = MongooseTSType<string> & Schema.Types.Buffer
-type MArray<T> = MongooseTSType<T, 'A', 'W'> & Schema.Types.Array
-type MObject<T> = MongooseTSType<T, 'O'>
-type MRef<RefId extends MTypes, RefImplem extends MSchema<any>> = MongooseTSType<Ref<{w:RefId}, {w:RefImplem}>, 'R','W'>
+//type MBoolean = MongooseTSType<boolean> & Schema.Types.Boolean
+//type MNumber = MongooseTSType<number> & Schema.Types.Number
+//type MString = MongooseTSType<string> & Schema.Types.String
+//type MDate = MongooseTSType<string | number> & Schema.Types.Date
+//type MObjectId = MongooseTSType<ObjectId> & Schema.Types.ObjectId
+//type MBuffer = MongooseTSType<string> & Schema.Types.Buffer
+//type MArray<T> = MongooseTSType<T, 'A', 'W'> & Schema.Types.Array
+//type MObject<T> = MongooseTSType<T, 'O'>
+//type MRef<RefId extends MTypes, RefImplem extends MSchema<any>> = MongooseTSType<Ref<{w:RefId}, {w:RefImplem}>, 'R','W'>
 type MDecimal128 = MongooseTSType<number> & Schema.Types.Decimal128
 
 
@@ -180,17 +306,47 @@ type MMixed = MongooseTSType<ObjectId> & Schema.Types.Decimal128
 */
 type MongooseArrayType = MBoolean | MNumber | MString | MDate | MObjectId | MBuffer | MDecimal128 | MRef<any, any> | MArray<any> | MObject<any>;
 
-type Options = {
+type SchemaOptions = {
+    autoIndex: any,
+    bufferCommands: any,
+    capped: any,
+    collection: any,
+    id: any,
+    _id: any,
+    minimize: any,
+    read: any,
+    writeConcern: any,
+    safe: any,
+    shardKey: any,
+    strict: any,
+    strictQuery: any,
+    toJSON: any,
+    toObject: any,
+    typeKey: any,
+    validateBeforeSave: any,
+    versionKey: any,
+    collation: any,
+    skipVersioning: any,
+    timestamps: any,
+    selectPopulatedPaths: any,
+    storeSubdocValidationError: any,
+}
 
+type SchemaFieldOptionsAll = {
+    select?: boolean,
+    validate?: Function, 
+    get?: Function,
+    set?: Function, 
+    alias? : string
 }
 
 type MBaseSchema = Schema.Types.Boolean;
 /*Schema.Types.Array | Schema.Types.Boolean | Schema.Types.Buffer | Schema.Types.Date | Schema.Types.Decimal128 |
 Schema.Types.DocumentArray | Schema.Types.Embedded | Schema.Types.Mixed | Schema.Types.Number | Schema.Types.ObjectId | Schema.Types.String
-*/
-type MongooseTypeOptions<B, Options> = ({type : B} & {[i:string] : Options})
+// */
+// type MongooseTypeOptions<B, Options> = ({type : B} & {[i:string] : Options})
  
-type MoggooseType<B, E, Options> = E | MongooseTypeOptions<E, Options> 
+// type MoggooseType<B, E, Options> = E | MongooseTypeOptions<E, Options> 
 
 function MongooseTypes<TT, Options>(schemaType : TT, ... options : Options[]) : any
 {
@@ -209,14 +365,48 @@ interface MObject
     // define function, but doesn't excistin so I would have to inject it in the resulting prototype to make it work.
 }*/
 
+const MTypeBoolean = MTypes.Boolean({required : 'Req', default : true});
+
+type MTypeBoolean = typeof MTypeBoolean;
+
 const MTypes = {
-    Boolean : <Options> (options? : Options) => MongooseTypes(Schema.Types.Boolean, options) as MBoolean, //MoggooseType<Schema.Types.Boolean, Options, MBoolean>,
-    Number :  <Options>(options? : Options) => MongooseTypes(Schema.Types.Number, options) as MNumber, //MoggooseType<Schema.Types.Number, Options, MNumber>,
-    Decimal128 :  <Options>(options? : Options) => MongooseTypes(Schema.Types.Number, options) as MDecimal128, //MoggooseType<Schema.Types.Number, Options, MNumber>,
-    String :  <Options>(options? :  Options) => MongooseTypes(Schema.Types.String, options) as MString, //| MongooseTypeOptions<MString, Options>//MoggooseType<Schema.Types.String, Options, MString>,
+    Boolean : <Required extends 'Req' | 'Op' = 'Req', 
+            Default extends (boolean | undefined) = undefined, 
+            ReadOnly extends 'Get' | 'Set' = 'Get'>
+        (options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
+             => MongooseTypes(Schema.Types.Boolean, options) as MBoolean<Required, ReadOnly, Default>,
+
+    
+    Number : <Required extends 'Req' | 'Op' = 'Req', 
+            Default extends (number | undefined) = undefined, 
+            ReadOnly extends 'Get' | 'Set' = 'Get'>
+        (options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
+         => MongooseTypes(Schema.Types.Boolean, options) as MNumber<Required, ReadOnly, Default>,
+
+    String : <Required extends 'Req' | 'Op' = 'Req', 
+            Default extends (string | undefined) = undefined, 
+            ReadOnly extends 'Get' | 'Set' = 'Get'>
+        (options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
+         => MongooseTypes(Schema.Types.Boolean, options) as MString<Required, ReadOnly, Default>,
+
+    // Array can be a record of anything, we need to be , but need to break it up at schema level.
+    // so at the base schema level one can spesify all the, how to get all these types now working.
+    // Array<PrimativeMType>, Array<Record<string,...>, Array<Object>, Array<Schema>
+    // Must be able to be used any were..
+    // The problem non level top types is that I will have to use extends...
+    // that is a problem, because we realy on top level types and no ambiguity.
+    // the recusive pattern must be perfect.
+    Array : <ArrayItems extends MTypes,
+         Required extends 'Req' | 'Op' = 'Req', 
+         Default extends (string | undefined) = undefined, 
+         ReadOnly extends 'Get' | 'Set' = 'Get'>
+     (items : ArrayItems, options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
+      => MongooseTypes(Schema.Types.Boolean, options) as MArray<ArrayItems, Required, ReadOnly, Default>,
+  
+   
     //Date : () => <Options>(options? : Options) => MongooseTypes(Schema.Types.Date, options) as MString, //MoggooseType<Schema.Types.Boolean, Options, MDate>,        
-    ObjectId : <Options>(options? : Options) => MongooseTypes(Schema.Types.Boolean, options) as MObjectId, //MoggooseType<Schema.Types.ObjectId, Options, MObjectId>,        
-    Buffer :  <Options>(options? : Options) => MongooseTypes(Schema.Types.Boolean, options) as MBuffer, //MoggooseType<Schema.Types.Buffer, Options, MBuffer>,
+    ObjectId : <Options>(options? : SchemaFieldOptionsAll) => MongooseTypes(Schema.Types.Boolean, options) as MObjectId, //MoggooseType<Schema.Types.ObjectId, Options, MObjectId>,        
+    Buffer :  <Options>(options? : SchemaFieldOptionsAll) => MongooseTypes(Schema.Types.Boolean, options) as MBuffer, //MoggooseType<Schema.Types.Buffer, Options, MBuffer>,
         
     Array: <T extends MongooseArrayType, Options>(items : T, options? : Options) => 
         MongooseTypes(Schema.Types.Array, options) as Schema.Types.Array as MArray<{w:T}>,// MoggooseType<Schema.Types.Array, Options, MArray<T>>,                
