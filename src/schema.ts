@@ -49,56 +49,83 @@ import { StringContains, ObjectDiff } from './tstypelevel';
 // Should also be able to do this pattern in old school format, with out having to use extends.
 
 
-interface IMSchemaDefinition<> extends SchemaDefinition
+
+type InputTypeFormat<
+OptionalConstraints extends 'Req' | 'Op', 
+ReadonlyConstraints extends 'Get' | 'Set',
+DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
+RefTypeConstraints extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined
+> = IMongooseShape<any, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>;
+
+//type RecordInputTypeFormat<T extends IMongooseTSType<any,any,any> & IMTypeModifiers<any,any,any,any>> = IMTypeModifiersRecord<>;
+type RecordInputTypeFormat<
+OptionalConstraints extends 'Req' | 'Op', 
+ReadonlyConstraints extends 'Get' | 'Set',
+DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
+RefTypeConstraints extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined> = 
+IMTypeModifiersRecord<OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>;
+
+
+
+// type ArrayInputTypeFormat = {w: InputTypeFormat<any, any, any, any>};
+// type RefInputTypeFormat = {w: IMongooseSchemas<any,any,any,any,any,any,any>}
+
+// type ArrayTypes = RecordInputTypeFormat<any, any, any, any> | ArrayInputTypeFormat | RefInputTypeFormat;
+
+type TsTypesPrimatives = boolean | number | string | Date;  // this should actually be the IMongooseTsType constaint.
+// type TsHybridTypesFormat = TsTypesPrimatives |
+// RecordInputTypeFormat<any, any, any, any> | 
+// ArrayInputTypeFormat | 
+// RefInputTypeFormat | 
+// {w:IMongoosePartialSchema<any, any, any, any, any, any>}
+
+type ID = 'T' | 'R' | 'AR' | 'AN' | 'Ref' | 'S'
+
+type IShape = 
+IShapeTSType<any> 
+| IShapeTSRecord<any> 
+| IShapeTSArrayNeasted<any> 
+| IShapeTSArrayRecord<any>
+| IShapeTSRef<any>
+
+
+interface IShapeTSType<T extends TsTypesPrimatives>
 {
-    [path: string]: IMongooseTSType<any, any, any>;//MoggooseType<any,any,MongooseTSType<any>>;
+    __tsType : T;
+    __ID: 'T';
 }
 
-type MongooseTypes = any;
-
-interface IMSchemaId<ID extends MongooseTypes>
+interface IShapeTSRecord<T extends Record<string, IShape>>
 {
-    __id: ID
+    __tsType : T;
+    __ID: 'R';
+}
+
+interface IShapeTSArrayNeasted<T extends IShape>
+{
+    __tsType : {w:T};
+    __ID: 'AN';
+}
+
+interface IShapeTSArrayRecord<T extends Record<string, IShape>>
+{
+    __tsType : T;
+    __ID: 'AR';
 }
 
 
-// type MTypeModifiersDefaultRecord<TSType extends TsTypesPrimatives, Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends TSType | undefined> =
-// Record<string, IMongooseTSType<any,any,any> & IMTypeModifiersDefault<TSType, Optional, Readonly, Default>>
-
-// interface IMTypeModifiersDefault<TSType extends TsTypesPrimatives, Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends TSType | undefined>
-// extends IMTypeModifiers<Optional, Readonly, Default>
-// {
-//     __Optional : Optional
-//     __Readonly : Readonly   // Complications I can't detect readonly, so has to be explicity file mm.. How to create teh constructors for this.., I think only in 3.1, which make dynamic name for variable.
-//     __Default : Default
-// }
-
-interface IMTypeModifiersRecord<
-Optional extends 'Req' | 'Op',
-Readonly extends 'Get' | 'Set',
-Default extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
-RefType extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined,
-OptionalConstraints extends 'Req' | 'Op' = Optional, 
-ReadonlyConstraints extends 'Get' | 'Set' = Readonly,
-DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined = Default,
-RefTypeConstraints extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined = RefType,
-> extends
-Record<string, (IMongooseTSType<any,any,any> & 
-(IMTypeModifiersWithNeastedConstraints<Optional, Readonly, Default, RefType, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>)
-//| IMTypeModifiersRecord<Optional, Readonly, Default, RefType, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
-)>
+interface IShapeTSRef<T extends TsTypesPrimatives>
 {
+    __tsType : T;
+    __ID: 'Ref';
 }
 
-// interface IMRefTypeModifiers<
-//     Optional extends 'Req' | 'Op',
-//     Readonly extends 'Get' | 'Set',
-//     Default extends TsTypesPrimatives | Array<any> | undefined,
-//     RefType extends IMongooseSchemas<any,any,any,any,any,any,any>
-// > extends IMTypeModifiers<Optional, Readonly, Default, RefType>
-// {
 
-// }
+interface IShapeTSSchema<T extends Record<string, IShape>>
+{
+    __tsType : T;
+    __ID: 'S';
+}
 
 interface IMTypeModifiers<
     Optional extends 'Req' | 'Op',
@@ -117,8 +144,8 @@ interface IMTypeModifiersWithNeastedConstraints<
     Readonly extends 'Get' | 'Set',
     Default extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
     RefType extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined = undefined,
-    OptionalConstraints extends 'Req' | 'Op' = Optional, 
-    ReadonlyConstraints extends 'Get' | 'Set' = Readonly,
+    OptionalConstraints extends 'Req' | 'Op' | undefined= Optional, 
+    ReadonlyConstraints extends 'Get' | 'Set' | undefined = Readonly,
     DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined = Default,
     RefTypeConstraints extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined = RefType,
    
@@ -129,15 +156,54 @@ interface IMTypeModifiersWithNeastedConstraints<
     __RefType : RefType
 }
 
-// To validate this, one needs to build a generator based on the input to ensure that the final type is of the form
-// IMRefTypeModifiers
-interface MRefTypeModifiersRecord<Optional extends 'Req' | 'Op',
-Readonly extends 'Get' | 'Set', Default extends TsTypesPrimatives | Array<any> | undefined, 
-RefType extends IMongooseSchemas<any,any,any,any,any,any,any>> 
-extends Record<string, (IMongooseTSType<any,any,any> & IMTypeModifiers<Optional, Readonly, Default, RefType>) | MRefTypeModifiersRecord<any,any,any,any>>
-{
+type IMongooseShape<
+Shape extends IShape,
+Optional extends 'Req' | 'Op',
+Readonly extends 'Get' | 'Set',
+Default extends (Shape extends (IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>) ? [] : 
+TsTypesPrimatives | Array<any> | Record<string,TsTypesPrimatives> | TsTypesPrimatives) | undefined,
+//Shape['__tsType']) | undefined, This needs to be the extracted form.. update this later, once developed.
+RefType extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined = undefined,
+OptionalConstraints extends 'Req' | 'Op' | undefined = Optional, 
+ReadonlyConstraints extends 'Get' | 'Set' | undefined = Readonly,
+DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined = Default,
+RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined = RefType,
+> = Shape & IMTypeModifiersWithNeastedConstraints<Optional, Readonly, Default, RefType, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
 
+type MongooseTypes = any;
+
+interface IMSchemaId<ID extends MongooseTypes>
+{
+    __id: ID
 }
+
+interface IMTypeModifiersRecord<
+Optional extends 'Req' | 'Op',
+Readonly extends 'Get' | 'Set',
+Default extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
+RefType extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined,
+OptionalConstraints extends 'Req' | 'Op' = Optional, 
+ReadonlyConstraints extends 'Get' | 'Set' = Readonly,
+DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined = Default,
+RefTypeConstraints extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined = RefType,
+> extends
+Record<string, IMongooseShape<any, Optional, Readonly, Default, RefType, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>>
+{
+}
+
+
+
+// // To validate this, one needs to build a generator based on the input to ensure that the final type is of the form
+// // IMRefTypeModifiers
+// interface MRefTypeModifiersRecord<
+// Optional extends 'Req' | 'Op',
+// Readonly extends 'Get' | 'Set',
+// Default extends TsTypesPrimatives | Array<any> | undefined, 
+// RefType extends IMongooseSchemas<any,any,any,any,any,any,any>> 
+// extends Record<string, (IMongooseTSType<any,any,any> & IMTypeModifiers<Optional, Readonly, Default, RefType>) | MRefTypeModifiersRecord<any,any,any,any>>
+// {
+
+// }
 
 // // Problem with this referance type is that it is not perfectly recusive...
 // // as it addes on options, but from to level its fine actually, because constaint is actually at a top level.
@@ -148,48 +214,10 @@ extends Record<string, (IMongooseTSType<any,any,any> & IMTypeModifiers<Optional,
 // }
 
 
-interface MSchemaModifiers<
-    Optional extends 'Req' | 'Op',
-    Readonly extends 'Get' | 'Set',
-    Default extends MongooseTypes | undefined>
-{
-    [path: string]: IMTypeModifiers<Optional, Readonly, undefined>;//MoggooseType<any,any,MongooseTSType<any>>;
-}
-
-type ExtractSchemaValidation<T, SchemaModifiers extends IMTypeModifiers<any, any, any>> = {
-    [K in keyof T] : 
-        T[K] extends IMTypeModifiers<any, any, any> ? 
-            T[K] extends SchemaModifiers ? 
-                T[K] : 'Invalid Type for Key:' & K
-            : T[K] extends Record<string, any> ?
-                // Recurses here.
-            : 'Invalid type.'
-}
-
-// Require an extraction routine, to recusively extract referances.
-// I think be better to do this one get the major iteration pattern working.
-// Model-CollectionName
-// type ModelsRefMap<RefSchema extends Record<string, RefMap extends Record<string, Record<keyof RefSchema> = Record<string, RefMap<>>
-
-// interface RefMap<ModelsRefMap extends Record<string, RefMap<any>>> extends RefMapBase, extends Record<string, Record<string,keyof ModelsRefMap>> 
-// {
-
-// }
-
-// interface RefMapBase
-// {
-
-// }
-
-// const testings : ModelsRefMap = {
-//     col1 : 
-// }
 
 
 
-
-
-type SchemaTypeID<ID extends IMongooseTSType<any,'T','P'> & IMTypeModifiers<'Req', 'Set', undefined>> = ID
+type SchemaTypeID<ID extends IMongooseShape<IShapeTSType<any>, 'Req', 'Set', undefined>> = ID
 
 // DefaultsOptional = Optional = false & Readonly = false & Default = true    //  these would typically be optional.
 // ReadOnlyRequired = Optional = false & ReadOnly = true & Default = false
@@ -202,7 +230,7 @@ type SchemaTypeID<ID extends IMongooseTSType<any,'T','P'> & IMTypeModifiers<'Req
 // which will not be simplified.
 // The best I can really do is write Record schema formate, so that the input is validated.
 interface IMongooseSchemas<
-    Id extends SchemaTypeID<any>,
+    Id extends string,//SchemaTypeID<any>,
     Mod extends IMTypeModifiersRecord<any, 'Set', undefined, undefined>,
     ModRef extends IMTypeModifiersRecord<any, 'Set', undefined, any>,
     NonOpReadDefault extends IMTypeModifiersRecord<'Req', 'Get', undefined, undefined>,
@@ -253,31 +281,6 @@ interface IMongoosePartialSchema<
     __NeastedSchema : NeastedSchemas
 }
 
-// Test the assume structure of the schema.
-type testSchema = IMongoosePartialSchema<{},{},{},{},{},{neasted : IMongoosePartialSchema<{a : IMongooseTSType<''> & IMTypeModifiers<"Op","Set",undefined>},{},{},{},{},{neasted : IMongooseSchemas<{_id:IMongooseTSType<''> & IMTypeModifiers<"Req","Set", undefined>},{a : IMongooseTSType<''> & IMTypeModifiers<"Op","Set",undefined>},{},{},{},{},{}>}>}>
-
-/*
-var numberSchema = new Schema({
-  integerOnly: {
-    type: Number,
-    get: v => Math.round(v),
-    set: v => Math.round(v),
-    alias: 'i'
-  }
-});
-
-var Number = mongoose.model('Number', numberSchema);
-
-var doc = new Number();
-doc.integerOnly = 2.001;
-doc.integerOnly; // 2
-doc.i; // 2
-doc.i = 3.001;
-doc.integerOnly; // 3
-doc.i; // 3
-*/
-
-
 // I will have to figure out the defaults, because there seems to be a typescript bug of stores.
 // Which is a problem. Ask peire see if he has any ideas, lets press on with the other things.
 class MSchema<Id extends SchemaTypeID<any>,
@@ -287,7 +290,7 @@ NonOpReadDefault extends IMTypeModifiersRecord<'Req', 'Get', undefined, undefine
 NonOpROptional extends IMTypeModifiersRecord<'Req', 'Get', any, undefined>,
 NDefault extends IMTypeModifiersRecord<'Op', any, MongooseTypes, undefined>,
 NeastedSchemas extends IMongoosePartialSchemaRecord<any, any, any, any, any, any>>
-implements IMongooseSchemas<Id, Mod, ModRef, NonOpReadDefault, NonOpROptional, NDefault, NeastedSchemas>, extends Schema
+extends Schema implements IMongooseSchemas<Id, Mod, ModRef, NonOpReadDefault, NonOpROptional, NDefault, NeastedSchemas> 
 {
     constructor(
         public __Name : string,
@@ -323,7 +326,7 @@ NonOpReadDefault extends IMTypeModifiersRecord<'Req', 'Get', undefined, undefine
 NonOpROptional extends IMTypeModifiersRecord<'Req', 'Get', any, undefined>,
 NDefault extends IMTypeModifiersRecord<'Op', any, MongooseTypes, undefined>,
 NeastedSchemas extends IMongoosePartialSchemaRecord<any, any, any, any, any, any>>
-implements IMongooseSchemas<BaseSchema['__Id'], Mod, ModRef, NonOpReadDefault, NonOpROptional, NDefault, NeastedSchemas>, extends Schema
+extends Schema implements IMongooseSchemas<BaseSchema['__Id'], Mod, ModRef, NonOpReadDefault, NonOpROptional, NDefault, NeastedSchemas>
 {
     constructor(
         public baseSchema : BaseSchema,
@@ -354,67 +357,28 @@ interface ObjectId extends String
 {
 }
 
-type InputTypeFormat<
-OptionalConstraints extends 'Req' | 'Op', 
-ReadonlyConstraints extends 'Get' | 'Set',
-DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
-RefTypeConstraints extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined
-> = 
-IMongooseTSType<any,any,any> & IMTypeModifiersWithNeastedConstraints<OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>;
 
-//type RecordInputTypeFormat<T extends IMongooseTSType<any,any,any> & IMTypeModifiers<any,any,any,any>> = IMTypeModifiersRecord<>;
-type RecordInputTypeFormat<
-OptionalConstraints extends 'Req' | 'Op', 
-ReadonlyConstraints extends 'Get' | 'Set',
-DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
-RefTypeConstraints extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined> = 
-IMTypeModifiersRecord<OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>;
-
-
-
-type ArrayInputTypeFormat = {w: InputTypeFormat<any, any, any, any>};
-type RefInputTypeFormat = {w: IMongooseSchemas<any,any,any,any,any,any,any>}
-
-type ArrayTypes = RecordInputTypeFormat<any, any, any, any> | ArrayInputTypeFormat | RefInputTypeFormat;
-
-type TsTypesPrimatives = boolean | number | string | Date;  // this should actually be the IMongooseTsType constaint.
-type TsHybridTypesFormat = TsTypesPrimatives |
-RecordInputTypeFormat<any, any, any, any> | 
-ArrayInputTypeFormat | 
-RefInputTypeFormat | 
-{w:IMongoosePartialSchema<any, any, any, any, any, any>}
-
-type ID = 'T' |'O' | 'A' | 'R' | 'S' | 'N' | 'J'
-type InputForm = 'P' | 'W'
-
-interface IMongooseTSType<T extends TsHybridTypesFormat, I extends ID = 'T', F extends InputForm = 'P'>
-{
-    __tsType : T;   // Mostly everything has a tsType so it is here by default.
-    __ID: I;
-    __InputForm : F;
-}
-
-type MongooseTypePrimative<T extends TsTypesPrimatives,
-Optional extends 'Req' | 'Op',
-Readonly extends 'Get' | 'Set',
-Default extends T | undefined,
-I extends ID = 'T', F extends InputForm = 'P', 
-> = IMongooseTSType<T, I, F> & IMTypeModifiersWithNeastedConstraints<Optional, Readonly, Default>
+// type MongooseTypePrimative<T extends TsTypesPrimatives,
+// Optional extends 'Req' | 'Op',
+// Readonly extends 'Get' | 'Set',
+// Default extends T | undefined,
+// I extends ID = 'T', F extends InputForm = 'P', 
+// > = IMongooseTSTypeOnly<T, I> & IMTypeModifiersWithNeastedConstraints<Optional, Readonly, Default>
 
 
 
 // There are two types of arrays Primatives and Objects or Arrays of Arrays.
-type MongooseTypeArray<T extends ArrayTypes,
-Optional extends 'Req' | 'Op',
-Readonly extends 'Get' | 'Set',
-Default extends Array<any> | undefined,
-OptionalConstraints extends 'Req' | 'Op', 
-ReadonlyConstraints extends 'Get' | 'Set',
-DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
-RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
-InputForm extends 'P' |'W' = 'W'
-> = IMongooseTSType<T, 'A', InputForm> & IMTypeModifiersWithNeastedConstraints<Optional, Readonly, Default, undefined, 
-OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
+// type MongooseTypeArray<T extends ArrayTypes,
+// Optional extends 'Req' | 'Op',
+// Readonly extends 'Get' | 'Set',
+// Default extends Array<any> | undefined,
+// OptionalConstraints extends 'Req' | 'Op', 
+// ReadonlyConstraints extends 'Get' | 'Set',
+// DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
+// RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
+// InputForm extends 'P' |'W' = 'W'
+// > = IMongooseTSType<T, 'A', InputForm> & IMTypeModifiersWithNeastedConstraints<Optional, Readonly, Default, undefined, 
+// OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
 
 // type MongooseTypeObject<T extends RecordInputTypeFormat,
 // Optional extends 'Req' | 'Op',
@@ -428,9 +392,9 @@ OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints
 // IMTypeModifiersWithNeastedConstraints<Optional, Readonly, undefined, RefType, OptionalConstraints, ReadonlyConstraints, undefined, RefTypeConstraints>
 
 
-type MongooseTypeRef<Ref extends TsTypesPrimatives, RefImpl extends IMongooseSchemas<any, any, any, any, any, any, any>,
-Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends Array<any> | undefined
-> = IMongooseTSType<Ref, 'J', 'W'> & IMTypeModifiersWithNeastedConstraints<Optional, Readonly, Default, RefImpl>
+// type MongooseTypeRef<Ref extends TsTypesPrimatives, RefImpl extends IMongooseSchemas<any, any, any, any, any, any, any>,
+// Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends Array<any> | undefined
+// > = IMongooseTSTypeOnly<Ref, 'J'> & IMTypeModifiersWithNeastedConstraints<Optional, Readonly, Default, RefImpl>
 
 
 // Hybrid type, since we don't want to use the extends keyword, to check for the differance in structure between
@@ -444,60 +408,43 @@ export type Ref<RefId, RefImplem> = {
     RefImplem : RefImplem
 }
 
-// New set of Primatives
+// // New set of Primatives
 
-type MObjectId<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends boolean | undefined> = 
-MongooseTypePrimative<string, 'Req', 'Set', undefined> & Schema.Types.ObjectId;
+// type MObjectId<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends boolean | undefined> = 
+// IMongooseShape<IShapeTSType<,string, 'Req', 'Set', undefined> & Schema.Types.ObjectId;
 
 type MBoolean<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends boolean | undefined> = 
-MongooseTypePrimative<boolean, Optional, Readonly, Default> & Schema.Types.Boolean;
+IMongooseShape<IShapeTSType<boolean>, Optional, Readonly, Default> & Schema.Types.Boolean;
 
 type MNumber<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends number | undefined> = 
-MongooseTypePrimative<number, Optional, Readonly, Default> & Schema.Types.Number;
+IMongooseShape<IShapeTSType<number>, Optional, Readonly, Default> & Schema.Types.Number;
 
 type MString<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends string | undefined> = 
-MongooseTypePrimative<string, Optional, Readonly, Default> & Schema.Types.String;
+IMongooseShape<IShapeTSType<string>, Optional, Readonly, Default> & Schema.Types.String;
 
 type MDate<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set', Default extends Date | undefined> = 
-MongooseTypePrimative<Date, Optional, Readonly, Default> & Schema.Types.Date;
+IMongooseShape<IShapeTSType<Date>, Optional, Readonly, Default> & Schema.Types.Date;
 
-//type MObjectId<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set'> = 
-//MongooseTypePrimative<string, Optional, Readonly, undefined> & Schema.Types.ObjectId;
+// type MObject<
+// Items extends IMTypeModifiersRecord<
+// OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints,
+// OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
+// Optional extends 'Req' | 'Op',
+// Readonly extends 'Get' | 'Set',
+// Default extends Record<string, TsTypesPrimatives> | undefined,
+// RefType extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined,
+// OptionalConstraints extends 'Req' | 'Op', 
+// ReadonlyConstraints extends 'Get' | 'Set',
+// DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
+// RefTypeConstraints extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined
+// > = 
+// IMongooseTSTypeRecord<Items, 'O'> & 
+// IMTypeModifiersWithNeastedConstraints<Optional, Readonly, Default, RefType, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
 
-// Potentially we can make the ts type for the buffer the true node.js type instead of string.
-type MBuffer<Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set'> = 
-MongooseTypePrimative<string, Optional, Readonly, undefined> & Schema.Types.Buffer;
-
-type MArray<Arr extends ArrayTypes, Optional extends 'Req' | 'Op', Readonly extends 'Get' | 'Set',
-Default extends [] | undefined,
-OptionalConstraints extends 'Req' | 'Op', 
-ReadonlyConstraints extends 'Get' | 'Set',
-DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
-RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
-InputForm extends 'P' | 'W' = 'W'
-> = 
-MongooseTypeArray<Arr, Optional, Readonly, Default, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints, InputForm> & Schema.Types.Array;
-
-type MObject<
-Items extends IMTypeModifiersRecord<
-OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints,
-OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
-Optional extends 'Req' | 'Op',
-Readonly extends 'Get' | 'Set',
-Default extends Record<string, TsTypesPrimatives> | undefined,
-RefType extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined,
-OptionalConstraints extends 'Req' | 'Op', 
-ReadonlyConstraints extends 'Get' | 'Set',
-DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
-RefTypeConstraints extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined
-> = 
-IMongooseTSType<Items, 'O', 'P'> & 
-IMTypeModifiersWithNeastedConstraints<Optional, Readonly, Default, RefType, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
-
-type MRef<Ref extends TsTypesPrimatives, RefType extends IMongooseSchemas<any,any,any,any,any,any,any>,
-Optional extends 'Req' | 'Op',
-Readonly extends 'Get' | 'Set'> = 
-MongooseTypeRef<Ref, RefType, Optional, Readonly, undefined>;
+// type MRef<Ref extends TsTypesPrimatives, RefType extends IMongooseSchemas<any,any,any,any,any,any,any>,
+// Optional extends 'Req' | 'Op',
+// Readonly extends 'Get' | 'Set'> = 
+// MongooseTypeRef<Ref, RefType, Optional, Readonly, undefined>;
 
 
 // Primatives
@@ -600,6 +547,20 @@ interface MObject
 
 class MTypeArray {
 
+    static default<
+    OptionalConstraints extends 'Req' | 'Op', 
+    ReadonlyConstraints extends 'Get' | 'Set',
+    DefaultConstraints extends ([] | undefined),
+    RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
+    ArrayItems extends IMongooseShape<IShape, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
+    Required extends 'Req' | 'Op' = 'Op', 
+    Default extends ([] | undefined) = [], 
+    ReadOnly extends 'Get' | 'Set' = 'Set'
+    >
+    (item: ArrayItems, options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
+    : IMongooseShape<IShapeTSArrayNeasted<ArrayItems>,Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
+    & Schema.Types.Array;
+
     // static default <ArrayItems extends InputTypeFormat,
     // Required extends 'Req' | 'Op' = 'Req', 
     // Default extends ([] | undefined) = [], 
@@ -621,22 +582,14 @@ class MTypeArray {
     Default extends ([] | undefined) = [], 
     ReadOnly extends 'Get' | 'Set' = 'Set'>
     (item: ArrayItems, options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
-    : MArray<ArrayItems, Required, ReadOnly, Default, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints, 'P'>
+    : IMongooseShape<IShapeTSArrayRecord<ArrayItems>,Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
+    & Schema.Types.Array
+    //IMongooseTSTypeRecord<ArrayItems, 'A'> & IMTypeModifiersWithNeastedConstraints<Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
+    //;
+    //MArray<ArrayItems, Required, ReadOnly, Default, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints, 'P'>
 
-    static default <
-    OptionalConstraints extends 'Req' | 'Op', 
-    ReadonlyConstraints extends 'Get' | 'Set',
-    DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
-    RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
-    ArrayItems extends InputTypeFormat<OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
-    Required extends 'Req' | 'Op' = 'Op', 
-    Default extends ([] | undefined) = [], 
-    ReadOnly extends 'Get' | 'Set' = 'Set'
-    >
-
-    (item: ArrayItems, options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
-    : MArray<{w:ArrayItems}, Required, ReadOnly, Default, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints, 'W'>
-
+    
+    
     static default(items : any, options?: {required?: any, readonly?: any, default?: any}) : never & 'Invalid Type Inputs'
     {
         return MongooseTypes(items, options) as never;
@@ -644,47 +597,48 @@ class MTypeArray {
 }
 
 
-class MTypeObject {
-    // Required to pass tought in an inverse way the constraints, into the return type
-    // to ensure that all the parameters match...
-    // mm how do I do this.
-    // There are the requirements of this document, which need to be met.
-    // So one of the ways, I can think of doing this is that mixing in the constaint for lower level rquire ment,
-    // but there is no such thing as higher or lower qualifying requirement.
-    // The only other way is for me to implement auxilary fields that can pass tought constraints,
-    // which are just there for 
-    static default <
-    Required extends 'Req' | 'Op', 
-    ReadOnly extends 'Get' | 'Set',
-    Default extends Record<string, TsTypesPrimatives> | undefined,
-    RefType extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
-    OptionalConstraints extends 'Req' | 'Op', 
-    ReadonlyConstraints extends 'Get' | 'Set',
-    DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
-    RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
-    ObjectItems extends IMTypeModifiersRecord<
-    OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints, 
-    OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
-    >(object: ObjectItems, options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
-    : 
-    MObject<ObjectItems, Required, ReadOnly, Default, RefType, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
+// class MTypeObject {
+//     // Required to pass tought in an inverse way the constraints, into the return type
+//     // to ensure that all the parameters match...
+//     // mm how do I do this.
+//     // There are the requirements of this document, which need to be met.
+//     // So one of the ways, I can think of doing this is that mixing in the constaint for lower level rquire ment,
+//     // but there is no such thing as higher or lower qualifying requirement.
+//     // The only other way is for me to implement auxilary fields that can pass tought constraints,
+//     // which are just there for 
+//     static default <
+//     Required extends 'Req' | 'Op', 
+//     ReadOnly extends 'Get' | 'Set',
+//     Default extends Record<string, TsTypesPrimatives> | undefined,
+//     RefType extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
+//     OptionalConstraints extends 'Req' | 'Op', 
+//     ReadonlyConstraints extends 'Get' | 'Set',
+//     DefaultConstraints extends Record<string, TsTypesPrimatives> | undefined,
+//     RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
+//     ObjectItems extends IMTypeModifiersRecord<
+//     OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints, 
+//     OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
+//     >(object: ObjectItems, options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
+//     : 
+//     IMongooseShape<IShapeTSRecord<ObjectItems>,Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
+//     & Schema.Types.;
 
-    static default(object : any, options?: {required?: any, readonly?: any, default?: any}) : never & 'Invalid Type Inputs'
-    {
-        return MongooseTypes(object, options, true) as never;
-    }
-}
+//     static default(object : any, options?: {required?: any, readonly?: any, default?: any}) : never & 'Invalid Type Inputs'
+//     {
+//         return MongooseTypes(object, options, true) as never;
+//     }
+// }
 
 
 const MTypes = {
 
-    ObjectId : () => mongoose.Schema.Types.ObjectId as any as IMongooseTSType<string,'T','P'> & IMTypeModifiers<'Req', 'Set', undefined>,
+    ObjectId : () => mongoose.Schema.Types.ObjectId as any as IShapeTSType<string> & IMTypeModifiers<'Req', 'Set', undefined>,
 
     Boolean : <Required extends 'Req' | 'Op' = 'Op', 
             Default extends (boolean | undefined) = undefined, 
             ReadOnly extends 'Get' | 'Set' = 'Set'>
         (options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
-             => MongooseTypes(Schema.Types.Boolean, options) as MBoolean<Required, ReadOnly, Default>,
+        => MongooseTypes(Schema.Types.Boolean, options) as MBoolean<Required, ReadOnly, Default>,
 
     
     Number : <Required extends 'Req' | 'Op' = 'Op', 
@@ -706,7 +660,7 @@ const MTypes = {
         => MongooseTypes(Schema.Types.Date, options) as MDate<Required, ReadOnly, Default>,
 
     Array : MTypeArray.default,
-    Object : MTypeObject.default,
+    //Object : MTypeObject.default,
     Record : <Required extends 'Req' | 'Op', 
     ReadOnly extends 'Get' | 'Set',
     Default extends undefined,
@@ -716,69 +670,124 @@ const MTypes = {
     DefaultConstraints extends TsTypesPrimatives | Array<any> | undefined,
     RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
     Record extends IMTypeModifiersRecord<OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>>(record : Record)
-    => record as any as IMongooseTSType<Record, 'R', 'P'> & 
-    IMTypeModifiersWithNeastedConstraints<Required, ReadOnly, Default, RefType, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
-    
+    => record as any as IMongooseShape<IShapeTSRecord<Record>, Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
 
-    Schema :  <NeastedSchemas extends IMongoosePartialSchema<any, any, any, any, any, any>,
-    Required extends 'Req' | 'Op' = 'Op', 
-    ReadOnly extends 'Get' | 'Set' = 'Set'
-    >
-    (object : NeastedSchemas, options? : {required?: Required, readonly?: ReadOnly, default?: never} & SchemaFieldOptionsAll)
-     => MongooseTypes(object, options) as IMongooseTSType<{w:NeastedSchemas}, 'S', 'W'> & 
-    IMTypeModifiersWithNeastedConstraints<Required, ReadOnly, undefined, undefined, any, any, any, any>
+    // Schema :  <NeastedSchemas extends IMongoosePartialSchema<any, any, any, any, any, any>,
+    // Required extends 'Req' | 'Op' = 'Op', 
+    // ReadOnly extends 'Get' | 'Set' = 'Set'
+    // >
+    // (object : NeastedSchemas, options? : {required?: Required, readonly?: ReadOnly, default?: never} & SchemaFieldOptionsAll)
+    //  => MongooseTypes(object, options) as IMongooseTSTypeSchema<NeastedSchemas, 'S'> & 
+    // IMTypeModifiersWithNeastedConstraints<Required, ReadOnly, undefined, undefined, any, any, any, any>
 
-    ,
+    // ,
     //MongooseTypes(Schema.Types.Boolean, options) as MBuffer,// MoggooseType<Schema.Types.Buffer, Options, MBuffer>,
 
     Ref:<MSchema extends IMongooseSchemas<any, any, any, any, any, any, any>,
     Required extends 'Req' | 'Op' = 'Op', 
-    ReadOnly extends 'Get' | 'Set' = 'Set'
+    ReadOnly extends 'Get' | 'Set' = 'Set',
     >(refSchema: MSchema, options? : {required?: Required, readonly?: ReadOnly, default?: never} & SchemaFieldOptionsAll)
-    => MongooseTypes(refSchema['__Id'], { options , ref: refSchema['__Name'] }) as any as MRef<MSchema['__Id'], MSchema, Required, ReadOnly>
+    => MongooseTypes(refSchema['__Id'], { options , ref: refSchema['__Name'] }) as any as IMongooseShape<IShapeTSRef<MSchema['__Id']['__tsType']>, Required, ReadOnly, undefined, MSchema,  undefined, undefined, undefined, undefined>
 };
 
+const mRight = new MSchema('Right', MTypes.ObjectId(), {a: MTypes.Number({required:'Req'})},{},{},{},{},{},{});
+
+const mMumberSchema = new MSchema('MyCusCollection', MTypes.ObjectId(),{a : MTypes.Number({required:'Req', }), b: MTypes.Boolean(), c: MTypes.String(), d: MTypes.Date(),
+e: MTypes.Array(MTypes.Number({required:'Req'})), f: MTypes.Array({z:MTypes.Number(), y: MTypes.Boolean()}), g: MTypes.Record({m:MTypes.Number()})
+},{m : MTypes.Ref(mRight, {required:'Req'})},{},{},{},{},{});
+
+const mTypes = MTypes.Ref(mRight, {required:'Req'});
+
+type ulu = typeof mTypes;
+type kkkk  = ulu['__tsType'];
 
 
-// naturally nest documents....
-// Map, is basically a document. and an Array
-
-//Record<string, (IMongooseTSType<any,any,any> & IMTypeModifiersWithNeastedConstraints<Optional, Readonly, Default, RefType, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints> ) |
-
-
-const mMumberSchema = new MSchema('MyCusCollection', MTypes.ObjectId(),{a : MTypes.Number({required:'Req', }), b: MTypes.Boolean() , c: MTypes.String(), d: MTypes.Date(),
-e: MTypes.Array(MTypes.Number()), f: MTypes.Array({z:MTypes.Number(), y: MTypes.Boolean()}), g: MTypes.Record({})
-},{},{},{},{},{},{});
-
-type ExtractRequiredOptionalMod<Mod extends IMongooseTSType<any,any,any> & IMTypeModifiersWithNeastedConstraints<any,any,any,any>, T> = ({
+type ExtractRequiredOptionalMod<Mod extends IMTypeModifiersWithNeastedConstraints<any,any,any,any>, T extends any> = ({
     'Req' : T 
     'Op' : T | undefined
 })[Mod['__Optional']];
 
-type ExtractTSTYpe<Mod extends IMongooseTSType<any,any,any> & IMTypeModifiersWithNeastedConstraints<any,any,any,any>> = Mod['__tsType'];
-
-type ExtractInputForm<
-Mod extends IMongooseTSType<any,any,any> & IMTypeModifiersWithNeastedConstraints<any,any,any,any>,
- T extends any> = ({
-    'P' : T,
-    'W' : T['w']
-})[Mod['__InputForm']];
-
-// We don't have to handle readonly, because we have broken everything up upfront
-// when defining the schema.
-
 type ExtractSchemaRecord<T extends IMTypeModifiersRecord<any,any,any,any>> = {
     [P in keyof T] : 
     ({
-        'T' : ExtractType<T[P]>,
-        'O' : ExtractRequiredOptionalMod<T[P], ExtractSchemaRecord<T[P]['__tsType']>>,
-        'A' : ExtractRequiredOptionalMod<T[P], ExtractInputForm<T[P], ExtractSchemaRecord<T[P]['__tsType']>>>,
-        'J' : 'Invalid Option here'
-        'R' : ExtractSchemaRecord<T[P]['__tsType']>
+        'T' : ExtractRequiredOptionalMod<T[P], T[P]['__tsType']>,
+        'R' : ExtractRequiredOptionalMod<T[P], ExtractSchemaRecord<T[P]['__tsType']>>,
+        'AN' : ExtractRequiredOptionalMod<T[P],ExtractSchemaRecord<T[P]['__tsType']>['w'][]>,
+        'AR' : ExtractRequiredOptionalMod<T[P],ExtractSchemaRecord<T[P]['__tsType']>[]>
+        'Ref' : 'Invalid Option here'
         'S' : 'Invalid Option Here'
     })[T[P]['__ID']]
 }
 
+
+
+
+
+type ExtractSchemaRecordWithPathsPartial<T extends IMTypeModifiersRecord<any,any,any,any>, Paths extends Record<string, any> = {}, KeysOfPaths = keyof Paths> = {
+    [P in keyof T] : 
+    ({
+        'T' : ExtractRequiredOptionalMod<T[P], T[P]['__tsType']>,
+        'R' : ExtractRequiredOptionalMod<T[P], ExtractSchemaRecord<T[P]['__tsType']>>,
+        'AN' : ExtractRequiredOptionalMod<T[P], ExtractSchemaRecord<T[P]['__tsType']>['w'][]>,
+        'AR' : ExtractRequiredOptionalMod<T[P], ExtractSchemaRecord<T[P]['__tsType']>[]>
+        'Ref' : P extends keyof Paths ? 
+            &
+            ExtractSchemaRecordWithPathsPartial<T[P]['__RefType']['__ModRef'], Paths[P]> 
+        
+            : T[P]['__tsType'],
+        'S' : 'Invalid Option Here'
+    })[T[P]['__ID']]
+}
+/*
+ __Mod : Mod
+    __ModRef : ModRef
+    __NonOpReadDefault : NonOpReadDefault
+    __NonOpROptional : NonOpROptional
+    __NDefault : NDefault
+    __NeastedSchema : NeastedSchemas
+*/
+
+
+type ExtractNoRefSchema<MSchema extends IMongooseSchemas<any, any, any, any, any, any, any>> = 
+ExtractSchemaRecord<MSchema['__Id']> & 
+ExtractSchemaRecord<MSchema['__Mod']> & 
+ExtractSchemaRecord<MSchema['__NDefault']> & 
+ExtractSchemaRecord<MSchema['__NonOpROptional']> & 
+ExtractSchemaRecord<MSchema['__NonOpReadDefault']>
+
+type ExtractFullSchema<MSchema extends IMongooseSchemas<any, any, any, any, any, any, any>, Paths extends Record<string, any> = {}> = 
+ExtractSchemaRecord<MSchema['__Id']> & 
+ExtractSchemaRecord<MSchema['__Mod']> & 
+ExtractSchemaRecord<MSchema['__NDefault']> & 
+ExtractSchemaRecord<MSchema['__NonOpROptional']> & 
+ExtractSchemaRecord<MSchema['__NonOpReadDefault']> & 
+ExtractSchemaRecordWithPathsPartial<MSchema['__ModRef'], Paths>
+
+type tekkst = ExtractSchemaRecord<typeof mMumberSchema['__Mod']>;
+
+const tek : tekkst = {
+    a: 234,
+    b : true,
+    c: '',
+    d: new Date(),
+    e : [],
+    f: [{
+        z : 223,
+        y: true
+    }],
+    g:
+    {
+        m: 234
+    }
+}
+
+type refImpl = ExtractSchemaRecordWithPathsPartial<typeof mMumberSchema['__ModRef'], {m:{}}>;
+
+const refImpl : refImpl = {
+m : {
+
+}
+}
 
 
 
