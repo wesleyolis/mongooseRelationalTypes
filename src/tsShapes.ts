@@ -87,3 +87,28 @@ function capture<Shape extends IMongooseShape<any,any,any>, ID extends Shape['__
 const myClass = new MyClass({a:false} as any as ShapeTsType<boolean>);
 
 const captured = capture(myClass);
+
+interface Builder<A extends string, B extends string>
+{
+}
+
+type AString = 'A' | 'E' | 'G';
+type BString = 'B' | 'F' | 'H';
+
+type RecordBuilder<A extends AString, B extends BString> = Record<string, Builder<A,B>>
+
+const builderRecord = {
+    a : {} as any as Builder<'A','B'>,
+    e : {} as any as Builder<'E','F'>,
+    g : {} as any as Builder<'G','F'>,
+}
+
+function Capture<A extends 'A', B extends BString, Rec extends RecordBuilder<A, B>>(record : Rec) : {Ra:A,Rb:B}
+{
+    return {} as  {Ra:A,Rb:B};
+}
+
+const result =
+{
+    a:Capture(builderRecord)
+}
