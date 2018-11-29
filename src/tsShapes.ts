@@ -68,16 +68,22 @@ Optional extends 'Req' | 'Op',
 Readonly extends 'Get' | 'Set'
 > = Shape & IMTypeModifiersWithNeastedConstraints<Optional, Readonly>
  
+type IDS<T extends ShapeTsType<any>> = T
 
-class MyClass<ID extends string> {
 
-    constructor(public __ID : ID)
+class MyClass<Shape extends IDS<any>> {
+
+    constructor(public __ID : Shape)
     {
-        
+
     }
 }
 
-function neasted<ID extends string>(id : ID) : IMongooseShape<ShapeTsType<ID>, 'Req','Set'>
+function capture<Shape extends IMongooseShape<any,any,any>, ID extends Shape['__ID']['__Type']>(shape : Shape) : IMongooseShape<ShapeTsType<ID>, 'Req','Set'>
 {
     return {} as any;
 }
+
+const myClass = new MyClass({a:false} as any as ShapeTsType<boolean>);
+
+const captured = capture(myClass);

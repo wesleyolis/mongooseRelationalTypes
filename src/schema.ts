@@ -3,6 +3,51 @@ import * as mongoose from 'mongoose';
 import {Schema, SchemaDefinition, SchemaTypeOpts, SchemaType, Types} from 'mongoose'
 import {If, ObjectHasKey, ObjectOptional, ObjectOmit, ObjectClean, Bool, StringOmit, StringEq, ObjectOverwrite, Option} from './tstypelevel';
 import { StringContains, ObjectDiff } from './tstypelevel';
+import { Module } from 'module';
+import { ENGINE_METHOD_PKEY_METHS } from 'constants';
+
+/*
+--------------------------
+Helpers Routines
+--------------------------
+*/
+
+/*
+RecusivePick using extends, which using type interigation.
+*/
+//const ___CPTSymbol = Symbol()
+
+type ICPT<T> = {
+    
+    ___CPTSymbol : T
+    //[___CPTSymbol] : T
+}
+
+type RecusivePick<Object extends Record<string, any>,
+Condition extends Record<string, any> | string | number | boolean, 
+StopCondition extends Record<string, any> | ICPT<any> | undefined = undefined,
+StopConditionEnhanced = string | boolean | number | Date | StopCondition> =
+Pick<
+{
+    [K in keyof Object]
+        : Object[K] extends StopConditionEnhanced ? Object[K]
+            : Object[K] extends Array<infer A>? RecusivePick<A, Condition, StopCondition> []
+            : Object[K] extends Array<infer A> | undefined ? RecusivePick<A, Condition, StopCondition> [] | undefined
+            : RecusivePick<Object[K], Condition, StopCondition>
+}
+,{
+    [K in keyof Object] 
+        : Object[K] extends StopConditionEnhanced ? (Object[K] extends Condition ? K : never) 
+            : Object[K] extends Record<string,never> ? never 
+            : Object[K] extends Array<Record<string,never>> ? never 
+            : Object[K] extends Array<Record<string,never>> | undefined ? never 
+            : K // Only want this key if the object is not empty
+}[keyof Object]>
+
+/*
+recusivePick using HasKeyValue, which should be fasters, but is more complex and not as generic, because
+it will need to use
+*/
 
 // SchemaFormats
 // -------------------------------------
@@ -81,47 +126,50 @@ type TsTypesPrimatives = boolean | number | string | Date;  // this should actua
 
 type ID = 'T' | 'R' | 'AR' | 'AN' | 'Ref' | 'S'
 
-type IShape = 
+
+type IShape<Constaint extends IShape<any>> = 
 IShapeTSType<any> 
-| IShapeTSRecord<any> 
-| IShapeTSArrayNeasted<any> 
-| IShapeTSArrayRecord<any>
+| IShapeContainers<Constaint>
 | IShapeTSRef<any>
+| IShapeTSSchema<any>
 
+type IShapeContainers<Constaint extends IShape<any>> = IShapeTSRecord<any,Constaint> | IShapeTSArrayNeasted<any, Constaint> | IShapeTSArrayRecord<any, Constaint>
 
-interface IShapeTSType<T extends TsTypesPrimatives>
+interface IShapeTSNeastedConstaint<T extends IShape<any> | undefined>
+{
+}
+
+interface IShapeTSType<T extends TsTypesPrimatives> extends IShapeTSNeastedConstaint<undefined>
 {
     __tsType : T;
     __ID: 'T';
 }
 
-interface IShapeTSRecord<T extends Record<string, IShape>>
+interface IShapeTSRecord<T extends Record<string, IShape<any>>, Constraint extends IShape<any> | undefined> extends IShapeTSNeastedConstaint<Constraint>
 {
     __tsType : T;
     __ID: 'R';
 }
 
-interface IShapeTSArrayNeasted<T extends IShape>
+interface IShapeTSArrayNeasted<T extends IShape<any>, Constraint extends IShape<any> | undefined> extends IShapeTSNeastedConstaint<Constraint>
 {
     __tsType : {w:T};
     __ID: 'AN';
 }
 
-interface IShapeTSArrayRecord<T extends Record<string, IShape>>
+interface IShapeTSArrayRecord<T extends Record<string, IShape<any>>, Constraint extends IShape<any> | undefined> extends IShapeTSNeastedConstaint<Constraint>
 {
     __tsType : T;
     __ID: 'AR';
 }
 
-
-interface IShapeTSRef<T extends TsTypesPrimatives>
+interface IShapeTSRef<T extends TsTypesPrimatives> extends IShapeTSNeastedConstaint<undefined>
 {
     __tsType : T;
     __ID: 'Ref';
 }
 
-
-interface IShapeTSSchema<T extends Record<string, IShape>>
+interface IShapeTSSchema<T extends IMongooseSchemas<any, any, any, any, any, any, any>> extends IShapeTSNeastedConstaint<undefined>
 {
     __tsType : T;
     __ID: 'S';
@@ -157,10 +205,10 @@ interface IMTypeModifiersWithNeastedConstraints<
 }
 
 type IMongooseShape<
-Shape extends IShape,
+Shape extends IShape<any>,
 Optional extends 'Req' | 'Op',
 Readonly extends 'Get' | 'Set',
-Default extends (Shape extends (IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>) ? [] : 
+Default extends (Shape extends (IShapeTSArrayNeasted<any, any> | IShapeTSArrayRecord<any, any>) ? [] : 
 TsTypesPrimatives | Array<any> | Record<string,TsTypesPrimatives> | TsTypesPrimatives) | undefined,
 //Shape['__tsType']) | undefined, This needs to be the extracted form.. update this later, once developed.
 RefType extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined = undefined,
@@ -178,6 +226,7 @@ interface IMSchemaId<ID extends MongooseTypes>
 }
 
 interface IMTypeModifiersRecord<
+Shape extends IShape<any>,
 Optional extends 'Req' | 'Op',
 Readonly extends 'Get' | 'Set',
 Default extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
@@ -187,7 +236,7 @@ ReadonlyConstraints extends 'Get' | 'Set' = Readonly,
 DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined = Default,
 RefTypeConstraints extends IMongooseSchemas<any,any,any,any,any,any,any> | undefined = RefType,
 > extends
-Record<string, IMongooseShape<any, Optional, Readonly, Default, RefType, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>>
+Record<string, IMongooseShape<Shape, Optional, Readonly, Default, RefType, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>>
 {
 }
 
@@ -231,12 +280,12 @@ type SchemaTypeID<ID extends IMongooseShape<IShapeTSType<any>, 'Req', 'Set', und
 // The best I can really do is write Record schema formate, so that the input is validated.
 interface IMongooseSchemas<
     Id extends string,//SchemaTypeID<any>,
-    Mod extends IMTypeModifiersRecord<any, 'Set', undefined, undefined>,
-    ModRef extends IMTypeModifiersRecord<any, 'Set', undefined, any>,
-    NonOpReadDefault extends IMTypeModifiersRecord<'Req', 'Get', undefined, undefined>,
-    NonOpROptional extends IMTypeModifiersRecord<'Req', 'Get', any, undefined>,
-    NDefault extends IMTypeModifiersRecord<'Op', any, MongooseTypes, undefined>,
-    NeastedSchemas extends IMongoosePartialSchemaRecord<any, any, any, any, any, any>
+    Mod extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>, any, 'Set', undefined, undefined>,
+    ModRef extends IMTypeModifiersRecord<IShapeContainers<IShapeTSRef<any>> | IShapeTSRef<any>,any, 'Set', undefined, any>,
+    NonOpReadDefault extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>,'Req', 'Get', undefined, undefined>,
+    NonOpROptional extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>, 'Req', 'Get', any, undefined>,
+    NDefault extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>, 'Op', any, MongooseTypes, undefined>,
+    NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>
     > extends IMongoosePartialSchema<Mod, ModRef, NonOpReadDefault, NonOpROptional, NDefault, NeastedSchemas>
 {
     __Name : string // This is a default name, that can be used for the model, which can be overidden by the model.
@@ -255,22 +304,32 @@ interface IMongooseSchemas<
     __Id : Id
 }
 
-type IMongoosePartialSchemaRecord<
-Mod extends IMTypeModifiersRecord<any, 'Set', undefined, undefined>,
-ModRef extends IMTypeModifiersRecord<any, 'Set', undefined, any>,
-NonOpReadDefault extends IMTypeModifiersRecord<'Req', 'Get', undefined, undefined>,
-NonOpROptional extends IMTypeModifiersRecord<'Req', 'Get', any, undefined>,
-NDefault extends IMTypeModifiersRecord<'Op', any, MongooseTypes, undefined>,
-NeastedSchemas extends IMongoosePartialSchemaRecord<any, any, any, any, any, any>
-> = Record<string, IMongoosePartialSchema<Mod, ModRef, NonOpReadDefault, NonOpROptional, NDefault, NeastedSchemas>>
+type INeastedSchemaRecord<
+Mod extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>,any, 'Set', undefined, undefined>,
+ModRef extends IMTypeModifiersRecord<IShapeContainers<IShapeTSRef<any>> | IShapeTSRef<any>,any, 'Set', undefined, any>,
+NonOpReadDefault extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>,'Req', 'Get', undefined, undefined>,
+NonOpROptional extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>,'Req', 'Get', any, undefined>,
+NDefault extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>,'Op', any, MongooseTypes, undefined>,
+NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>
+> = Record<string, (IMongooseShape<IShapeContainers<IShapeTSType<any>> | IShapeTSSchema<any>, any, any, any, any>)>
+
+
+// type IMongoosePartialSchemaRecord<
+// Mod extends IMTypeModifiersRecord<any, 'Set', undefined, undefined>,
+// ModRef extends IMTypeModifiersRecord<any, 'Set', undefined, any>,
+// NonOpReadDefault extends IMTypeModifiersRecord<'Req', 'Get', undefined, undefined>,
+// NonOpROptional extends IMTypeModifiersRecord<'Req', 'Get', any, undefined>,
+// NDefault extends IMTypeModifiersRecord<'Op', any, MongooseTypes, undefined>,
+// NeastedSchemas extends IMongoosePartialSchemaRecord<any, any, any, any, any, any>
+// > = Record<string, IMongoosePartialSchema<Mod, ModRef, NonOpReadDefault, NonOpROptional, NDefault, NeastedSchemas>>
 
 interface IMongoosePartialSchema<
-    Mod extends IMTypeModifiersRecord<any, 'Set', undefined, undefined>,
-    ModRef extends IMTypeModifiersRecord<any, 'Set', undefined, any> | undefined,
-    NonOpReadDefault extends IMTypeModifiersRecord<'Req', 'Get', undefined, undefined> | Record<never, never>,
-    NonOpROptional extends IMTypeModifiersRecord<'Req', 'Get', any, undefined> | Record<never, never>,
-    NDefault extends IMTypeModifiersRecord<'Op', any, MongooseTypes, undefined> | Record<never, never>,
-    NeastedSchemas extends IMongoosePartialSchemaRecord<any, any, any, any, any, any>
+    Mod extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>, any, 'Set', undefined, undefined>,
+    ModRef extends IMTypeModifiersRecord<IShapeContainers<IShapeTSRef<any>> | IShapeTSRef<any>, any, 'Set', undefined, any> | undefined,
+    NonOpReadDefault extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>, 'Req', 'Get', undefined, undefined> | Record<never, never>,
+    NonOpROptional extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>, 'Req', 'Get', any, undefined> | Record<never, never>,
+    NDefault extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>, 'Op', any, MongooseTypes, undefined> | Record<never, never>,
+    NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>
     >
 {
     __Mod : Mod
@@ -283,13 +342,13 @@ interface IMongoosePartialSchema<
 
 // I will have to figure out the defaults, because there seems to be a typescript bug of stores.
 // Which is a problem. Ask peire see if he has any ideas, lets press on with the other things.
-class MSchema<Id extends SchemaTypeID<any>,
-Mod extends IMTypeModifiersRecord<any, 'Set', undefined, undefined>,
-ModRef extends IMTypeModifiersRecord<any, 'Set', undefined, any>,
-NonOpReadDefault extends IMTypeModifiersRecord<'Req', 'Get', undefined, undefined>,
-NonOpROptional extends IMTypeModifiersRecord<'Req', 'Get', any, undefined>,
-NDefault extends IMTypeModifiersRecord<'Op', any, MongooseTypes, undefined>,
-NeastedSchemas extends IMongoosePartialSchemaRecord<any, any, any, any, any, any>>
+class MSchema<Id extends string,
+Mod extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>,any, 'Set', undefined, undefined>,
+ModRef extends IMTypeModifiersRecord<IShapeContainers<IShapeTSRef<any>> | IShapeTSRef<any>,any, 'Set', undefined, any>,
+NonOpReadDefault extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>, 'Req', 'Get', undefined, undefined>,
+NonOpROptional extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>,'Req', 'Get', any, undefined>,
+NDefault extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>> | IShapeTSType<any>,'Op', any, MongooseTypes, undefined>,
+NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>>
 extends Schema implements IMongooseSchemas<Id, Mod, ModRef, NonOpReadDefault, NonOpROptional, NDefault, NeastedSchemas> 
 {
     constructor(
@@ -320,12 +379,12 @@ extends Schema implements IMongooseSchemas<Id, Mod, ModRef, NonOpReadDefault, No
 // Partial Schema, which still needs to refect the id,
 // but that should be done by linking it to the base parent schema, which defines some base concepts.
 class MSchemaPartial<BaseSchema extends MSchema<any, any, any, any, any, any, any>,
-Mod extends IMTypeModifiersRecord<any, 'Set', undefined, undefined>,
-ModRef extends IMTypeModifiersRecord<any, 'Set', undefined, any>,
-NonOpReadDefault extends IMTypeModifiersRecord<'Req', 'Get', undefined, undefined>,
-NonOpROptional extends IMTypeModifiersRecord<'Req', 'Get', any, undefined>,
-NDefault extends IMTypeModifiersRecord<'Op', any, MongooseTypes, undefined>,
-NeastedSchemas extends IMongoosePartialSchemaRecord<any, any, any, any, any, any>>
+Mod extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>>  | IShapeTSType<any>, any, 'Set', undefined, undefined>,
+ModRef extends IMTypeModifiersRecord<IShapeContainers<IShapeTSRef<any>>  | IShapeTSRef<any>, any, 'Set', undefined, any>,
+NonOpReadDefault extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>>  | IShapeTSType<any>, 'Req', 'Get', undefined, undefined>,
+NonOpROptional extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>>  | IShapeTSType<any>, 'Req', 'Get', any, undefined>,
+NDefault extends IMTypeModifiersRecord<IShapeContainers<IShapeTSType<any>>  | IShapeTSType<any>, 'Op', any, MongooseTypes, undefined>,
+NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>>
 extends Schema implements IMongooseSchemas<BaseSchema['__Id'], Mod, ModRef, NonOpReadDefault, NonOpROptional, NDefault, NeastedSchemas>
 {
     constructor(
@@ -552,13 +611,14 @@ class MTypeArray {
     ReadonlyConstraints extends 'Get' | 'Set',
     DefaultConstraints extends ([] | undefined),
     RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
-    ArrayItems extends IMongooseShape<IShape, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
+    ShapeConstaints extends IShape<any>,
+    ArrayItems extends IMongooseShape<IShape<ShapeConstaints>, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
     Required extends 'Req' | 'Op' = 'Op', 
     Default extends ([] | undefined) = [], 
     ReadOnly extends 'Get' | 'Set' = 'Set'
     >
     (item: ArrayItems, options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
-    : IMongooseShape<IShapeTSArrayNeasted<ArrayItems>,Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
+    : IMongooseShape<IShapeTSArrayNeasted<ArrayItems, ShapeConstaints>,Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
     & Schema.Types.Array;
 
     // static default <ArrayItems extends InputTypeFormat,
@@ -577,13 +637,15 @@ class MTypeArray {
     ReadonlyConstraints extends 'Get' | 'Set',
     DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
     RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
-    ArrayItems extends IMTypeModifiersRecord<OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
+    ShapeConstraints extends IShape<any>,
+    ArrayItems extends IMTypeModifiersRecord<ShapeConstraints, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
     Required extends 'Req' | 'Op' = 'Op', 
     Default extends ([] | undefined) = [], 
     ReadOnly extends 'Get' | 'Set' = 'Set'>
     (item: ArrayItems, options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
-    : IMongooseShape<IShapeTSArrayRecord<ArrayItems>,Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
-    & Schema.Types.Array
+    : ShapeConstraints
+    //IMongooseShape<IShapeTSArrayRecord<ArrayItems, ShapeConstraints>,Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
+    //& Schema.Types.Array
     //IMongooseTSTypeRecord<ArrayItems, 'A'> & IMTypeModifiersWithNeastedConstraints<Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
     //;
     //MArray<ArrayItems, Required, ReadOnly, Default, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints, 'P'>
@@ -669,8 +731,9 @@ const MTypes = {
     ReadonlyConstraints extends 'Get' | 'Set',
     DefaultConstraints extends TsTypesPrimatives | Array<any> | undefined,
     RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
-    Record extends IMTypeModifiersRecord<OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>>(record : Record)
-    => record as any as IMongooseShape<IShapeTSRecord<Record>, Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
+    ShapeConstraints extends IShape<any>,
+    Record extends IMTypeModifiersRecord<ShapeConstraints, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>>(record : Record)
+    => record as any as IMongooseShape<IShapeTSRecord<Record, ShapeConstraints>, Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
 
     // Schema :  <NeastedSchemas extends IMongoosePartialSchema<any, any, any, any, any, any>,
     // Required extends 'Req' | 'Op' = 'Op', 
@@ -698,72 +761,203 @@ e: MTypes.Array(MTypes.Number({required:'Req'})), f: MTypes.Array({z:MTypes.Numb
 
 const mTypes = MTypes.Ref(mRight, {required:'Req'});
 
-type ulu = typeof mTypes;
-type kkkk  = ulu['__tsType'];
-
-
-type ExtractRequiredOptionalMod<Mod extends IMTypeModifiersWithNeastedConstraints<any,any,any,any>, T extends any> = ({
+type EROM<Mod extends IMTypeModifiersWithNeastedConstraints<any,any,any,any>, T extends any> = ({
     'Req' : T 
     'Op' : T | undefined
 })[Mod['__Optional']];
 
-type ExtractSchemaRecord<T extends IMTypeModifiersRecord<any,any,any,any>> = {
+type ESR<T extends IMTypeModifiersRecord<any, any,any,any,any>> = {
     [P in keyof T] : 
     ({
-        'T' : ExtractRequiredOptionalMod<T[P], T[P]['__tsType']>,
-        'R' : ExtractRequiredOptionalMod<T[P], ExtractSchemaRecord<T[P]['__tsType']>>,
-        'AN' : ExtractRequiredOptionalMod<T[P],ExtractSchemaRecord<T[P]['__tsType']>['w'][]>,
-        'AR' : ExtractRequiredOptionalMod<T[P],ExtractSchemaRecord<T[P]['__tsType']>[]>
+        'T' : EROM<T[P], T[P]['__tsType']>,
+        'R' : EROM<T[P], ESR<T[P]['__tsType']>>,
+        'AN' : EROM<T[P],ESR<T[P]['__tsType']>['w'][]>,
+        'AR' : EROM<T[P],ESR<T[P]['__tsType']>[]>
         'Ref' : 'Invalid Option here'
         'S' : 'Invalid Option Here'
     })[T[P]['__ID']]
 }
 
-
-
-
-
-type ExtractSchemaRecordWithPathsPartial<T extends IMTypeModifiersRecord<any,any,any,any>, Paths extends Record<string, any> = {}, KeysOfPaths = keyof Paths> = {
+type ESRP<T extends IMTypeModifiersRecord<any,any,any,any,any>, Paths extends Record<string, any> = {}, KeysOfPaths = keyof Paths> = {
     [P in keyof T] : 
     ({
-        'T' : ExtractRequiredOptionalMod<T[P], T[P]['__tsType']>,
-        'R' : ExtractRequiredOptionalMod<T[P], ExtractSchemaRecord<T[P]['__tsType']>>,
-        'AN' : ExtractRequiredOptionalMod<T[P], ExtractSchemaRecord<T[P]['__tsType']>['w'][]>,
-        'AR' : ExtractRequiredOptionalMod<T[P], ExtractSchemaRecord<T[P]['__tsType']>[]>
-        'Ref' : P extends keyof Paths ? 
-            &
-            ExtractSchemaRecordWithPathsPartial<T[P]['__RefType']['__ModRef'], Paths[P]> 
-        
-            : T[P]['__tsType'],
+        'T' : EROM<T[P], T[P]['__tsType']>,
+        'R' : EROM<T[P], ESRP<T[P]['__tsType']>>,
+        'AN' : EROM<T[P], ESRP<T[P]['__tsType']>['w'][]>,
+        'AR' : EROM<T[P], ESRP<T[P]['__tsType']>[]>
+        'Ref' : P extends keyof Paths ? ESRP<T[P]['__RefType'], Paths[P]> : T[P]['__tsType'],
         'S' : 'Invalid Option Here'
     })[T[P]['__ID']]
 }
+
+type ESNRef<T extends INeastedSchemaRecord<any, any, any, any, any, any>,
+Path extends string = '__Mod' | '__NonOpReadDefault' | '__NonOpROptional' | '__NDefault'> =
+{
+    [P in keyof T] : 
+    ({
+        'T' : 'Invalid Option Here'
+        'R' : EROM<T[P], ESNR<T[P]['__tsType']>>
+        'AN' : EROM<T[P],ESNR<T[P]['__tsType']>['w'][]>
+        'AR' : EROM<T[P],ESNR<T[P]['__tsType']>[]>
+        'Ref' : T[P] // Unmodified.
+        'S' : ESR<T[P]['__tsType'][Path]>
+    })[T[P]['__ID']]
+}
+
+type ESNR<T extends INeastedSchemaRecord<any, any, any, any, any, any>,
+Path extends string = '__Mod' | '__NonOpReadDefault' | '__NonOpROptional' | '__NDefault'> =
+{
+    [P in keyof T] : 
+    ({
+        'T' : 'Invalid Option Here'
+        'R' : EROM<T[P], ESNR<T[P]['__tsType']>>
+        'AN' : EROM<T[P],ESNR<T[P]['__tsType']>['w'][]>
+        'AR' : EROM<T[P],ESNR<T[P]['__tsType']>[]>
+        'Ref' : T[P]['__tsType']
+        'S' : ESR<T[P]['__tsType'][Path]>
+    })[T[P]['__ID']]
+}
+
+// See if I can make mutiple different version of ModelRecordTsType, that check Required, Optional, Readonly
+// But this can only really be done in the latest typesript versions.
+export interface IModelParts<
+Id extends string, 
+Mod extends ModelRecordTsTypes<any>,
+NonOpReadDefault extends ModelRecordTsTypes<any>,
+NonOpROptional extends ModelRecordTsTypes<any>,
+NDefault extends ModelRecordTsTypes<any>,
+ModRefIds extends ModelRecordTsTypes<any>,      // Used to spesify it must have these fields, irrelavant if modRef is populated, only there for sub sections.
+ModRefTypes extends ModelRecordTsTypes<any>,    // User to spesify it msut have there fields irrelacant if Mod Ref is populated, only there for sub sections.
+ModRef extends IMTypeModifiersRecord<any, 'Set', undefined, any> // Use the populates or extraction method... but should be removed as soon as it is not required.
+>
+{
+    __Id: Id;
+    __Mod: Mod;
+    __NonOpReadDefault: NonOpReadDefault;
+    __NonOpROptional: NonOpROptional;
+    __NDefault: NDefault;
+    __ModRefIds : ModRefIds;
+    __ModRefTypes : ModRefTypes;    // These are all the readonly version of the referance.
+    __ModRef: ModRef;
+}
+
+type IModelPartsFromSchema<TMSchema extends MSchema<string, any, any, any, any, any, any>> = IModelParts<
+TMSchema['__Id'],
+ESR<TMSchema['__Mod']> & ESNR<TMSchema['__NeastedSchema'],'__Mod'>,
+ESR<TMSchema['__NonOpReadDefault'] & ESNR<TMSchema['__NeastedSchema'],'__NonOpReadDefault'>>,
+ESR<TMSchema['__NonOpROptional'] & ESNR<TMSchema['__NeastedSchema'],'__NonOpReadDefault'>>,
+ESR<TMSchema['__NDefault'] & ESNR<TMSchema['__NeastedSchema'],'__NDefault'>>,
+ESR<TMSchema['__ModRef'] & ESNR<TMSchema['__NeastedSchema'],'__ModRef'>>, 
+{},
+ESR<TMSchema['__ModRef'] & ESNR<TMSchema['__NeastedSchema'],'__ModRef'>>
+>
+
+interface ModelRecordTsTypes<TS extends TsTypesPrimatives> extends Record<string, TS | ModelRecordTsTypes<any>>
+{
+}
+
+declare module 'mongoose'
+{
+    function model<
+    TMSchema extends MSchema<string, any, any, any, any, any, any>, 
+    ModelExtracted extends IModelParts<string, any, any, any, any, any, {}, any> = IModelPartsFromSchema<TMSchema>
+    > (name: string, schema?: Schema, collection?: string, skipInit?: boolean): IModel<ModelExtracted>
+
+    export module Types {
+
+        interface ObjectId
+        {
+            toString: () => string;   
+        }
+    }
+}
+
+export interface IModel<ModelShape extends IModelParts<string, any, any, any, any, any, any, any>>
+{
+
+}
+  
+const schemaRight = new MSchema('MRight', MTypes.ObjectId() as any as string,
+{},
+{},
+{},
+{},
+{},
+{},
+{})
+
+const schemaLeft = new MSchema('MSchemaName',
+MTypes.ObjectId() as any as string,
+{
+    aReqSet: MTypes.Boolean(),
+    aOpSet: MTypes.Boolean({required:'Op'}),
+    bSet: MTypes.Number({readonly: 'Set'}),
+    mNeasted : MTypes.Record({
+        mNa : MTypes.Number({required:'Req'}),
+        //mNb : MTypes.Number({required:'Req', readonly: 'Get'})
+    }),
+    mArraySimple : MTypes.Array(MTypes.String({required:'Op'}), {required:'Op'}),
+    mArrayRecord : MTypes.Array({
+
+    }, {required:'Op'})
+},
+{   
+    mRef : MTypes.Ref(schemaRight),
+    mNeastedRef : MTypes.Record({
+        mNRefA : MTypes.Ref(schemaRight, {required:'Op'})
+    }),
+    mArraySimpleRef : MTypes.Array(MTypes.Ref(schemaRight, {required:'Op'}), {}),
+    mArrayRef : MTypes.Array({
+        mArrayRefA: MTypes.Ref(schemaRight),
+        mArrayRefNumber: MTypes.Number()
+    },{})
+
+
+},
+{},
+{},
+{}, {}, {}
+)
+const mmm = MTypes.Number();
+const arr = MTypes.Array({hh : mmm});
+type uuuu = typeof  mmm
+type uuUU = typeof arr
+
 /*
- __Mod : Mod
-    __ModRef : ModRef
-    __NonOpReadDefault : NonOpReadDefault
-    __NonOpROptional : NonOpROptional
-    __NDefault : NDefault
-    __NeastedSchema : NeastedSchemas
+type uuUU = IShapeTSArrayNeasted<{
+    hh: MNumber<"Op", "Set", undefined>;
+}, {}> & 
+IMTypeModifiersWithNeastedConstraints<"Op", "Set", [], undefined, "Req" | "Op", "Set" | "Get", [] | undefined, 
+IMongooseSchemas<any, any, any, any, any, any, any> | undefined> & Schema.Types.Array
 */
 
+// // Extract Schema is the same as extra neasted schema.
+// type ESchema<MSchema extends IMongooseSchemas<any, any, any, any, any, any, any>> = 
+// ESR<MSchema['__Id']> 
+// ESR<MSchema['__Mod']> & 
+// ESR<MSchema['__NDefault']> & 
+// ESR<MSchema['__NonOpROptional']> & 
+// ESR<MSchema['__NonOpReadDefault']>
 
-type ExtractNoRefSchema<MSchema extends IMongooseSchemas<any, any, any, any, any, any, any>> = 
-ExtractSchemaRecord<MSchema['__Id']> & 
-ExtractSchemaRecord<MSchema['__Mod']> & 
-ExtractSchemaRecord<MSchema['__NDefault']> & 
-ExtractSchemaRecord<MSchema['__NonOpROptional']> & 
-ExtractSchemaRecord<MSchema['__NonOpReadDefault']>
+// & MSchema['____NeastedSchema']
 
-type ExtractFullSchema<MSchema extends IMongooseSchemas<any, any, any, any, any, any, any>, Paths extends Record<string, any> = {}> = 
-ExtractSchemaRecord<MSchema['__Id']> & 
-ExtractSchemaRecord<MSchema['__Mod']> & 
-ExtractSchemaRecord<MSchema['__NDefault']> & 
-ExtractSchemaRecord<MSchema['__NonOpROptional']> & 
-ExtractSchemaRecord<MSchema['__NonOpReadDefault']> & 
-ExtractSchemaRecordWithPathsPartial<MSchema['__ModRef'], Paths>
 
-type tekkst = ExtractSchemaRecord<typeof mMumberSchema['__Mod']>;
+// type ExtractNoRefSchema<MSchema extends IMongooseSchemas<any, any, any, any, any, any, any>> = 
+// ESR<MSchema['__Id']> & 
+// ESR<MSchema['__Mod']> & 
+// ESR<MSchema['__NDefault']> & 
+// ESR<MSchema['__NonOpROptional']> & 
+// ESR<MSchema['__NonOpReadDefault']>
+
+// type ExtractFullPartialSchema<MSchema extends IMongooseSchemas<any, any, any, any, any, any, any>, Paths extends Record<string, any> = {}> = 
+// ESR<MSchema['__Id']> & 
+// ESR<MSchema['__Mod']> & 
+// ESR<MSchema['__NDefault']> & 
+// ESR<MSchema['__NonOpROptional']> & 
+// ESR<MSchema['__NonOpReadDefault']> & 
+// ExtractSchemaRecordWithPathsPartial<MSchema['__ModRef'], Paths>
+
+type tekkst = ESR<typeof mMumberSchema['__Mod']>;
 
 const tek : tekkst = {
     a: 234,
@@ -785,7 +979,7 @@ type refImpl = ExtractSchemaRecordWithPathsPartial<typeof mMumberSchema['__ModRe
 
 const refImpl : refImpl = {
 m : {
-
+a : 234
 }
 }
 
