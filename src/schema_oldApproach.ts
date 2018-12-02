@@ -189,7 +189,7 @@ type TsTypesPrimatives = boolean | number | string | Date;  // this should actua
 
 type ID = 'T' | 'R' | 'AR' | 'AN' | 'Ref' | 'S'
 
-type ITSShapes = 
+type IShape = 
 IShapeTSType<any> 
 | IShapeContainers
 | IShapeTSRef<any>
@@ -197,97 +197,31 @@ IShapeTSType<any>
 
 type IShapeContainers = IShapeTSRecord<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>
 
-interface IShape<TID extends ID, Neasted> {
-    __ID: TID;
-    __Neasted : Neasted
-}
-
-interface ITSShape<T, ID> implements IShape<any>
-{
-    __tsType: T;
-    __ID: ID;
-}
-
-// Required Physical Prsent of the ID now, for runtime adapter transformation.
-class Shape<TShape extends ITSShape<any,any>> implements IShape<TShape['__ID'], any>
-{
-    constructor(public __ID: TShape['__ID'], public __Neasted : any)
-    {
-    }
-
-    TSTypeCast<T extends TShape['__tsType']>(rec? :T = undefined)  {
-        return this as any as ITSShape<T,TShape['__ID']>
-    }
-}
-
-type IShapeTSTypeExtends = Record<string, ITSShapes> | null
-
-interface IShapeTSType<T extends IShapeTSTypeExtends> extends IShape<any, any>
+interface IShapeTSType<T extends TsTypesPrimatives>
 {
     __tsType : T;
     __ID: 'T';
 }
 
-function ShapeTSType<T extends TsTypesPrimatives | null>()
-{
-    return new Shape<IShapeTSType<any>>('T').TSTypeCast<T>();
-}
-
-// const tesst = {...ShapeTSType<number>(),... ShapeTSType<boolean>()}
-
-type IShapeRecordExtends = Record<string, ITSShapes> | null
-
-interface IShapeTSRecord<T extends IShapeRecordExtends> extends IShape<any, any>
+interface IShapeTSRecord<T extends Record<string, IShape>>
 {
     __tsType : T;
     __ID: 'R';
 }
 
-const neastedTsType = ShapeTSType<boolean>();
-
-function ShapeTSRecord<T extends IShapeRecordExtends>(rec : T)
-{
-    return new Shape<IShapeTSRecord<any>>('R').TSTypeCast<T>(rec);
-    // Originally, I was doing a perfect passTought now I would be returning
-    // my varibles, so basically the tsType was of the same form as
-    // Why don't I just make tsType a physically type now...
-    // The only reason I actually don't is because the {w:T} patter,
-    // which make things ode, but if I did, there would be no duplication
-    // and additional of extra types, but does that matter, not really
-    // as I would rather have a consitant API for runtime, 
-    // Which doesn't expose the typescript hacks.
-}
-
-const HHH = ShapeTSRecord({a:neastedTsType});
-
-const uu = HHH
-
-type IShapeArrayNeastedExtends = ITSShapes | null;
-
-interface IShapeTSArrayNeasted<T extends IShapeArrayNeastedExtends>
+interface IShapeTSArrayNeasted<T extends IShape>
 {
     __tsType : {w:T};
     __ID: 'AN';
 }
 
-function ShapeTSArrayRecord<T extends IShapeRecordExtends>(record : T)
-{
-    return new Shape<IShapeTSArrayNeasted<any>>('AN').TSTypeCast<{w:T}>();
-}
-// I also gotta know what is in the inner runtime type..
-// Which is quite a problem.. Typically I just captured that information
-// for tsPerposes, so how do I refactor this now..
-// RuntimePart1 + RuntimePart2 + ITypes
-
-const uuu = ShapeTSArrayRecord(neasteda)
-
-interface IShapeTSArrayRecord<T extends Record<string, ITSShapes> | null>
+interface IShapeTSArrayRecord<T extends Record<string, IShape>>
 {
     __tsType : T;
     __ID: 'AR';
 }
 
-interface IShapeTSRef<T extends TsTypesPrimatives | (TsTypesPrimatives | null)>
+interface IShapeTSRef<T extends TsTypesPrimatives>
 {
     __tsType : T;
     __ID: 'Ref';
@@ -299,266 +233,44 @@ interface IShapeTSSchema<T extends IMongooseSchemas<any, any, any, any, any, any
     __ID: 'S';
 }
 
-
-type GenAdapters = 'Mongoose'
-
-// These are the type ids, which be store at runtime for translation
-// to other drivers, typically all cases would be avaliable here, and limit this to a subset
-// for spesific drives.
-type GenTypeID = 'Boolean' | 'Number' | 'String' | 'Date' | 'Record' | 'Array' | 'Ref' | 'Schema'
-
-type GenTypeAdapterMap = Record<GenAdapters, Record<GenTypeID : (genTypes : GenTypeAdapterAnotationOptions[GenAdapters])>>
-
-const GenTypeAdapterMap = {
-    'Mongoose' : {
-        'Boolean' : 'bool'
-        'Number' : 
-
-    }
-}
-
-type GenTypeAdapterAnotationOptions = Record<GenAdapters,Record<string,any>>;
-
-const GenType : GenTypeAdapterAnotationOptions = {
-    'Mongoose' : {
-
-    }
-}
-
-type ppp = (argo: string) => number;
-
-type ExtractGenTypeAdapterAnotationOptionsShape<T extends GenTypeAdapterAnotationOptions> =
-{
-    [K in keyof T] : Record<K,Record<GenTypeID,(shape: IShape<any> & IGenTypeModifiers<any,any,any,any,any>,anotations:T[K]) => string>>
-}
-
-class GenTsShape<
-TGenTypeAdaptorsAnontations extends GenTypeAdapterAnotationOptions,
-TAdapters extends keyof TGenTypeAdaptorsAnontations,
-TGenTypeAdaptorsMap extends Record<TAdapters, ,
-
+class ShapeContainers<
+Required extends 'Get' | 'Set',
+Nullable extends 'Nullable' | 'Value',
+Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
+RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never
 >
+extends IMTypeModifiers<>
 {
-    constructor()
-}   
+    static array<Rec extends Record<string, never>>(record : Rec)
+    {
 
-interface IGenTypeModifiers<
+    }
+}
+
+class ShapeRefAndContainers
+extends ShapeContainers
+{
+
+}
+
+class ShapeRefTsTypeAndContainers
+extends ShapeContainers
+{
+
+}
+
+interface IMTypeModifiers<
     Required extends 'Req' | 'Op',
     Readonly extends 'Get' | 'Set',
     Nullable extends 'Nullable' | 'Value',
     Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
-    RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never,
+    RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never
 > {
-}
-
-// class ShapeContainers<
-// Required extends 'Req' | 'Op',
-// Readonly extends 'Get' | 'Set',
-// Nullable extends 'Nullable' | 'Value',
-// Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
-// RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never
-// >
-// implements ITypeGenModifiers<Required, Readonly, Nullable, Default, RefType>
-// {
-//     arrayItem<Test extends Required,Rec extends Record<string, never>>(record : Rec) : IShapeMongoose & & IArrayFun
-//     {
-//         return new {runTime; rinte}
-//     }
-// }
-
-
-// Now I want to allow subset of this class by overiding the shape signature based on the input constructor parametes.
-//  Which would allow me to nuke certin functions;
-
-// Setup a configuration, that takes in a set of allow parameters and then defines,
-// which options will be avaliable.
-
-type ModfierFunKeys<
-Required extends 'Req' | 'Op',
-Readonly extends 'Get' | 'Set',
-Nullable extends 'Nullable' | 'Value',
-Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null
-> = ModfierFunKeysBase<Required, Readonly, Nullable>
-
-type ModfierFunKeysBase<
-Required extends 'Req' | 'Op',
-Readonly extends 'Get' | 'Set',
-Nullable extends 'Nullable' | 'Value'> = {
-    'Req': 'Required'
-    'Op': 'Optional'
-
-}[Required] |
-{
-    'Get': 'Readonly'
-    'Set' : never
-}[Readonly] |
-{
-    'Nullable' : 'Nullable'
-    'Value' : never
-}[Nullable] 
-
-interface ArraySep<
-Shape extends IShape,
-Required extends 'Req' | 'Op',
-Readonly extends 'Get' | 'Set',
-Nullable extends 'Nullable' | 'Value',
-Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
-RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never,
-Keys extends string = ModfierFunKeys<Required, Readonly, Nullable, Default>
->
-extends Pick<ArrayFun<Shape, Required, Readonly, Nullable, Default, RefType>, ''>
-{
-}
-
-type uuuuuuu = ArraySep<any, 'Req' | 'Op', never,never, any, any> 
-
-const mmm : uuuuuuu;
-mmm.
-
-class ArrayFun<
-Shape extends IShape,
-Required extends 'Req' | 'Op',
-Readonly extends 'Get' | 'Set',
-Nullable extends 'Nullable' | 'Value',
-Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
-RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never>
-implements ITypeGenModifiers<Required, Readonly, Nullable, Default, RefType> {
-
-
-    constructor(public __BaseConfig : ITypeModifiers<any, any, any, any, any>)
-    {
-    }
-
-    public Required()
-    {
-        const newRequired = 'Req'
-        type NewRequired = typeof newRequired;
-        this.__BaseConfig['__Required'] = newRequired
-
-        return new ArrayFun<Shape, NewRequired, Readonly, Nullable, Default, RefType>(this.__BaseConfig) as any as
-        IShapeTSArrayRecord<Shape['__tsType']>
-        & ITypeModifiers<NewRequired, Readonly,Nullable, Default, RefType>
-        & ArrayFun<Shape, NewRequired, Readonly,Nullable, Default, RefType> // Typically here I would mutate things..
-    }
-
-    public Optional()
-    {        
-        const newOptional = 'Op'
-        type NewOptional = typeof newOptional;
-        this.__BaseConfig['__Required'] = newOptional;
-
-        return new ArrayFun<Shape, NewOptional, Readonly, Nullable, Default, RefType>(this.__BaseConfig) as any as
-        IShapeTSArrayRecord<Shape['__tsType']>
-        & ITypeModifiers<NewOptional, Readonly,Nullable, Default, RefType>
-        & ArrayFun<Shape, NewOptional, Readonly,Nullable, Default, RefType> // Typically here I would mutate things..
-    }
-
-    public Nullable()
-    {
-        const newNulable = 'Nullable'
-        type NewNullable = typeof newNulable;
-        this.__BaseConfig['__Nullable'] = newNulable;
-
-        type NewShape = IShapeTSArrayRecord<Shape['__tsType'] | null>;
-
-        return new ArrayFun<NewShape, Required, Readonly, NewNullable, Default, RefType>(this.__BaseConfig) as any as
-        NewShape
-        & ITypeModifiers<Required, Readonly, NewNullable, Default, RefType>
-        & ArrayFun<Shape, Required, Readonly, NewNullable, Default, RefType> // Typically here I would mutate things..
-    }
-
-    public Readonly()
-    {
-        const newReadonly = 'Get'
-        type NewReadonly = typeof newReadonly;
-        this.__BaseConfig['__Nullable'] = newReadonly;
-
-        type NewShape = IShapeTSArrayRecord<Shape['__tsType']>;
-
-        return new ArrayFun<NewShape, Required, NewReadonly, Nullable, Default, RefType>(this.__BaseConfig) as any as
-        NewShape
-        & ITypeModifiers<Required, NewReadonly, Nullable, Default, RefType>
-        & ArrayFun<Shape, Required, NewReadonly, Nullable, Default, RefType> // Typically here I would mutate things..
-    }
-
-    public Default<DValue extends Default | (Nullable extends 'Nullable' ? null : never)>(dValue : DValue)
-    {
-        this.__BaseConfig.__Default = dValue;
-        return new ArrayFun<Shape, Required, Readonly, Nullable, DValue, RefType>(this.__BaseConfig) as any as
-        IShapeTSArrayRecord<Shape['__tsType']>
-        & ITypeModifiers<Required, Readonly, Nullable, Default, RefType>
-        & ArrayFun<Shape, Required, Readonly, Nullable, Default, RefType> // Typically here I would mutate things..
-    }
-}
-
-// interface ArrayFun<Required extends 'Req' | 'Op',
-// Readonly extends 'Get' | 'Set',
-// Nullable extends 'Nullable' | 'Value',
-// Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
-// RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never>
-// {
-//     Required() : ArrayFun<'Get', Readonly, Nullable, Default, RefType>
-// }
-
-// type Narrow = ReturnType<ShapeArrayFunctions['arrayItem']>
-
-// type ShapeArrayFunctions
-// <
-// Required extends 'Req' | 'Op',
-// Readonly extends 'Get' | 'Set',
-// Nullable extends 'Nullable' | 'Value',
-// Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
-// RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never> =
-// {
-//     'Req' : {
-        
-//     }
-//     'Op' : {
-
-//     }
-// }[Required]
-
-
-// interface ShapeArray<
-// Required extends 'Req',
-// Readonly extends 'Get' | 'Set',
-// Nullable extends 'Nullable' | 'Value',
-// Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
-// RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never> implements ITypeGenModifiers<Required, Readonly, Nullable, Default, RefType>
-// {
-//     static array<Rec extends Record<string, never>>(record : Rec, optional : boolean)
-//     {
-
-//     }
-// }
-
-// class ShapeRefAndContainers
-// extends ShapeContainers
-// {
-
-// }
-
-// class ShapeRefTsTypeAndContainers
-// extends ShapeContainers
-// {
-
-// }
-
-
-interface ITypeModifiers<
-    GenType extends GenTypeID,
-    Required extends 'Req' | 'Op',
-    Readonly extends 'Get' | 'Set',
-    Nullable extends 'Nullable' | 'Value',
-    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
-    RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never,
-> extends ITypeGenModifiers<Required, Readonly, Nullable, Default, RefType>{
-    public __GenTypeID : GenType
-    public __Required : Required
-    public __Readonly : Readonly   // Complications I can't detect readonly, so has to be explicity file mm.. How to create teh constructors for this.., I think only in 3.1, which make dynamic name for variable.
-    public __Nullable : Nullable
-    public __Default : Default
-    public __RefType : RefType
+    __Optional : Optional
+    __Readonly : Readonly   // Complications I can't detect readonly, so has to be explicity file mm.. How to create teh constructors for this.., I think only in 3.1, which make dynamic name for variable.
+    __Nullable : Nullable
+    __Default : Default
+    __RefType : RefType
 }
 
 interface IMTypeModifiersWithNeastedConstraints<

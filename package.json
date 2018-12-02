@@ -29,6 +29,6 @@
     "mocha": "^5.2.0",
     "mongo-in-memory": "0.0.5",
     "ts-node": "^7.0.1",
-    "typescript": "^2.8.4"
+    "typescript": "3.2.*"
   }
 }
