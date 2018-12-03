@@ -1,6 +1,6 @@
 //import {ExtractArrayItems, itemElements, KeyInPathsAtDepthKey} from './index'
 import * as mongoose from 'mongoose';
-import {Schema, SchemaDefinition, SchemaTypeOpts, SchemaType, Types} from 'mongoose'
+//import {Schema, SchemaDefinition, SchemaTypeOpts, SchemaType, Types} from 'mongoose'
 //import {If, ObjectHasKey, ObjectOptional, ObjectOmit, ObjectClean, Bool, StringOmit, StringEq, ObjectOverwrite, Option} from './tstypelevel';
 //import { StringContains, ObjectDiff } from './tstypelevel';
 //import { Module } from 'module';
@@ -368,7 +368,18 @@ type ExtractGenAdapterConfShape<T extends Record<string,any>> = {
 
 // }
 
-class SchemaGenerator<AdaptorConfigurations extends Record<string, ITSGenAdapterConfig<any, any>>>
+type AdaptorConfigurationSchemaOptions<T extends Record<string, ITSGenAdapterConfig<any, any>>> = {
+ [K in keyof T] : T[K]['__tsSchemaOptions']
+}
+
+type AdaptorConfigurationFieldOptions<T extends Record<string, ITSGenAdapterConfig<any, any>>> = {
+    [K in keyof T] : T[K]['__tsFieldOptions']
+}
+   
+class SchemaGenerator<AdaptorConfigurations extends Record<string, ITSGenAdapterConfig<any, any>>,
+SchemaOptions = AdaptorConfigurationSchemaOptions<AdaptorConfigurations>,
+FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
+>
 {
     constructor(public adaptors : AdaptorConfigurations)
     {
@@ -376,10 +387,46 @@ class SchemaGenerator<AdaptorConfigurations extends Record<string, ITSGenAdapter
 
     Generate(adapterName : keyof AdaptorConfigurations) : string {
         return 'Not Implemented Yet'
-    }
 
+    }
     // All the typescript type definitions, which must be define on this class, so that 
     // all the correct typing signatures will exist on the functions.
+
+    NewSchema<
+        Name extends string,
+        Id extends string,
+        ModRD extends IMTypeModifiersRecord<'Req', 'Set', any, never>,
+        ModRND extends IMTypeModifiersRecord<'Req', 'Set', never, never>,
+        ModOD extends IMTypeModifiersRecord<'Op', 'Set', any, never>,
+        ModOND extends IMTypeModifiersRecord<'Op', 'Set', never, never>,
+        ReadRD extends IMTypeModifiersRecord<'Req', 'Get', any, never>,
+        ReadRND extends IMTypeModifiersRecord<'Req', 'Get', never, never>,
+        ReadOD extends IMTypeModifiersRecord<'Op', 'Get', undefined, never>,
+        ReadOND extends IMTypeModifiersRecord<'Op', 'Get', never, never>,
+        ModRef extends IMTypeModifiersRecord<any, any, any, any>,
+        NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>
+    >(
+        name : Name,
+        id : Id,
+        modRD : ModRD,
+        modRND : ModRND,
+        modOD : ModOD,
+        modOND : ModOND,
+        readRD : ReadRD,
+        readRND : ReadRND,
+        readOD : ReadOD,
+        readOND : ReadOND,
+        modRef : ModRef,
+        neastedSchemas : NeastedSchemas,
+        options : SchemaOptions)
+    {
+        return new Schema(name, id, modRD, modRND, modOD, modOND, readRD, readRND, readOD, readOND, modRef, neastedSchemas, options);
+    }
+
+    NewPartialSchema()
+    {
+        return {} as boolean
+    }
 
 
     // I have two options here, for mixing of the types..
@@ -387,7 +434,11 @@ class SchemaGenerator<AdaptorConfigurations extends Record<string, ITSGenAdapter
 //     ObjectId () => mongoose.Schema.Types.ObjectId as any as string;
 //     //as IShapeTSType<string> & IMTypeModifiers<'Req', 'Set', undefined>,
 
-//     Boolean : ()
+     Boolean()
+     {
+        return NewTypeModifier({__Required: 'Req',__Readonly: 'Set', __Nullable: 'Value', __Default: undefined, __RefType: undefined})
+        as ;
+     }
     
 //     <Required extends 'Req' | 'Op' = 'Op', 
 //             ReadOnly extends 'Get' | 'Set' = 'Set',
@@ -499,29 +550,29 @@ class SchemaGenerator<AdaptorConfigurations extends Record<string, ITSGenAdapter
 
 
 type SchemaOptions = {
-    autoIndex: any,
-    bufferCommands: any,
-    capped: any,
-    collection: any,
-    id: any,
-    _id: any,
-    minimize: any,
-    read: any,
-    writeConcern: any,
-    safe: any,
-    shardKey: any,
-    strict: any,
-    strictQuery: any,
-    toJSON: any,
-    toObject: any,
-    typeKey: any,
-    validateBeforeSave: any,
-    versionKey: any,
-    collation: any,
-    skipVersioning: any,
-    timestamps: any,
-    selectPopulatedPaths: any,
-    storeSubdocValidationError: any,
+    autoIndex?: any,
+    bufferCommands?: any,
+    capped?: any,
+    collection?: any,
+    id?: any,
+    _id?: any,
+    minimize?: any,
+    read?: any,
+    writeConcern?: any,
+    safe?: any,
+    shardKey?: any,
+    strict?: any,
+    strictQuery?: any,
+    toJSON?: any,
+    toObject?: any,
+    typeKey?: any,
+    validateBeforeSave?: any,
+    versionKey?: any,
+    collation?: any,
+    skipVersioning?: any,
+    timestamps?: any,
+    selectPopulatedPaths?: any,
+    storeSubdocValidationError?: any,
 }
 
 type SchemaFieldOptionsAll = {
@@ -546,19 +597,21 @@ const adapter = {
 };
 
 
-const Schema = new SchemaGenerator(adapter);
+const GSchema = new SchemaGenerator(adapter);
 
-const mongooseRunTime = Schema.Generate('Mongoose', );
+GSchema.NewSchema(
+
+
+const mongooseRunTime = GSchema.Generate('Mongoose', [SchemaA]);
+
 
 // Needs to be like this, to allow extraction,
 // like to embed the correct, could be member, but
 // probably simple to have de coupled to reduce the overhead.
-const schemaA = new Schema({
-    a : Schema.Boolean().Required().Nullable().Default(5),
-    b : Schema.Boolean().Required().Nullable().Default(50)
-},
-{},
-{});
+const schemaA = GSchema.NewSchema('collectionName','',{
+    a : GSchema.Boolean(),//.Required().Nullable().Default(5),
+    b : GSchema.Boolean().,//.Required().Nullable().Default(50)
+},{},{},{},{},{},{},{},{},{},{Mongoose:{collation:''}});
 
 // Layer 2 were we want the typing speed improvements
 // were the model definition will extra this informaiton.
@@ -572,16 +625,26 @@ const modelA = model('collectionName', Schema)
 type SchemaA = ExtractTSSchema<typeof schemaA>;
 
 
-
-interface ITypeModifiers<
-    GenType extends IShape<any,any>,
+function NewTypeModifier<
     Required extends 'Req' | 'Op',
     Readonly extends 'Get' | 'Set',
     Nullable extends 'Nullable' | 'Value',
-    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
-    RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never,
-> extends ITypeGenModifiers<Required, Readonly, Nullable, Default, RefType>{
-    public __GenTypeID : GenType
+    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined,
+    RefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined = never
+>(modifiers : ITypeModifiers<Required, Readonly, Nullable, Default, RefType>)
+{
+    return modifiers as ITypeModifiersWithConstraints<Required, Readonly, Nullable, Default, RefType>;
+}
+
+const testingr = NewTypeModifier({__Required : 'Req',__Readonly: 'Set', __Nullable: 'Value', __Default: undefined, __RefType: undefined});
+
+interface ITypeModifiers<
+    Required extends 'Req' | 'Op',
+    Readonly extends 'Get' | 'Set',
+    Nullable extends 'Nullable' | 'Value',
+    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined,
+    RefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined=  never
+> {
     public __Required : Required
     public __Readonly : Readonly
     public __Nullable : Nullable
@@ -589,24 +652,143 @@ interface ITypeModifiers<
     public __RefType : RefType
 }
 
-
-interface ITypeModifiers<
+interface ITypeModifiersWithConstraints<
     Required extends 'Req' | 'Op',
     Readonly extends 'Get' | 'Set',
     Nullable extends 'Nullable' | 'Value',
-    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
-    RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never,
+    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined,
+    RefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined = never,
+    RequiredConstraint extends 'Req' | 'Op' | undefined = Required, 
+    ReadonlyConstraint extends 'Get' | 'Set' | undefined = Readonly,
+    NullableConstraint extends 'Nullable' | 'Value' | undefined = Nullable,
+    DefaultConstraint extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined = Default,
+    RefTypeConstraint extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined = RefType,
 > {
+    public __Required : Required
+    public __Readonly : Readonly
+    public __Nullable : Nullable
+    public __Default : Default
+    public __RefType : RefType
+
+    public __RequiredConstraint : RequiredConstraint
+    public __ReadonlyConstraint : ReadonlyConstraint
+    public __NullableConstraint : NullableConstraint
+    public __DefaultConstraint : DefaultConstraint
+    public __RefTypeConstraint : RefTypeConstraint
 }
 
-interface IGenTypeModifiers<
-    Required extends 'Req' | 'Op',
-    Readonly extends 'Get' | 'Set',
-    Nullable extends 'Nullable' | 'Value',
-    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
-    RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never,
-> {
+
+interface ISchema<
+    Name extends string,
+    Id extends string,
+    ModRD extends IMTypeModifiersRecord<'Req', 'Set', any, never>,
+    ModRND extends IMTypeModifiersRecord<'Req', 'Set', never, never>,
+    ModOD extends IMTypeModifiersRecord<'Op', 'Set', any, never>,
+    ModOND extends IMTypeModifiersRecord<'Op', 'Set', never, never>,
+    ReadRD extends IMTypeModifiersRecord<'Req', 'Get', any, never>,
+    ReadRND extends IMTypeModifiersRecord<'Req', 'Get', never, never>,
+    ReadOD extends IMTypeModifiersRecord<'Op', 'Get', undefined, never>,
+    ReadOND extends IMTypeModifiersRecord<'Op', 'Get', never, never>,
+    ModRef extends IMTypeModifiersRecord<any, any, any, any>,
+    NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>>
+{
+        public __Name : Name,
+        public __Id : Id,
+        public __ModRD : ModRD,
+        public __ModRND : ModRND,
+        public __ModOD : ModOD,
+        public __ModOND : ModOND,
+        public __ReadRD : ReadRD,
+        public __ReadRND : ReadRND,
+        public __ReadOD : ReadOD,
+        public __ReadOND : ReadOND,
+        public __ModRef : ModRef,
+        public __NeastedSchemas : NeastedSchemas,
+        public __Options : Record<string,any>        
 }
+
+class Schema<
+Id extends string,
+ModRD extends IMTypeModifiersRecord<'Req', 'Set', any, never>,
+ModRND extends IMTypeModifiersRecord<'Req', 'Set', never, never>,
+ModOD extends IMTypeModifiersRecord<'Op', 'Set', any, never>,
+ModOND extends IMTypeModifiersRecord<'Op', 'Set', never, never>,
+ReadRD extends IMTypeModifiersRecord<'Req', 'Get', any, never>,
+ReadRND extends IMTypeModifiersRecord<'Req', 'Get', never, never>,
+ReadOD extends IMTypeModifiersRecord<'Op', 'Get', undefined, never>,
+ReadOND extends IMTypeModifiersRecord<'Op', 'Get', never, never>,
+ModRef extends IMTypeModifiersRecord<any, any, any, any>,
+NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>>
+implements IPartialSchema<ModRD, ModRND, ModOD, ModOND, ReadRD, ReadRND, ReadOD, ReadOND, ModRef, NeastedSchemas>
+{
+        constructor(
+        public __Name : string,
+        public __Id : Id,
+        public __ModRD : ModRD,
+        public __ModRND : ModRND,
+        public __ModOD : ModOD,
+        public __ModOND : ModOND,
+        public __ReadRD : ReadRD,
+        public __ReadRND : ReadRND,
+        public __ReadOD : ReadOD,
+        public __ReadOND : ReadOND,
+        public __ModRef : ModRef,
+        public __NeastedSchemas : NeastedSchemas,
+        public __options : Record<string, any>
+    )
+    {
+    }
+}
+
+interface ISchemaPartial<
+ModRD extends IMTypeModifiersRecord<'Req', 'Set', any, never>,
+ModRND extends IMTypeModifiersRecord<'Req', 'Set', never, never>,
+ModOD extends IMTypeModifiersRecord<'Op', 'Set', any, never>,
+ModOND extends IMTypeModifiersRecord<'Op', 'Set', never, never>,
+ReadRD extends IMTypeModifiersRecord<'Req', 'Get', any, never>,
+ReadRND extends IMTypeModifiersRecord<'Req', 'Get', never, never>,
+ReadOD extends IMTypeModifiersRecord<'Op', 'Get', undefined, never>,
+ReadOND extends IMTypeModifiersRecord<'Op', 'Get', never, never>,
+ModRef extends IMTypeModifiersRecord<any, any, any, any>,
+NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>>
+{
+}
+
+class SchemaPartial<
+BaseSchema extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any>,
+ModRD extends IMTypeModifiersRecord<'Req', 'Set', any, never>,
+ModRND extends IMTypeModifiersRecord<'Req', 'Set', never, never>,
+ModOD extends IMTypeModifiersRecord<'Op', 'Set', any, never>,
+ModOND extends IMTypeModifiersRecord<'Op', 'Set', never, never>,
+ReadRD extends IMTypeModifiersRecord<'Req', 'Get', any, never>,
+ReadRND extends IMTypeModifiersRecord<'Req', 'Get', never, never>,
+ReadOD extends IMTypeModifiersRecord<'Op', 'Get', undefined, never>,
+ReadOND extends IMTypeModifiersRecord<'Op', 'Get', never, never>,
+ModRef extends IMTypeModifiersRecord<any, any, any, any>,
+NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>>
+implements ISchemas<BaseSchema['__Id'], ModRD, ModRND, ModOD, ModOND, ReadRD, ReadRND, ReadOD, ReadOND, ModRef, NeastedSchemas>
+{
+    constructor(
+        public baseSchema : BaseSchema,
+        public __ModRD : ModRD,
+        public __ModRND : ModRND,
+        public __ModOD : ModOD,
+        public __ModOND : ModOND,
+        public __ReadRD : ReadRD,
+        public __ReadRND : ReadRND,
+        public __ReadOD : ReadOD,
+        public __ReadOND : ReadOND,
+        public __ModRef : ModRef,
+        public __NeastedSchemas : NeastedSchemas,
+        public options : Record<string,any> = baseSchema['__Id'],
+        public __Id : BaseSchema['__Id'] = baseSchema['__Id'],
+        public __Name : BaseSchema['__Name']
+    )
+    {
+    }
+}
+
+
 
 // class ShapeContainers<
 // Required extends 'Req' | 'Op',
@@ -677,17 +859,41 @@ function Boolean() {
     return new Modifier();
 }
 
+
+// Problem is that every time I re-intialize MOdifiers, I loose the shape information,
+// this means that the two need to be tightly coupled with one another.
+// the runtime information needs to be preserved,
+// not just the type information..
+
 class Modifier<
-Shape extends ITSShape<any,any>,
+AvaliableOptions extends Record<string,any>,
+Shape extends ITSShape<any, any>,   // this is here to preseve the shape information
 Required extends 'Req' | 'Op',
 Readonly extends 'Get' | 'Set',
 Nullable extends 'Nullable' | 'Value',
-Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
-RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never>
-implements ITypeGenModifiers<Required, Readonly, Nullable, Default, RefType> {
+Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined,
+RefType extends ISchemas<any, any, any, any, any, any, any, any, any, any, any> | undefined= never>
+implements ITypeModifiers<Required, Readonly, Nullable, Default, RefType> {
 
 
-    constructor(public __BaseConfig : ITypeModifiers<any, any, any, any, any>)
+    constructor(
+        public __Options: AvaliableOptions,
+        public __Shape: Shape,// This has to be generic, because this can contain absolutely anything..
+        public __Required: Required,
+        public __Readonly: Readonly,
+        public __Nullable: Nullable,
+        public __Default : Default,
+        public __RefType : RefType
+    )
+    {
+    }
+
+    public Anotations(options : AvaliableOptions)
+    {
+
+    }
+
+    public Options(options : AvaliableOptions)
     {
     }
 
@@ -695,7 +901,7 @@ implements ITypeGenModifiers<Required, Readonly, Nullable, Default, RefType> {
     {
         const newRequired = 'Req'
         type NewRequired = typeof newRequired;
-        this.__BaseConfig['__Required'] = newRequired
+        this.__Required = newRequired
 
         return new ArrayFun<Shape, NewRequired, Readonly, Nullable, Default, RefType>(this.__BaseConfig) as any as
         IShapeTSArrayRecord<Shape['__tsType']>
@@ -839,11 +1045,11 @@ Readonly extends  'Get' | 'Set',
 Default extends (Shape extends (IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>) ? [] : 
 TsTypesPrimatives | Array<any> | Record<string,TsTypesPrimatives> | TsTypesPrimatives) | undefined | never,
 //Shape['__tsType']) | undefined, This needs to be the extracted form.. update this later, once developed.
-RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any,any,any,any> | undefined = never,
+RefType extends ISchemas<any, any, any, any, any, any, any, any,any,any,any> | undefined = never,
 OptionalConstraints extends 'Req' | 'Op' | undefined = Optional, 
 ReadonlyConstraints extends 'Get' | 'Set' | undefined = Readonly,
 DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined = Default,
-RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> | undefined = RefType,
+RefTypeConstraints extends ISchemas<any, any, any, any, any, any, any, any, any, any, any> | undefined = RefType,
 > = IMTypeModifiersWithNeastedConstraints<Optional, Readonly, Default, RefType, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
 & Shape
 
@@ -858,11 +1064,11 @@ interface IMTypeModifiersRecord<
 Optional extends 'Req' | 'Op',
 Readonly extends 'Get' | 'Set',
 Default extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
-RefType extends IMongooseSchemas<any,any,any,any,any,any,any, any,any,any,any> | undefined,
+RefType extends ISchemas<any,any,any,any,any,any,any, any,any,any,any> | undefined,
 OptionalConstraints extends 'Req' | 'Op' = Optional, 
 ReadonlyConstraints extends 'Get' | 'Set' = Readonly,
 DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined = Default,
-RefTypeConstraints extends IMongooseSchemas<any,any,any,any,any,any,any,any,any,any,any> | undefined = RefType,
+RefTypeConstraints extends ISchemas<any,any,any,any,any,any,any,any,any,any,any> | undefined = RefType,
 > extends
 Record<string, IMongooseShape<IShape, Optional, Readonly, Default, RefType, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>>
 {
@@ -911,8 +1117,8 @@ type SchemaTypeID<ID extends IMongooseShape<IShapeTSType<any>, 'Req', 'Set', und
 
 
 
-interface ISchema<
-    Id extends string,//SchemaTypeID<any>,
+interface ISchemas<
+    Id extends string,
     ModRD extends IMTypeModifiersRecord<'Req', 'Set', any, never>,
     ModRND extends IMTypeModifiersRecord<'Req', 'Set', never, never>,
     ModOD extends IMTypeModifiersRecord<'Op', 'Set', any, never>,
@@ -923,51 +1129,9 @@ interface ISchema<
     ReadOND extends IMTypeModifiersRecord<'Op', 'Get', never, never>,
     ModRef extends IMTypeModifiersRecord<any, any, any, any>,
     NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>
-    > extends IMongoosePartialSchema<ModRD, ModRND, ModOD, ModOND, ReadRD, ReadRND, ReadOD, ReadOND, ModRef, NeastedSchemas>
+    > extends IPartialSchema<ModRD, ModRND, ModOD, ModOND, ReadRD, ReadRND, ReadOD, ReadOND, ModRef, NeastedSchemas>
 {
-    __Name : string // This is a default name, that can be used for the model, which can be overidden by the model.
-    // The question is how would you update the referance were there are mutiple instances..
-    // We would require to have an abstract list of model names, however, for typings, the name of the model,
-    // is actually in consiquential, because we tie nothing to the name..
-    // The problem is for runtime information, because one needs to create a new schema, with a new name, were the referance
-    // is abstracted away.
-    // the only way one is cappable of doing that is, the name needs to be looked up in a dictionary under and alias name.
-    // RefModelName, when a new instance of Schema is create the default value would be used for each,
-    // or it can be overidden with a new list.
-    // Yes so each schema.
-    // Which means one needs a set of model maps..
-    // were for single name instance model, 
-    // to simplfy things I am just going to use a string right now.
-    __Id : Id
-}
-
-interface IMongooseSchemas<
-    Id extends string,//SchemaTypeID<any>,
-    ModRD extends IMTypeModifiersRecord<'Req', 'Set', any, never>,
-    ModRND extends IMTypeModifiersRecord<'Req', 'Set', never, never>,
-    ModOD extends IMTypeModifiersRecord<'Op', 'Set', any, never>,
-    ModOND extends IMTypeModifiersRecord<'Op', 'Set', never, never>,
-    ReadRD extends IMTypeModifiersRecord<'Req', 'Get', any, never>,
-    ReadRND extends IMTypeModifiersRecord<'Req', 'Get', never, never>,
-    ReadOD extends IMTypeModifiersRecord<'Op', 'Get', undefined, never>,
-    ReadOND extends IMTypeModifiersRecord<'Op', 'Get', never, never>,
-    ModRef extends IMTypeModifiersRecord<any, any, any, any>,
-    NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>
-    > extends IMongoosePartialSchema<ModRD, ModRND, ModOD, ModOND, ReadRD, ReadRND, ReadOD, ReadOND, ModRef, NeastedSchemas>
-{
-    __Name : string // This is a default name, that can be used for the model, which can be overidden by the model.
-    // The question is how would you update the referance were there are mutiple instances..
-    // We would require to have an abstract list of model names, however, for typings, the name of the model,
-    // is actually in consiquential, because we tie nothing to the name..
-    // The problem is for runtime information, because one needs to create a new schema, with a new name, were the referance
-    // is abstracted away.
-    // the only way one is cappable of doing that is, the name needs to be looked up in a dictionary under and alias name.
-    // RefModelName, when a new instance of Schema is create the default value would be used for each,
-    // or it can be overidden with a new list.
-    // Yes so each schema.
-    // Which means one needs a set of model maps..
-    // were for single name instance model, 
-    // to simplfy things I am just going to use a string right now.
+    __Name : string 
     __Id : Id
 }
 
@@ -990,7 +1154,7 @@ NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>
 // NeastedSchemas extends IMongoosePartialSchemaRecord<any, any, any, any, any, any>
 // > = Record<string, IMongoosePartialSchema<Mod, ModRef, NonOpReadDefault, NonOpROptional, NDefault, NeastedSchemas>>
 
-interface IMongoosePartialSchema<
+interface IPartialSchema<
 ModRD extends IMTypeModifiersRecord<'Req', 'Set', any, never>,
 ModRND extends IMTypeModifiersRecord<'Req', 'Set', never, never>,
 ModOD extends IMTypeModifiersRecord<'Op', 'Set', any, never>,
@@ -1012,105 +1176,40 @@ NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>>
     __ReadOND : ReadOND,
     __ModRef : ModRef,
     __NeastedSchemas : NeastedSchemas
-
 }
 
 // I will have to figure out the defaults, because there seems to be a typescript bug of stores.
 // Which is a problem. Ask peire see if he has any ideas, lets press on with the other things.
-class MSchema<
-Id extends string,
-ModRD extends IMTypeModifiersRecord<'Req', 'Set', any, never>,
-ModRND extends IMTypeModifiersRecord<'Req', 'Set', never, never>,
-ModOD extends IMTypeModifiersRecord<'Op', 'Set', any, never>,
-ModOND extends IMTypeModifiersRecord<'Op', 'Set', never, never>,
-ReadRD extends IMTypeModifiersRecord<'Req', 'Get', any, never>,
-ReadRND extends IMTypeModifiersRecord<'Req', 'Get', never, never>,
-ReadOD extends IMTypeModifiersRecord<'Op', 'Get', undefined, never>,
-ReadOND extends IMTypeModifiersRecord<'Op', 'Get', never, never>,
-ModRef extends IMTypeModifiersRecord<any, any, any, any>,
-NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>>
-extends Schema implements IMongooseSchemas<Id, ModRD, ModRND, ModOD, ModOND, ReadRD, ReadRND, ReadOD, ReadOND, ModRef, NeastedSchemas> 
-{
-        constructor(
-        public __Name : string,
-        public __Id : Id,
-        public __ModRD : ModRD,
-        public __ModRND : ModRND,
-        public __ModOD : ModOD,
-        public __ModOND : ModOND,
-        public __ReadRD : ReadRD,
-        public __ReadRND : ReadRND,
-        public __ReadOD : ReadOD,
-        public __ReadOND : ReadOND,
-        public __ModRef : ModRef,
-        public __NeastedSchemas : NeastedSchemas,
-        public options : SchemaOptions | Record<string,never>
-    )
-    {
-        super({id:__Id, 
-            ... __Name as any,
-            ... __Id as any,
-            ... __ModRD as any,
-            ... __ModRND as any,
-            ... __ModOD as any,
-            ... __ReadRD as any,
-            ... __ReadRND as any,
-            ... __ReadOD as any,
-            ... __ReadOND as any,
-            ... __ModRef as any,
-            ... __NeastedSchemas as any,
-        }, options)
-
-    }
-}
-
-// const newSchema = new MSchema({}, {},{},{},{},{},{},{})
-// Partial Schema, which still needs to refect the id,
-// but that should be done by linking it to the base parent schema, which defines some base concepts.
-class MSchemaPartial<BaseSchema extends MSchema<any, any, any, any, any, any, any, any, any, any, any>,
-ModRD extends IMTypeModifiersRecord<'Req', 'Set', any, never>,
-ModRND extends IMTypeModifiersRecord<'Req', 'Set', never, never>,
-ModOD extends IMTypeModifiersRecord<'Op', 'Set', any, never>,
-ModOND extends IMTypeModifiersRecord<'Op', 'Set', never, never>,
-ReadRD extends IMTypeModifiersRecord<'Req', 'Get', any, never>,
-ReadRND extends IMTypeModifiersRecord<'Req', 'Get', never, never>,
-ReadOD extends IMTypeModifiersRecord<'Op', 'Get', undefined, never>,
-ReadOND extends IMTypeModifiersRecord<'Op', 'Get', never, never>,
-ModRef extends IMTypeModifiersRecord<any, any, any, any>,
-NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>>
-extends Schema implements IMongooseSchemas<BaseSchema['__Id'], ModRD, ModRND, ModOD, ModOND, ReadRD, ReadRND, ReadOD, ReadOND, ModRef, NeastedSchemas>
-{
-    constructor(
-        public baseSchema : BaseSchema,
-        public __ModRD : ModRD,
-        public __ModRND : ModRND,
-        public __ModOD : ModOD,
-        public __ModOND : ModOND,
-        public __ReadRD : ReadRD,
-        public __ReadRND : ReadRND,
-        public __ReadOD : ReadOD,
-        public __ReadOND : ReadOND,
-        public __ModRef : ModRef,
-        public __NeastedSchemas : NeastedSchemas,
-        public options : SchemaOptions,
-        public __Id : BaseSchema['__Id'] = baseSchema['__Id'],
-        public __Name : BaseSchema['__Name']
-    )
-    {
-        super({
-            ... __ModRD as any,
-            ... __ModRND as any,
-            ... __ModOD as any,
-            ... __ReadRD as any,
-            ... __ReadRND as any,
-            ... __ReadOD as any,
-            ... __ReadOND as any,
-            ... __ModRef as any,
-            ... __NeastedSchemas as any,
-        }, options)
-
-    }
-}
+// class Schema<
+// Id extends string,
+// ModRD extends IMTypeModifiersRecord<'Req', 'Set', any, never>,
+// ModRND extends IMTypeModifiersRecord<'Req', 'Set', never, never>,
+// ModOD extends IMTypeModifiersRecord<'Op', 'Set', any, never>,
+// ModOND extends IMTypeModifiersRecord<'Op', 'Set', never, never>,
+// ReadRD extends IMTypeModifiersRecord<'Req', 'Get', any, never>,
+// ReadRND extends IMTypeModifiersRecord<'Req', 'Get', never, never>,
+// ReadOD extends IMTypeModifiersRecord<'Op', 'Get', undefined, never>,
+// ReadOND extends IMTypeModifiersRecord<'Op', 'Get', never, never>,
+// ModRef extends IMTypeModifiersRecord<any, any, any, any>,
+// NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>>
+// {
+//         constructor(
+//         public __Name : string,
+//         public __Id : Id,
+//         public __ModRD : ModRD,
+//         public __ModRND : ModRND,
+//         public __ModOD : ModOD,
+//         public __ModOND : ModOND,
+//         public __ReadRD : ReadRD,
+//         public __ReadRND : ReadRND,
+//         public __ReadOD : ReadOD,
+//         public __ReadOND : ReadOND,
+//         public __ModRef : ModRef,
+//         public __NeastedSchemas : NeastedSchemas,
+//     )
+//     {
+//     }
+// }
 
 interface ObjectId extends String
 {
