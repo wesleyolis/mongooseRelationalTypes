@@ -287,7 +287,94 @@ function ShapeTSSchema<T extends IMongooseSchemas<any, any, any, any, any, any, 
     return new Shape<IShapeTSSchema<T>>('S').TSTypeCastUp();
 }
 
-type GenAdapters = 'Mongoose'
+type GenAdapters = 'Mongoose' | 'Postgress'
+
+type GenAdaptersSchemaOptions = Record<GenAdapters, Record<string, any>>;
+
+type GenAdaptersFieldTypesOptions = Record<GenAdapters, Record<string, any>>;
+
+type IFieldDef<Options extends GenAdaptersFieldTypesOptions> = 
+IShape<any,any> & IMTypeModifiers<any, any, any, any, any, any, any, any, any, any> & Options;
+
+type IteratorSchemaContext = {
+    schema : ISchema<any, any, any, any, any, any, any, any, any, any, any>,
+    parentSchema : ISchema<any, any, any, any, any, any, any, any, any, any, any> | undefined,
+    rootSchema : ISchema<any, any, any, any, any, any, any, any, any, any, any> | undefined,
+    fieldKeys: string [] // May want simple boolean to decided on things.
+}
+
+type IteratorFieldContext = {
+    schema : IteratorSchemaContext
+    fields: {
+        field : IFieldDef<any>,
+        parentField : IFieldDef<any>,
+        fieldKeys: string []
+    }
+}
+
+type GenOptionsPrimatives = boolean | number | string;
+
+interface IGenAdapterConfig<FieldOptions extends Record<string, GenOptionsPrimatives>> {
+    
+    schemaTransform: (        
+        options: SchemaOptions,
+        iteratorContext: IteratorSchemaContext,
+        schemasContents: string | undefined
+    ) => string,
+    fieldTransforms:(
+        key: string,
+        options: FieldOptions,
+        iteratorContext: IteratorFieldContext,
+        neastedFieldTransformContents: string | undefined
+    ) => string
+}
+
+interface ITSGenAdapterConfig<
+SchemaOptions extends Record<string, GenOptionsPrimatives>,
+FieldOptions extends Record<string, GenOptionsPrimatives>
+> extends IGenAdapterConfig<FieldOptions> {
+    __tsSchemaOptions: Record<string, GenOptionsPrimatives>,
+    __tsFieldOptions: Record<string, GenOptionsPrimatives>,
+}
+
+type GenAdapterConfiguration = Record<GenAdapters, IGenAdapterConfig<any>>
+
+type ExtractGenAdapterConfShape<T extends Record<string,any>> = {
+    [K in keyof T] : IGenAdapterConfig<T[K]['__tsFieldOptions']>
+}
+
+function GenAdapterConfiguration<Adapters extends ExtractGenAdapterConfShape<Adapters>>(adapters : Adapters)
+{
+    return adapters;
+}
+
+// The schemaOptions need to be defined as typesript information and not as runtime informaiton.
+// This means that I am going to need a helper function, which takes in the runtime information
+// and then takes on some typescript constraints __tsTheOption anme.
+
+function NewAdapterConfiguration<
+SchemaOptions extends Record<string, GenOptionsPrimatives>,
+FieldOptions extends Record<string, GenOptionsPrimatives>>(config : IGenAdapterConfig<FieldOptions>)
+{
+    return config as ITSGenAdapterConfig<SchemaOptions, FieldOptions>
+}
+
+const adapter = {
+    'Mongoose': NewAdapterConfiguration<{},{}>({
+    schemaTransform : {} as any,
+    fieldTransforms : {} as any})
+};
+
+const uuu = GenAdapterConfiguration(adapter);
+
+//     const adapter : GenAdapterConfiguration = {
+//     'Mongoose': NewAdapterConfiguration<{},{}>({
+//         schemaTransform : (config,iterator, string) =>
+//         fieldTransforms : (config) =>''
+//     })     
+//     }
+// }
+
 
 // These are the type ids, which be store at runtime for translation
 // to other drivers, typically all cases would be avaliable here, and limit this to a subset
@@ -304,7 +391,7 @@ const GenTypeAdapterMap = {
     }
 }
 
-type GenTypeAdapterAnotationOptions = Record<GenAdapters,Record<string,any>>;
+type GenTypeAdapterAnotationOptions = Record<GenAdapters, Record<string,any>>;
 
 const GenType : GenTypeAdapterAnotationOptions = {
     'Mongoose' : {
@@ -644,6 +731,38 @@ type SchemaTypeID<ID extends IMongooseShape<IShapeTSType<any>, 'Req', 'Set', und
 //-----------------
 // ModRef, becomes readonly in the final schema...
 // since we can't update things back to the model, might be the wrong call toought.
+
+
+
+interface ISchema<
+    Id extends string,//SchemaTypeID<any>,
+    ModRD extends IMTypeModifiersRecord<'Req', 'Set', any, never>,
+    ModRND extends IMTypeModifiersRecord<'Req', 'Set', never, never>,
+    ModOD extends IMTypeModifiersRecord<'Op', 'Set', any, never>,
+    ModOND extends IMTypeModifiersRecord<'Op', 'Set', never, never>,
+    ReadRD extends IMTypeModifiersRecord<'Req', 'Get', any, never>,
+    ReadRND extends IMTypeModifiersRecord<'Req', 'Get', never, never>,
+    ReadOD extends IMTypeModifiersRecord<'Op', 'Get', undefined, never>,
+    ReadOND extends IMTypeModifiersRecord<'Op', 'Get', never, never>,
+    ModRef extends IMTypeModifiersRecord<any, any, any, any>,
+    NeastedSchemas extends INeastedSchemaRecord<any, any, any, any, any, any>
+    > extends IMongoosePartialSchema<ModRD, ModRND, ModOD, ModOND, ReadRD, ReadRND, ReadOD, ReadOND, ModRef, NeastedSchemas>
+{
+    __Name : string // This is a default name, that can be used for the model, which can be overidden by the model.
+    // The question is how would you update the referance were there are mutiple instances..
+    // We would require to have an abstract list of model names, however, for typings, the name of the model,
+    // is actually in consiquential, because we tie nothing to the name..
+    // The problem is for runtime information, because one needs to create a new schema, with a new name, were the referance
+    // is abstracted away.
+    // the only way one is cappable of doing that is, the name needs to be looked up in a dictionary under and alias name.
+    // RefModelName, when a new instance of Schema is create the default value would be used for each,
+    // or it can be overidden with a new list.
+    // Yes so each schema.
+    // Which means one needs a set of model maps..
+    // were for single name instance model, 
+    // to simplfy things I am just going to use a string right now.
+    __Id : Id
+}
 
 interface IMongooseSchemas<
     Id extends string,//SchemaTypeID<any>,
