@@ -287,8 +287,6 @@ function ShapeTSSchema<T extends IMongooseSchemas<any, any, any, any, any, any, 
     return new Shape<IShapeTSSchema<T>>('S').TSTypeCastUp();
 }
 
-type GenAdapters = 'Mongoose' | 'Postgress'
-
 type GenAdaptersSchemaOptions = Record<GenAdapters, Record<string, any>>;
 
 type GenAdaptersFieldTypesOptions = Record<GenAdapters, Record<string, any>>;
@@ -312,41 +310,32 @@ type IteratorFieldContext = {
     }
 }
 
-type GenOptionsPrimatives = boolean | number | string;
+type GenOptionsPrimatives = boolean | number | string | Function | undefined;
 
-interface IGenAdapterConfig<FieldOptions extends Record<string, GenOptionsPrimatives>> {
+interface IGenAdapterConfig<SchemaAnotationOptions extends Record<string, GenOptionsPrimatives>, FieldAnotationOptions extends Record<string, GenOptionsPrimatives>> {
     
     schemaTransform: (        
-        options: SchemaOptions,
+        anotationOptions: SchemaAnotationOptions,
         iteratorContext: IteratorSchemaContext,
         schemasContents: string | undefined
     ) => string,
-    fieldTransforms:(
+    fieldTransform:(
         key: string,
-        options: FieldOptions,
+        anotationOptions: FieldAnotationOptions,
         iteratorContext: IteratorFieldContext,
         neastedFieldTransformContents: string | undefined
     ) => string
 }
 
 interface ITSGenAdapterConfig<
-SchemaOptions extends Record<string, GenOptionsPrimatives>,
-FieldOptions extends Record<string, GenOptionsPrimatives>
-> extends IGenAdapterConfig<FieldOptions> {
-    __tsSchemaOptions: Record<string, GenOptionsPrimatives>,
-    __tsFieldOptions: Record<string, GenOptionsPrimatives>,
+SchemaAnontationOptions extends Record<string, GenOptionsPrimatives>,
+FieldAnontationOptions extends Record<string, GenOptionsPrimatives>
+> extends IGenAdapterConfig<SchemaAnontationOptions, FieldAnontationOptions> {
+    __tsSchemaOptions: SchemaAnontationOptions,
+    __tsFieldOptions: FieldAnontationOptions,
 }
 
-type GenAdapterConfiguration = Record<GenAdapters, IGenAdapterConfig<any>>
-
-type ExtractGenAdapterConfShape<T extends Record<string,any>> = {
-    [K in keyof T] : IGenAdapterConfig<T[K]['__tsFieldOptions']>
-}
-
-function GenAdapterConfiguration<Adapters extends ExtractGenAdapterConfShape<Adapters>>(adapters : Adapters)
-{
-    return adapters;
-}
+type GenAdapterConfiguration = Record<string, IGenAdapterConfig<any, any>>
 
 // The schemaOptions need to be defined as typesript information and not as runtime informaiton.
 // This means that I am going to need a helper function, which takes in the runtime information
@@ -354,65 +343,261 @@ function GenAdapterConfiguration<Adapters extends ExtractGenAdapterConfShape<Ada
 
 function NewAdapterConfiguration<
 SchemaOptions extends Record<string, GenOptionsPrimatives>,
-FieldOptions extends Record<string, GenOptionsPrimatives>>(config : IGenAdapterConfig<FieldOptions>)
+FieldOptions extends Record<string, GenOptionsPrimatives>>(config : IGenAdapterConfig<SchemaOptions, FieldOptions>)
 {
     return config as ITSGenAdapterConfig<SchemaOptions, FieldOptions>
 }
 
-const adapter = {
-    'Mongoose': NewAdapterConfiguration<{},{}>({
-    schemaTransform : {} as any,
-    fieldTransforms : {} as any})
-};
+// Typescript seem to not be able to validate function signatures
+// not much we can do about that..
+type ExtractGenAdapterConfShape<T extends Record<string,any>> = {
+    [K in keyof T] : ITSGenAdapterConfig<
+    T[K]['__tsSchemaOptions'] extends unknown ? Record<string,never> : T[K]['__tsSchemaOptions'],
+    T[K]['__tsFieldOptions'] extends unknown ? Record<string,never> : T[K]['__tsFieldOptions']
+    >
+}
 
-const uuu = GenAdapterConfiguration(adapter);
+// type MapRuntimeToTSType = {
+//     'Boolean' : boolean,
+//     'Number' : number,
+//     'String' : string,
+//     'Date' : Date
+//     'R' : Record
+//     'AR' : Array<Record<string,any>>,
+//     'A' : Array<>;
 
-//     const adapter : GenAdapterConfiguration = {
-//     'Mongoose': NewAdapterConfiguration<{},{}>({
-//         schemaTransform : (config,iterator, string) =>
-//         fieldTransforms : (config) =>''
-//     })     
-//     }
 // }
 
-
-// These are the type ids, which be store at runtime for translation
-// to other drivers, typically all cases would be avaliable here, and limit this to a subset
-// for spesific drives.
-type GenTypeID = 'Boolean' | 'Number' | 'String' | 'Date' | 'Record' | 'Array' | 'Ref' | 'Schema'
-
-type GenTypeAdapterMap = Record<GenAdapters, Record<GenTypeID : (genTypes : GenTypeAdapterAnotationOptions[GenAdapters])>>
-
-const GenTypeAdapterMap = {
-    'Mongoose' : {
-        'Boolean' : 'bool'
-        'Number' : 
-
-    }
-}
-
-type GenTypeAdapterAnotationOptions = Record<GenAdapters, Record<string,any>>;
-
-const GenType : GenTypeAdapterAnotationOptions = {
-    'Mongoose' : {
-
-    }
-}
-
-type ExtractGenTypeAdapterAnotationOptionsShape<T extends GenTypeAdapterAnotationOptions> =
+class SchemaGenerator<AdaptorConfigurations extends Record<string, ITSGenAdapterConfig<any, any>>>
 {
-    [K in keyof T] : Record<K,Record<GenTypeID,(shape: IShape<any> & IGenTypeModifiers<any,any,any,any,any>,anotations:T[K]) => string>>
-}
+    constructor(public adaptors : AdaptorConfigurations)
+    {
+    }
 
-class GenTsShape<
-TGenTypeAdaptorsAnontations extends GenTypeAdapterAnotationOptions,
-TAdapters extends keyof TGenTypeAdaptorsAnontations,
-TGenTypeAdaptorsMap extends Record<TAdapters, ,
+    Generate(adapterName : keyof AdaptorConfigurations) : string {
+        return 'Not Implemented Yet'
+    }
 
->
-{
-    constructor()
+    // All the typescript type definitions, which must be define on this class, so that 
+    // all the correct typing signatures will exist on the functions.
+
+
+    // I have two options here, for mixing of the types..
+
+//     ObjectId () => mongoose.Schema.Types.ObjectId as any as string;
+//     //as IShapeTSType<string> & IMTypeModifiers<'Req', 'Set', undefined>,
+
+//     Boolean : ()
+    
+//     <Required extends 'Req' | 'Op' = 'Op', 
+//             ReadOnly extends 'Get' | 'Set' = 'Set',
+//             Default extends (boolean | undefined | never) = never
+//             >
+//         (options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
+//         => MongooseTypes(Schema.Types.Boolean, options) as MBoolean<Required, ReadOnly, Default>,
+
+    
+//     Number : <Required extends 'Req' | 'Op' = 'Op', 
+//             ReadOnly extends 'Set' | 'Get' = 'Set',
+//             Default extends (number | undefined) = never
+//             >
+//         (options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
+//          => MongooseTypes(Schema.Types.Number, options) as MNumber<Required, ReadOnly, Default>,
+
+//     String : <Required extends 'Req' | 'Op' = 'Op', 
+//             ReadOnly extends 'Get' | 'Set' = 'Set',
+//             Default extends (string | undefined) = undefined
+//             >
+//         (options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
+//          => MongooseTypes(Schema.Types.String, options) as 
+//          //IMongooseShape<IShapeTSType<string>, Required, ReadOnly, Default>,
+//          MString<Required, ReadOnly, Default>,
+         
+//     Date : <Required extends 'Req' | 'Op' = 'Op', 
+//             Default extends (Date | undefined) = never, 
+//             ReadOnly extends 'Get' | 'Set' = 'Set'>
+//         (options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
+//         => MongooseTypes(Schema.Types.Date, options) as MDate<Required, ReadOnly, Default>,
+
+
+//         // Array : <OptionalConstraints extends 'Req' | 'Op', 
+//         // ReadonlyConstraints extends 'Get' | 'Set',
+//         // DefaultConstraints extends ([] | undefined),
+//         // RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
+//         // ArrayItems extends IMongooseShape<IShape, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
+//         // Required extends 'Req' | 'Op' = 'Op', 
+//         // Default extends ([] | undefined) = [], 
+//         // ReadOnly extends 'Get' | 'Set' = 'Set'
+//         // >(items: ArrayItems, options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
+//         // => MongooseTypes(items, options) as IMongooseShape<IShapeTSArrayNeasted<ArrayItems2>,Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
+//         // & Schema.Types.Array,
+    
+//         // Array : function<OptionalConstraints extends 'Req' | 'Op', 
+//         // DefaultConstraints extends ([] | undefined),
+//         // RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
+//         // ArrayItems extends IMongooseShape<IShape, OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
+//         // Required extends 'Req' | 'Op' = 'Op', 
+//         // Default extends ([] | undefined) = [], 
+//         // ReadOnly extends 'Get' | 'Set' = 'Set',
+//         // ReadonlyConstraints extends 'Get' | 'Set' = 'Set',
+//         // >(items: ArrayItems, options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
+//         // : IMongooseShape<IShapeTSArrayNeasted<ArrayItems>,Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
+//         // & Schema.Types.Array {return MongooseTypes(items, options)},
+    
+        
+//         // function<OptionalConstraints extends 'Req' | 'Op', 
+//         // ReadonlyConstraints extends 'Get' | 'Set',
+//         // DefaultConstraints extends TsTypesPrimatives | Array<any> | Record<string, TsTypesPrimatives> | undefined,
+//         // RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any> | undefined,
+//         // ArrayItems extends IMTypeModifiersRecord<OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
+//         // Required extends 'Req' | 'Op' = 'Op', 
+//         // Default extends ([] | undefined) = [], 
+//         // ReadOnly extends 'Get' | 'Set' = 'Set'>
+//         // (items: ArrayItems, options?: {required?: Required, readonly?: ReadOnly, default?: Default} & SchemaFieldOptionsAll)
+//         //  : IMongooseShape<IShapeTSArrayRecord<ArrayItems>,Required, ReadOnly, Default, undefined,  OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>
+//         // & Schema.Types.Array { return MongooseTypes(items, options)},
+
+//     Array : MTypeArray.default,
+//     //Object : MTypeObject.default,
+    
+//     Record : <DefaultConstraints extends TsTypesPrimatives | Array<any> | undefined | Record<string, never>,
+//     Records extends IMTypeModifiersRecord<OptionalConstraints, ReadonlyConstraints, DefaultConstraints, RefTypeConstraints>,
+//     OptionalConstraints extends 'Req' | 'Op' = any, 
+//     ReadonlyConstraints extends 'Get' | 'Set' = any,
+//     RefTypeConstraints extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> | undefined = any
+
+//     //Required extends 'Req' | 'Op' = 'Req', 
+//     //ReadOnly extends 'Get' | 'Set' = 'Set',
+//     //Default extends undefined = never
+//     >(record : Records)
+//     => record as any as IMongooseShape<IShapeTSRecord<Records>, any, any, any, never, 
+//     ExtractRecordModfierConstraints<Records,'__OptionalConstraints'>, 
+//     ExtractRecordModfierConstraints<Records,'__ReadonlyConstraints'>, 
+//     ExtractRecordModfierConstraints<Records,'__DefaultConstraints'>, 
+//     ExtractRecordModfierConstraints<Records,'__RefTypeConstraints'>>,
+
+
+//     // Schema :  <NeastedSchemas extends IMongoosePartialSchema<any, any, any, any, any, any>,
+//     // Required extends 'Req' | 'Op' = 'Op', 
+//     // ReadOnly extends 'Get' | 'Set' = 'Set'
+//     // >
+//     // (object : NeastedSchemas, options? : {required?: Required, readonly?: ReadOnly, default?: never} & SchemaFieldOptionsAll)
+//     //  => MongooseTypes(object, options) as IMongooseTSTypeSchema<NeastedSchemas, 'S'> & 
+//     // IMTypeModifiersWithNeastedConstraints<Required, ReadOnly, undefined, undefined, any, any, any, any>
+
+//     // ,
+//     //MongooseTypes(Schema.Types.Boolean, options) as MBuffer,// MoggooseType<Schema.Types.Buffer, Options, MBuffer>,
+
+//     Ref:<MSchema extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any>,
+//     Required extends 'Req' | 'Op' = 'Op', 
+//     ReadOnly extends 'Get' | 'Set' = 'Set',
+//     >(refSchema: MSchema, options? : {required?: Required, readonly?: ReadOnly, default?: never} & SchemaFieldOptionsAll)
+//     => MongooseTypes(refSchema['__Id'], { options , ref: refSchema['__Name'] }) as any as IMongooseShape<IShapeTSRef<MSchema['__Id']>, Required, ReadOnly, never, MSchema>
+// };
+
 }   
+
+
+type SchemaOptions = {
+    autoIndex: any,
+    bufferCommands: any,
+    capped: any,
+    collection: any,
+    id: any,
+    _id: any,
+    minimize: any,
+    read: any,
+    writeConcern: any,
+    safe: any,
+    shardKey: any,
+    strict: any,
+    strictQuery: any,
+    toJSON: any,
+    toObject: any,
+    typeKey: any,
+    validateBeforeSave: any,
+    versionKey: any,
+    collation: any,
+    skipVersioning: any,
+    timestamps: any,
+    selectPopulatedPaths: any,
+    storeSubdocValidationError: any,
+}
+
+type SchemaFieldOptionsAll = {
+    select?: boolean,
+    validate?: Function, 
+    get?: Function,
+    set?: Function, 
+    alias? : string
+}
+
+
+const adapter = {
+    'Mongoose': NewAdapterConfiguration<SchemaOptions, SchemaFieldOptionsAll>({
+    schemaTransform : {} as any,
+    fieldTransform : {} as (
+        key: string,
+        options: SchemaFieldOptionsAll,
+        iteratorContext: IteratorFieldContext,
+        neastedFieldTransformContents: string | undefined
+    ) => string
+    })
+};
+
+
+const Schema = new SchemaGenerator(adapter);
+
+const mongooseRunTime = Schema.Generate('Mongoose', );
+
+// Needs to be like this, to allow extraction,
+// like to embed the correct, could be member, but
+// probably simple to have de coupled to reduce the overhead.
+const schemaA = new Schema({
+    a : Schema.Boolean().Required().Nullable().Default(5),
+    b : Schema.Boolean().Required().Nullable().Default(50)
+},
+{},
+{});
+
+// Layer 2 were we want the typing speed improvements
+// were the model definition will extra this informaiton.
+// What we could do is the full type type out here, but then check that
+// Schema conforms to that, but the simpified 
+const modelA = model('collectionName', Schema)
+
+// This basically what the model would be doing up front.
+// If we wanted to speed things up and not do the type extraction
+// from 
+type SchemaA = ExtractTSSchema<typeof schemaA>;
+
+
+
+interface ITypeModifiers<
+    GenType extends IShape<any,any>,
+    Required extends 'Req' | 'Op',
+    Readonly extends 'Get' | 'Set',
+    Nullable extends 'Nullable' | 'Value',
+    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
+    RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never,
+> extends ITypeGenModifiers<Required, Readonly, Nullable, Default, RefType>{
+    public __GenTypeID : GenType
+    public __Required : Required
+    public __Readonly : Readonly
+    public __Nullable : Nullable
+    public __Default : Default
+    public __RefType : RefType
+}
+
+
+interface ITypeModifiers<
+    Required extends 'Req' | 'Op',
+    Readonly extends 'Get' | 'Set',
+    Nullable extends 'Nullable' | 'Value',
+    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
+    RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never,
+> {
+}
 
 interface IGenTypeModifiers<
     Required extends 'Req' | 'Op',
@@ -482,9 +667,18 @@ extends Pick<ArrayFun<Shape, Required, Readonly, Nullable, Default, RefType>, ''
 {
 }
 
+const DefaultConfig : ITypeModifiers<'Op', 'Set', 'Value', undefined, any> = {
+    __Default : undefined
 
-class ArrayFun<
-Shape extends ITSShape<any>,
+}
+
+
+function Boolean() {
+    return new Modifier();
+}
+
+class Modifier<
+Shape extends ITSShape<any,any>,
 Required extends 'Req' | 'Op',
 Readonly extends 'Get' | 'Set',
 Nullable extends 'Nullable' | 'Value',
@@ -611,23 +805,6 @@ implements ITypeGenModifiers<Required, Readonly, Nullable, Default, RefType> {
 // {
 
 // }
-
-
-interface ITypeModifiers<
-    GenType extends GenTypeID,
-    Required extends 'Req' | 'Op',
-    Readonly extends 'Get' | 'Set',
-    Nullable extends 'Nullable' | 'Value',
-    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null,
-    RefType extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any> = never,
-> extends ITypeGenModifiers<Required, Readonly, Nullable, Default, RefType>{
-    public __GenTypeID : GenType
-    public __Required : Required
-    public __Readonly : Readonly   // Complications I can't detect readonly, so has to be explicity file mm.. How to create teh constructors for this.., I think only in 3.1, which make dynamic name for variable.
-    public __Nullable : Nullable
-    public __Default : Default
-    public __RefType : RefType
-}
 
 interface IMTypeModifiersWithNeastedConstraints<
     Optional extends 'Req' | 'Op',
@@ -1049,39 +1226,39 @@ type MMixed = MongooseTSType<ObjectId> & Schema.Types.Decimal128
 */
 //type MongooseArrayType = MBoolean | MNumber | MString | MDate | MObjectId | MBuffer | MDecimal128 | MRef<any, any> | MArray<any> | MObject<any>;
 
-type SchemaOptions = {
-    autoIndex: any,
-    bufferCommands: any,
-    capped: any,
-    collection: any,
-    id: any,
-    _id: any,
-    minimize: any,
-    read: any,
-    writeConcern: any,
-    safe: any,
-    shardKey: any,
-    strict: any,
-    strictQuery: any,
-    toJSON: any,
-    toObject: any,
-    typeKey: any,
-    validateBeforeSave: any,
-    versionKey: any,
-    collation: any,
-    skipVersioning: any,
-    timestamps: any,
-    selectPopulatedPaths: any,
-    storeSubdocValidationError: any,
-}
+// type SchemaOptions = {
+//     autoIndex: any,
+//     bufferCommands: any,
+//     capped: any,
+//     collection: any,
+//     id: any,
+//     _id: any,
+//     minimize: any,
+//     read: any,
+//     writeConcern: any,
+//     safe: any,
+//     shardKey: any,
+//     strict: any,
+//     strictQuery: any,
+//     toJSON: any,
+//     toObject: any,
+//     typeKey: any,
+//     validateBeforeSave: any,
+//     versionKey: any,
+//     collation: any,
+//     skipVersioning: any,
+//     timestamps: any,
+//     selectPopulatedPaths: any,
+//     storeSubdocValidationError: any,
+// }
 
-type SchemaFieldOptionsAll = {
-    select?: boolean,
-    validate?: Function, 
-    get?: Function,
-    set?: Function, 
-    alias? : string
-}
+// type SchemaFieldOptionsAll = {
+//     select?: boolean,
+//     validate?: Function, 
+//     get?: Function,
+//     set?: Function, 
+//     alias? : string
+// }
 
 type MBaseSchema = Schema.Types.Boolean;
 /*Schema.Types.Array | Schema.Types.Boolean | Schema.Types.Buffer | Schema.Types.Date | Schema.Types.Decimal128 |
