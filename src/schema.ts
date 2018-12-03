@@ -269,6 +269,14 @@ interface ITSShape<T, TID extends ID> extends IShape<ID, any>
 // after which that member is disgarded.
 // basically this is cirtual member that just gets throw away.
 // it could extend the based implementation
+// The simple anwser here is that one can old check the ID,
+// because the two internal shapes of the ts and neasted are not the same,
+// which would requie a 3 field to storm the unformatted type,
+// which would then need to be strip away.
+// So basically if one to par, the class should take in the two seperate interface check that the ids are the same
+// then mix the interfaces togather.
+// For now, I am just going to not keep things as detached, because it doesn't really matter.
+// lets get on which things nw, it should all work.
 class NShape<TShape extends IShape<any,any>, TTSShape extends ITSShape<any, any>, implements IShape<TShape['__ID'], TShape['__Neasted']>
 {
     constructor(public __ID: TShape['__ID'], public __Neasted : TShape['__Neasted'] | undefined = undefined)
