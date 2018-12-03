@@ -180,12 +180,7 @@ IMTypeModifiersRecord<OptionalConstraints, ReadonlyConstraints, DefaultConstrain
 
 // type ArrayTypes = RecordInputTypeFormat<any, any, any, any> | ArrayInputTypeFormat | RefInputTypeFormat;
 
-type TsTypesPrimatives = boolean | number | string | Date;  // this should actually be the IMongooseTsType constaint.
-// type TsHybridTypesFormat = TsTypesPrimatives |
-// RecordInputTypeFormat<any, any, any, any> | 
-// ArrayInputTypeFormat | 
-// RefInputTypeFormat | 
-// {w:IMongoosePartialSchema<any, any, any, any, any, any>}
+type TsTypesPrimatives = boolean | number | string | Date; 
 
 type ID = 'T' | 'R' | 'AR' | 'AN' | 'Ref' | 'S'
 
@@ -202,112 +197,30 @@ interface IShape<TID extends ID, Neasted>{
     __Neasted : Neasted
 }
 
-// Need to define things in terms of I type neasted
-// Which is the physically type and would be physically implemented.
-// Then there is the upcast type, which is for typescript iteration,
-// Which format may change, such with the {w:T}, for wrapping, which is change
-// from __Neasted.. format.
-// We also required to be able to use Interface requirement for shape
-// and constraint matching.. typeically we have used the ts version..
-// I could change this to be the base version, but then I would be ensuring that everything is upcast.
-// It would be better for me to use the ts version.
-// Problem is here that TS type gets its format from Neasted, but types are current
-// defined at ts level. I only want a single instance, So how do I go about this..
-// MOve the definitions to instance of the physical
-// or type move.
-// The thing is if I don't define the types at the lowers level, then __Record, will always be undefine...mmm
-// I need to refacot rhtings so that those constraints are at base level.
-// then ts mutates them for iteration, which requires no knowlgade of the custom formatting.
-
-// I have manage to build the pattern, but it ensure that virtual tsTypes which are cast to have to relay on the runtime
-// I wanted to decouple this!
-// I need to think about this for a few, minutes can I still now do this, if not how can I do this..
-// The way one would go about doing this is in the runtime helper function,
-// it should ideally mix the types togather, I can't rember, but probably what I was not going for an finding typing issues.
-
 interface ITSShape<T, TID extends ID> extends IShape<ID, any>
 {
     __tsType: T;
     __ID: TID;
 }
 
-
-// // Required Physical Prsent of the ID now, for runtime adapter transformation.
-// class Shape<TShape extends ITSShape<any, any>> implements IShape<TShape['__ID'], TShape['__Neasted']>
-// {
-//     constructor(public __ID: TShape['__ID'], public __Neasted : TShape['__Neasted'] | undefined = undefined)
-//     {
-//     }
-
-//     TSTypeCast<T extends TShape['__tsType']>()  {
-//         return this as any as TShape['__tsType']
-//     }
-// }
-
-// interface IShapeTSType<T extends IShapeTSTypeExtends> extends IShape<'T', IShapeTSTypeExtends> implements ITSShape
-// {
-//     __tsType : T;
-// }
-
-// type rrr = IShapeTSType<number>
-
-// type uuu = rrr['__tsType'];
-
-// function ShapeTSType<T extends IShapeTSType<any>['__Neasted']>()
-// {
-//     return new Shape<IShapeTSType<T>>('T').TSTypeCast<T>();
-// }
-
-// This function will do the mixing if and only if the Id's are the same,
-// but then also required to check that __Neasted is a matching type to 
-// ITShape.. problem is that, which is actually the existing problem tsType, share and the __Neasted
-// shapes are different, so how do I check that IShape extends this in a decoupled system.
-// which out having the plain type which is not wrapped for extraction
-// to compare against..
-// This means that basically the physical and the virtual types need to share 
-// a common field format, to check the paring correctly.
-// after which that member is disgarded.
-// basically this is cirtual member that just gets throw away.
-// it could extend the based implementation
-// The simple anwser here is that one can old check the ID,
-// because the two internal shapes of the ts and neasted are not the same,
-// which would requie a 3 field to storm the unformatted type,
-// which would then need to be strip away.
-// So basically if one to par, the class should take in the two seperate interface check that the ids are the same
-// then mix the interfaces togather.
-// For now, I am just going to not keep things as detached, because it doesn't really matter.
-// lets get on which things nw, it should all work.
-class NShape<TShape extends IShape<any,any>, TTSShape extends ITSShape<any, any>, implements IShape<TShape['__ID'], TShape['__Neasted']>
+class Shape<TShape extends ITSShape<any, any>> implements IShape<TShape['__ID'],  TShape['__Neasted']>
 {
-    constructor(public __ID: TShape['__ID'], public __Neasted : TShape['__Neasted'] | undefined = undefined)
+    constructor(public __ID: TShape['__ID'], public __Neasted : TShape['__Neasted'] = undefined)
     {
     }
 
-    TSTypeCastUp()  {
-        return this as any as TShape
-    }
-}
-
-// Required Physical Prsent of the ID now, for runtime adapter transformation.
-class Shape<TShape extends ITSShape<any, any>> implements IShape<TShape['__ID'], TShape['__Neasted']>
-{
-    constructor(public __ID: TShape['__ID'], public __Neasted : TShape['__Neasted'] | undefined = undefined)
-    {
-    }
-
-    TSTypeCastUp()  {
+    TSTypeCastUp() {
         return this as any as TShape
     }
 }
 
 type IShapeTSTypeExtends = boolean | number | null;
 
-interface IShapeTSType<T extends IShapeTSTypeExtends> extends IShape<'T', IShapeTSTypeExtends> implements ITSShape
-{
+interface IShapeTSType<T extends IShapeTSTypeExtends> extends IShape<'T', undefined> implements ITSShape {
     __tsType : T;
 }
 
-function ShapeTSType<T extends IShapeTSType<any>['__Neasted']>()
+function ShapeTSType<T extends IShapeTSTypeExtends>()
 {
     return new Shape<IShapeTSType<T>>('T').TSTypeCastUp();
 }
@@ -333,37 +246,46 @@ interface IShapeTSArrayNeasted<T extends IShapeArrayNeastedExtends> extends ISha
     __ID: 'AN';
 }
 
-function ShapeTSArrayRecord<T extends IShapeArrayNeastedExtends>(record : T)
+function ShapeTSArray<T extends IShapeArrayNeastedExtends>(record : T)
 {
     return new Shape<IShapeTSArrayNeasted<T>>('AN').TSTypeCastUp();
 }
-// I also gotta know what is in the inner runtime type..
-// Which is quite a problem.. Typically I just captured that information
-// for tsPerposes, so how do I refactor this now..
-// RuntimePart1 + RuntimePart2 + ITypes
 
-const neastedSimple = ShapeTSType();
+type IShapeTSArrayRecordExtends = Record<string, ITSShapes> | null;
 
-const uuu = ShapeTSArrayRecord(neastedSimple)
-
-interface IShapeTSArrayRecord<T extends Record<string, ITSShapes> | null>
+interface IShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends> extends IShape<any, IShapeTSArrayRecordExtends> implements ITSShape
 {
     __tsType : T;
     __ID: 'AR';
 }
 
-interface IShapeTSRef<T extends TsTypesPrimatives | (TsTypesPrimatives | null)>
+function ShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends>()
+{
+    return new Shape<IShapeTSArrayRecord<T>>('AR').TSTypeCastUp();
+}
+
+interface IShapeTSRef<T extends TsTypesPrimatives> extends IShape<any, TsTypesPrimatives> implements ITSShape
 {
     __tsType : T;
     __ID: 'Ref';
 }
 
+function ShapeTSRef<T extends TsTypesPrimatives>()
+{
+    return new Shape<IShapeTSRef<T>>('Ref').TSTypeCastUp();
+}
+
 interface IShapeTSSchema<T extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any>>
+extends IShape<any, IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any>> implements ITSShape
 {
     __tsType : T;
     __ID: 'S';
 }
 
+function ShapeTSSchema<T extends IMongooseSchemas<any, any, any, any, any, any, any, any, any, any, any>>()
+{
+    return new Shape<IShapeTSSchema<T>>('S').TSTypeCastUp();
+}
 
 type GenAdapters = 'Mongoose'
 
