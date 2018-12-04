@@ -13,18 +13,18 @@ IShapeTSType<any>
 type IShapeContainers = IShapeTSRecord<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>
 
 
-interface IShape<TID extends ID>{
+interface IShape<TID extends ID, TNeasted>{
     id: TID;
-    neasted : Neasted
+    neasted : TNeasted
 }
 
-interface ITSShape<T, TID extends ID> extends IShape<ID>
+interface ITSShape<T, TID extends ID> extends IShape<ID, T>
 {
     __tsType: T;
     __ID: TID;
 }
 
-class Shape<TShape extends ITSShape<any, any>> implements IShape<TShape['__ID']>
+class Shape<TShape extends ITSShape<any, any>> implements IShape<TShape['__ID'], TShape['neasted'] >
 {
     constructor(public id: TShape['__ID'], public neasted : TShape['neasted'] | undefined = undefined)
     {
@@ -52,7 +52,6 @@ type IShapeRecordExtends = Record<string, ITSShapes> | null
 interface IShapeTSRecord<T extends IShapeRecordExtends> extends ITSShape<T, 'R'>
 {
     __tsType : T;
-    __ID: 'R';
 }
 
 function ShapeTSRecord<T extends IShapeRecordExtends>(rec : T)
@@ -62,10 +61,9 @@ function ShapeTSRecord<T extends IShapeRecordExtends>(rec : T)
 
 type IShapeArrayNeastedExtends = ITSShapes | null;
 
-interface IShapeTSArrayNeasted<T extends IShapeArrayNeastedExtends> extends ITSShape<T, 'AN'>
+interface IShapeTSArrayNeasted<T extends IShapeArrayNeastedExtends> extends ITSShape<any, 'AN'>
 {
     __tsType : {w:T};
-    __ID: 'AN';
 }
 
 function ShapeTSArray<T extends IShapeArrayNeastedExtends>(record : T)
@@ -78,7 +76,6 @@ type IShapeTSArrayRecordExtends = Record<string, ITSShapes> | null;
 interface IShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends> extends ITSShape<T, 'AR'>
 {
     __tsType : T;
-    __ID: 'AR';
 }
 
 function ShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends>()
@@ -89,7 +86,6 @@ function ShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends>()
 interface IShapeTSRef<T extends TsTypesPrimatives> extends ITSShape<T,'Ref'>
 {
     __tsType : T;
-    __ID: 'Ref';
 }
 
 function ShapeTSRef<T extends TsTypesPrimatives>()
@@ -101,7 +97,6 @@ interface IShapeTSSchema<T extends ISchemas<any, any, any, any, any, any, any, a
 extends ITSShape<T, 'S'> 
 {
     __tsType : T;
-    __ID: 'S';
 }
 
 function ShapeTSSchema<T extends ISchemas<any, any, any, any, any, any, any, any, any, any, any>>()
