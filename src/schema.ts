@@ -192,10 +192,18 @@ IShapeTSType<any>
 
 type IShapeContainers = IShapeTSRecord<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>
 
-interface IShape<TID extends ID, Neasted>{
-    __ID: TID;
-    __Neasted : Neasted
+type Neasted = IShapeContainers | undefined;
+
+
+interface IShape<TID extends ID, TNeasted>{
+    id: TID;
+    neasted : Neasted
 }
+
+// interface IShape<TID extends ID, Neasted>{
+//     __ID: TID;
+//     __Neasted : Neasted
+// }
 
 interface ITSShape<T, TID extends ID> extends IShape<ID, any>
 {
@@ -224,6 +232,7 @@ function ShapeTSType<T extends IShapeTSTypeExtends>()
 {
     return new Shape<IShapeTSType<T>>('T').TSTypeCastUp();
 }
+
 
 type IShapeRecordExtends = Record<string, ITSShapes> | null
 
@@ -607,7 +616,7 @@ const mongooseRunTime = GSchema.Generate('Mongoose', [SchemaA]);
 const schemaA = GSchema.NewSchema('collectionName','',{
     a : GSchema.Boolean(),//.Required().Nullable().Default(5),
     b : GSchema.Boolean(),//.Required().Nullable().Default(50)
-},{},{},{},{},{},{},{},{},{},{Mongoose:{collation:''}});
+},{},{},{},{},{},{},{},{},{},{Mongoose:{collation:'',}});
 
 // Layer 2 were we want the typing speed improvements
 // were the model definition will extra this informaiton.
@@ -626,48 +635,61 @@ function NewTypeModifier<
     Shape extends ITSShape<any,any>,
 >(shape : Shape, genType : TypesPrimative)
 {
-    return new Modifier({}, shape, genType, 'Op', 'Set', 'Value', undefined, undefined);
+    return new Modifiers(shape, genType, 'Op', 'Set', 'Value', undefined, undefined, {})
 };
 
 const testingr = NewTypeModifier(ShapeTSType<boolean>(), 'Boolean');
 
-interface ITypeModifiers<
-    Shape extends ITSShape<any,any>,
-    Required extends 'Req' | 'Op',
-    Readonly extends 'Get' | 'Set',
-    Nullable extends 'Nullable' | 'Value',
-    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined,
-    RefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined = undefined
-> {
-    public __Shape : Shape;
-    public __Type : TypesPrimative;
-    public __Required : Required;
-    public __Readonly : Readonly;
-    public __Nullable : Nullable;
-    public __Default : Default;
-    public __RefType : RefType;
+type _Required = 'Req' | 'Op'
+type _Readonly = 'Get' | 'Set'
+type _Nullable = 'Nullable' | 'Value'
+type _Default = TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined
+type _RefType = ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined 
+type _OptionsAnontations = Record<string,Record<string,any>>
+
+
+interface IModifiers<TOptions extends _OptionsAnontations> {
+    public type: TypesPrimative;
+    public required: _Required;
+    public readonly: _Readonly;
+    public nullable: _Nullable;
+    public init: _Default;
+    public refType: _RefType;
+    public options : TOptions;
 }
 
-interface ITypeModifiersWithConstraints<
-    Shape extends ITSShape<any,any>,
-    Required extends 'Req' | 'Op',
-    Readonly extends 'Get' | 'Set',
-    Nullable extends 'Nullable' | 'Value',
-    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined,
-    RefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined = undefined,
-    RequiredConstraint extends 'Req' | 'Op' | undefined = Required, 
-    ReadonlyConstraint extends 'Get' | 'Set' | undefined = Readonly,
-    NullableConstraint extends 'Nullable' | 'Value' | undefined = Nullable,
-    DefaultConstraint extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined = Default,
-    RefTypeConstraint extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined = RefType,
-> extends ITypeModifiers<Shape, Required, Readonly, Nullable, Default, RefType>{
-    // public __Type : TypesPrimative
-    // public __Required : Required
-    // public __Readonly : Readonly
-    // public __Nullable : Nullable
-    // public __Default : Default
-    // public __RefType : RefType
+interface ITSModifiers<
+    TOptionsAnotations extends _OptionsAnontations,
+    TShape extends ITSShape<any,any>,
+    TRequired extends _Required,
+    TReadonly extends _Readonly,
+    TNullable extends _Nullable,
+    TDefault extends _Default,
+    TRefType extends _RefType,
+> extends IModifiers<TOptionsAnotations> {
+    public __Shape : TShape;
+    public __Type : TypesPrimative;
+    public __Required : TRequired;
+    public __Readonly : TReadonly;
+    public __Nullable : TNullable;
+    public __Default : TDefault;
+    public __RefType : TRefType;
+}
 
+interface ITSModifiersWithConstraints<
+    TOptionsAnotations extends _OptionsAnontations,
+    TShape extends ITSShape<any,any>,
+    TRequired extends _Required,
+    TReadonly extends _Readonly,
+    TNullable extends _Nullable,
+    TDefault extends _Default,
+    TRefType extends _RefType = undefined,
+    RequiredConstraint extends _Required | undefined = TRequired, 
+    ReadonlyConstraint extends _Readonly | undefined = TReadonly,
+    NullableConstraint extends _Nullable | undefined = TNullable,
+    DefaultConstraint extends _Default = TDefault,
+    RefTypeConstraint extends _RefType = TRefType,
+> extends ITSModifiers<TOptionsAnotations, TShape, TRequired, TReadonly, TNullable, TDefault, TRefType>{
     public __RequiredConstraint : RequiredConstraint
     public __ReadonlyConstraint : ReadonlyConstraint
     public __NullableConstraint : NullableConstraint
@@ -854,14 +876,6 @@ implements ISchemas<BaseSchema['__Id'], ModRD, ModRND, ModOD, ModOND, ReadRD, Re
 
 
 
-function NewTypeModifierDefault<Shape extends ITSShape<any,any>,
->(shape : Shape, genType : TypesPrimative)
-{
-    return new Modifier({}, shape, genType, 'Op', 'Set', 'Value', undefined, undefined) as any as ITypeModifiersWithConstraints<Shape, 'Op', 'Set', 'Value', undefined, undefined>>
-}
-
-
-
 type TypeNames = 'Boolean' | 'Number' | 'String' | 'Date'
 
 
@@ -870,142 +884,182 @@ type TypeNames = 'Boolean' | 'Number' | 'String' | 'Date'
 // the runtime information needs to be preserved,
 // not just the type information..
 
-interface IModifiersFuns<
-    AvaliableOptions extends Record<string, any>,
-    Shape extends ITSShape<any, any>,
-    Required extends 'Req' | 'Op',
-    Readonly extends 'Get' | 'Set',
-    Nullable extends 'Nullable' | 'Value',
-    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined,
-    RefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined>
-    extends ITypeModifiers<Shape, Required, Readonly, Nullable, Default, RefType>, IShape<Shape['__ID'], Shape['__Neasted']>
-{
-    public Anotations(options : AvaliableOptions) : IModifiersFuns<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
-    public Options(options : AvaliableOptions) : IModifiersFuns<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
-    public Required() : IModifiersFuns<AvaliableOptions, Shape, 'Req', Readonly, Nullable, Default, RefType>
-    public Optional() : IModifiersFuns<AvaliableOptions, Shape, 'Op', Readonly, Nullable, Default, RefType>
-    public Nullable() : IModifiersFuns<AvaliableOptions, Shape, Required, Readonly, 'Nullable', Default, RefType>
-    public Readonly() : IModifiersFuns<AvaliableOptions, Shape, Required, 'Get', Nullable, Default, RefType>
-    public Default<DValue extends Default | (Nullable extends 'Nullable' ? null : never)>(dValue : DValue) : 
-    IModifiersFuns<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
-}
+// interface IModifiersFuns<
+//     AvaliableOptions extends Record<string, any>,
+//     Shape extends ITSShape<any, any>,
+//     Required extends 'Req' | 'Op',
+//     Readonly extends 'Get' | 'Set',
+//     Nullable extends 'Nullable' | 'Value',
+//     Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined,
+//     RefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined>
+//     extends ITSModifiers<Shape, Required, Readonly, Nullable, Default, RefType>, IShape<Shape['__ID'], Shape['__Neasted']>
+// {
+//     public Anotations(options : AvaliableOptions) : IModifiersFuns<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
+//     public Options(options : AvaliableOptions) : IModifiersFuns<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
+//     public Required() : IModifiersFuns<AvaliableOptions, Shape, 'Req', Readonly, Nullable, Default, RefType>
+//     public Optional() : IModifiersFuns<AvaliableOptions, Shape, 'Op', Readonly, Nullable, Default, RefType>
+//     public Nullable() : IModifiersFuns<AvaliableOptions, Shape, Required, Readonly, 'Nullable', Default, RefType>
+//     public Readonly() : IModifiersFuns<AvaliableOptions, Shape, Required, 'Get', Nullable, Default, RefType>
+//     public Default<DValue extends Default | (Nullable extends 'Nullable' ? null : never)>(dValue : DValue) : 
+//     IModifiersFuns<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
+// }
 
-type uuuu = IModifiersFunsWithConstraints<any,any,any,any,any,any,any> extends Modifiers<any,any,any,any,any,any,any> ? 'T' :'F'
+//type uuuu = IModifiersFunsWithConstraints<any,any,any,any,any,any,any> extends ITSTypeModifiers<any,any,any,any,any,any,any> ? 'T' :'F'
 
 
-interface IModifiersFunsWithConstraints<
-    AvaliableOptions extends Record<string, any>,
-    Shape extends ITSShape<any, any>,
-    Required extends 'Req' | 'Op',
-    Readonly extends 'Get' | 'Set',
-    Nullable extends 'Nullable' | 'Value',
-    Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined,
-    RefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined>
-    extends ITypeModifiersWithConstraints<Shape, Required, Readonly, Nullable, Default, RefType>
-{
-    public Anotations(options : AvaliableOptions) : IModifiersFunsWithConstraints<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
-    public Options(options : AvaliableOptions) : IModifiersFunsWithConstraints<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
-    public Required() : IModifiersFunsWithConstraints<AvaliableOptions, Shape, 'Req', Readonly, Nullable, Default, RefType>
-    public Optional() : IModifiersFunsWithConstraints<AvaliableOptions, Shape, 'Op', Readonly, Nullable, Default, RefType>
-    public Nullable() : IModifiersFunsWithConstraints<AvaliableOptions, Shape, Required, Readonly, 'Nullable', Default, RefType>
-    public Readonly() : IModifiersFunsWithConstraints<AvaliableOptions, Shape, Required, 'Get', Nullable, Default, RefType>
-    public Default<DValue extends Default | (Nullable extends 'Nullable' ? null : never)>(dValue : DValue) : 
-    IModifiersFunsWithConstraints<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
-}
+// interface IModifiersFunsWithConstraints<
+//     AvaliableOptions extends Record<string, any>,
+//     Shape extends ITSShape<any, any>,
+//     Required extends 'Req' | 'Op',
+//     Readonly extends 'Get' | 'Set',
+//     Nullable extends 'Nullable' | 'Value',
+//     Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined,
+//     RefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined>
+//     extends ITSTypeModifiersWithConstraints<Shape, Required, Readonly, Nullable, Default, RefType>
+// {
+//     public Anotations(options : AvaliableOptions) : IModifiersFunsWithConstraints<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
+//     public Options(options : AvaliableOptions) : IModifiersFunsWithConstraints<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
+//     public Required() : IModifiersFunsWithConstraints<AvaliableOptions, Shape, 'Req', Readonly, Nullable, Default, RefType>
+//     public Optional() : IModifiersFunsWithConstraints<AvaliableOptions, Shape, 'Op', Readonly, Nullable, Default, RefType>
+//     public Nullable() : IModifiersFunsWithConstraints<AvaliableOptions, Shape, Required, Readonly, 'Nullable', Default, RefType>
+//     public Readonly() : IModifiersFunsWithConstraints<AvaliableOptions, Shape, Required, 'Get', Nullable, Default, RefType>
+//     public Default<DValue extends Default | (Nullable extends 'Nullable' ? null : never)>(dValue : DValue) : 
+//     IModifiersFunsWithConstraints<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
+// }
 
 class Modifiers<
-AvaliableOptions extends Record<string, any>,
-Shape extends ITSShape<any, any>,
-Required extends 'Req' | 'Op',
-Readonly extends 'Get' | 'Set',
-Nullable extends 'Nullable' | 'Value',
-Default extends TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined,
-RefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined>
-implements ITypeModifiers<Shape, Required, Readonly, Nullable, Default, RefType>
+TAvaliableOptions extends Record<string, any>,
+TShape extends ITSShape<any, any>,
+TRequired extends _Required,
+TReadonly extends _Readonly,
+TNullable extends _Nullable,
+TDefault extends _Default,
+TRefType extends _RefType>
+implements ITSModifiersWithConstraints<TAvaliableOptions, TShape, TRequired, TReadonly, TNullable, TDefault, TRefType>,
+implements IModifiers<TAvaliableOptions>,
+implements IShape<any,any>
 {
     constructor(
-        public __Options: AvaliableOptions,
-        public __Shape: Shape,// This has to be generic, because this can contain absolutely anything..
-        public __Type : TypesPrimative,
-        public __Required: Required,
-        public __Readonly: Readonly,
-        public __Nullable: Nullable,
-        public __Default : Default,
-        public __RefType : RefType,
-        public __ID : Shape['__ID'] = __Shape.__ID,
-        public __Neasted : Shape['__Neasted'] = __Shape.__Neasted
+        shape: TShape,
+        public type: TypesPrimative,
+        public required: _Required,
+        public readonly: _Readonly,
+        public nullable: _Nullable,
+        public init: _Default,
+        public refType: _RefType,
+        public options: TAvaliableOptions,
+        public id: TShape['__ID'] = shape.id,
+        public neasted: TShape['__Neasted'] = shape.neasted,
     )
     {
     }
 
-    public Anotations(options : AvaliableOptions)
+    public Anotations(options :TAvaliableOptions)
     {
-        this.__Options = options
+        this.options = options
     }
 
-    public Options(options : AvaliableOptions)
+    public Options(options : TAvaliableOptions)
     {
-        this.__Options = options;
+        this.options = options;
     }
 
-    public Required()
-    {
-        const newRequired = 'Req'
-        type NewRequired = typeof newRequired;
-        this.__Required = newRequired;
+    // public Required()
+    // {
+    //     const newRequired = 'Req'
+    //     type NewRequired = typeof newRequired;
+    //     this.required = newRequired;
 
-        return NewTypeModiiers<AvaliableOptions, Shape, NewRequired, Readonly, Nullable, Default, RefType>(this);
-    }
+    //     return NewTypeModiiers<AvaliableOptions, Shape, NewRequired, Readonly, Nullable, Default, RefType>(this);
+    // }
 
-    public Optional()
-    {        
-        const newOptional = 'Op'
-        type NewOptional = typeof newOptional;
-        this.__Required = newOptional;
+    // public Optional()
+    // {        
+    //     const newOptional = 'Op'
+    //     type NewOptional = typeof newOptional;
+    //     this.__Required = newOptional;
 
-        return NewTypeModiiers<AvaliableOptions, Shape, NewOptional, Readonly, Nullable, Default, RefType>(this);
-    }
+    //     return NewTypeModiiers<AvaliableOptions, Shape, NewOptional, Readonly, Nullable, Default, RefType>(this);
+    // }
 
-    public Nullable()
-    {
-        const newNulable = 'Nullable'
-        type NewNullable = typeof newNulable;
-        this.__Nullable = newNulable;
+    // public Nullable()
+    // {
+    //     const newNulable = 'Nullable'
+    //     type NewNullable = typeof newNulable;
+    //     this.__Nullable = newNulable;
 
-        return NewTypeModiiers<AvaliableOptions, Shape, Required, Readonly, NewNullable, Default, RefType>(this);
-    }
+    //     return NewTypeModiiers<AvaliableOptions, Shape, Required, Readonly, NewNullable, Default, RefType>(this);
+    // }
 
-    public Readonly()
-    {
-        const newReadonly = 'Get'
-        type NewReadonly = typeof newReadonly;
-        this.__Readonly = newReadonly;
+    // public Readonly()
+    // {
+    //     const newReadonly = 'Get'
+    //     type NewReadonly = typeof newReadonly;
+    //     this.__Readonly = newReadonly;
 
-        type NewShape = IShapeTSArrayRecord<Shape['__tsType']>;
+    //     type NewShape = IShapeTSArrayRecord<Shape['__tsType']>;
 
-        return NewTypeModiiers<AvaliableOptions, Shape, Required, NewReadonly, Nullable, Default, RefType>(this);
-    }
+    //     return NewTypeModiiers<AvaliableOptions, Shape, Required, NewReadonly, Nullable, Default, RefType>(this);
+    // }
 
-    public Default<DValue extends Default | (Nullable extends 'Nullable' ? null : never)>(dValue : DValue)
-    {
-        this.__Default = dValue;
-        return NewTypeModiiers<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>(this);
+    // public Default<DValue extends Default | (Nullable extends 'Nullable' ? null : never)>(dValue : DValue)
+    // {
+    //     this.__Default = dValue;
+    //     return NewTypeModiiers<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>(this);
 
-    }
+    // }
 }
 
 
-function NewTypeModiiers<
-AvaliableOptions extends Record<string, any>,
-Shape extends ITSShape<any, any>,
-Required extends 'Req' | 'Op',
-Readonly extends 'Get' | 'Set',
-Nullable extends 'Nullable' | 'Value',
-Default extends TsTypesPrimatives | Array<never> | Array<Record<string, TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined,
-RefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined,
->(mod : Modifiers<any, any, any, any, any, any, any>)
+
+function NewTypeModifierDefault<
+Shape extends ITSShape<any,any>,
+>(shape : Shape, type : TypesPrimative)
 {
-    return new Modifiers(mod.__Options, mod.__Shape, mod.__Type, mod.__Required, mod.__Readonly, mod.__Nullable, mod.__Default, mod.__RefType, mod.__ID, mod.__Neasted) as any as IModifiersFunsWithConstraints<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
+    /*
+        shape: TShape,
+        public type: TypesPrimative,
+        public required: _Required,
+        public readonly: _Readonly,
+        public nullable: _Nullable,
+        public init: _Default,
+        public refType: _RefType,
+        public options: TAvaliableOptions,
+        public id: TShape['__ID'] = shape.id,
+        public neasted: TShape['__Neasted'] = shape.neasted,
+    */
+    const results =  new Modifiers(shape, type, 'Op', 'Set', 'Value', undefined, undefined, {}) as
+    I
+
+    type Results = typeof results;
+
+    type uu = Results['required']
+
+    //  as any
+    //  as ITypeModifiersWithConstraints<Shape, 'Op', 'Set', 'Value', undefined, undefined>>
+}
+
+
+const testingA = new Modifiers(shape, type, 'Op', 'Set', 'Value', undefined, undefined, {});
+
+
+
+// function NewTypeModiiers<
+// AvaliableOptions extends Record<string, any>,
+// Shape extends ITSShape<any, any>,
+// Required extends 'Req' | 'Op',
+// Readonly extends 'Get' | 'Set',
+// Nullable extends 'Nullable' | 'Value',
+// Default extends TsTypesPrimatives | Array<never> | Array<Record<string, TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined,
+// RefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any> | undefined,
+// >(mod : Modifiers<any, any, any, any, any, any, any>)
+// {
+//     return new Modifiers(mod.__Options, mod.__Shape, mod.__Type, mod.__Required, mod.__Readonly, mod.__Nullable, mod.__Default, mod.__RefType, mod.__ID, mod.__Neasted) as any as IModifiersFunsWithConstraints<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
+// }
+
+function NewTypeModiiers(mod : Modifiers<any, any, any, any, any, any, any>)
+{
+    return new Modifiers<Modifiers['options']>(mod.__Options, mod.__Shape, mod.__Type, mod.__Required, mod.__Readonly, mod.__Nullable, mod.__Default, mod.__RefType, mod.__ID, mod.__Neasted) as any as IModifiersFunsWithConstraints<AvaliableOptions, Shape, Required, Readonly, Nullable, Default, RefType>
 }
 
 // interface ArrayFun<Required extends 'Req' | 'Op',
