@@ -471,7 +471,7 @@ FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
     Record<Record extends ITSModifiersRecord<ID, any, any, any, any, any>>(rec : Record)
     {
         return NewModifiersWithConstraints(ShapeTSRecord(rec), 'Record', {} as FieldOptions,
-        {} as ExtractRecordModfierConstraints<Record,'__ID', '__ShapeIDConstraints'>
+        {} as ExtractRecordModfierConstraints<Record,'__ID', '__IDConstraints'>
         {} as ExtractRecordModfierConstraints<Record,'__Required', '__RequiredConstraints'>,
         {} as ExtractRecordModfierConstraints<Record,'__Readonly','__ReadonlyConstraints'>,
         {} as ExtractRecordModfierConstraints<Record,'__Nullable','__NullableConstraints'>,
@@ -491,7 +491,7 @@ FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
     ArrayRecord<Record extends ITSModifiersRecord<ID, any, any, any, any, any>>(items : Record)
     {
         return NewModifiersWithConstraints(ShapeTSArrayRecord(items), 'ArrayRecord', {} as FieldOptions,
-        {} as ExtractRecordModfierConstraints<Record,'__ID', '__ShapeIDConstraints'>,
+        {} as ExtractRecordModfierConstraints<Record,'__ID', '__IDConstraints'>,
         {} as ExtractRecordModfierConstraints<Record,'__Required', '__RequiredConstraints'>,
         {} as ExtractRecordModfierConstraints<Record,'__Readonly','__ReadonlyConstraints'>,
         {} as ExtractRecordModfierConstraints<Record,'__Nullable','__NullableConstraints'>,
@@ -653,8 +653,8 @@ const schemaA = GSchema.NewSchema('collectionName','', {
     //primative : GSchema.Boolean(),
     refType : GSchema.RefType(schemaARight).Required(),
     neasted : GSchema.Record({
-        Na : GSchema.Number().Required() // Need to fix constraints from here again.*********************************************************************
-       // Nb : GSchema.RefType(schemaARight).Required()
+        //Na : GSchema.Number().Required() // Need to fix constraints from here again.*********************************************************************
+        Nb : GSchema.RefType(schemaARight).Required()
     }).Required()
 },{},{Mongoose:{collation:'',}});
 
@@ -1104,7 +1104,7 @@ type INeastedSchemaRecord = Record<string, (ITSModifiersWithConstraints<any, any
 
 type ExtractRecordModfierConstraints<T extends Record<string, ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any, any, any>>, 
 Modifier extends '__ID' | '__Required' | '__Readonly' | '__Nullable' | '__Default' | '__RefType',
-ModifierConstraint extends '__ShapeIDConstraints' | '__RequiredConstraints' | '__ReadonlyConstraints' | '__NullableConstraints' | '__DefaultConstraints' | '__RefTypeConstraints'> = {
+ModifierConstraint extends '__IDConstraints' | '__RequiredConstraints' | '__ReadonlyConstraints' | '__NullableConstraints' | '__DefaultConstraints' | '__RefTypeConstraints'> = {
     [K in keyof T] : T[K][Modifier] | T[K][ModifierConstraint]
 }[keyof T]
 
