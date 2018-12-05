@@ -191,8 +191,10 @@ IShapeTSType<any>
 | IShapeTSSchema<any>
 
 type IShapeContainers = IShapeTSRecord<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>
+type IShapeContainersID = IShapeTSRecord<any>['__ID'] | IShapeTSArrayNeasted<any>['__ID'] | IShapeTSArrayRecord<any>['__ID']
 
 type IShapeRefContainers = IShapeContainers | IShapeTSRef<any>;//IShapeTSSchema
+type IShapeRefContainersID = IShapeContainersID | IShapeTSRef<any>['__ID']
 
 type Neasted = IShapeContainers | undefined;
 
@@ -291,7 +293,11 @@ extends ITSShape<T, 'S'>
 function ShapeTSSchema<T extends ISchemas<any, any, any, any, any, any, any, any, any, any, any, any>>()
 {
     return new Shape<IShapeTSSchema<T>>('S').TSTypeCastUp();
-}
+// }
+
+// type TesResult = ITSModifiersWithConstraints<any, any, any, any, any, any, any, any, any, any, IShapeTSType<number>, any> extends 
+// ITSModifiersWithConstraints<any,any,any,any,any,any,any,any,any,any, IShapeTSArrayNeasted<any>,any> ?
+// 'T' : 'F'
 
 type GenAdaptersSchemaOptions = Record<GenAdapters, Record<string, any>>;
 
@@ -301,7 +307,7 @@ type IFieldDef<Options extends GenAdaptersFieldTypesOptions> =
 IShape<any,any> & IMTypeModifiers<any, any, any, any, any, any, any, any, any, any> & Options;
 
 type IteratorSchemaContext = {
-    schema : ISchema<any, any, any, any, any, any, any, any, any, any, any>,
+    schema : ISchema<any, any, any, any, any, any, any, any, any, any,any, any>,
     parentSchema : ISchema<any, any, any, any, any, any, any, any, any, any, any> | undefined,
     rootSchema : ISchema<any, any, any, any, any, any, any, any, any, any, any> | undefined,
     fieldKeys: string [] // May want simple boolean to decided on things.
@@ -401,15 +407,15 @@ FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
     NewSchema<
         Name extends string,
         Id extends string,
-        ModRD extends ITSModifiersRecord<ITSShapes, 'Req', 'Set', any, undefined>,
-        ModRND extends ITSModifiersRecord<ITSShapes, 'Req', 'Set', undefined, undefined>,
-        ModOD extends ITSModifiersRecord<ITSShapes, 'Op', 'Set', any, undefined>,
-        ModOND extends ITSModifiersRecord<ITSShapes, 'Op', 'Set', undefined, undefined>,
-        ReadRD extends ITSModifiersRecord<ITSShapes, 'Req', 'Get', any, undefined>,
-        ReadRND extends ITSModifiersRecord<ITSShapes, 'Req', 'Get', undefined, undefined>,
-        ReadOD extends ITSModifiersRecord<ITSShapes, 'Op', 'Get', undefined, undefined>,
-        ReadOND extends ITSModifiersRecord<ITSShapes, 'Op', 'Get', undefined, undefined>,
-        ModRef extends ITSModifiersRecord<IShapeRefContainers, any, any, any, ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>>,
+        ModRD extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Set', any, undefined>,
+        ModRND extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Set', undefined, undefined>,
+        ModOD extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Set', any, undefined>,
+        ModOND extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Set', undefined, undefined>,
+        ReadRD extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Get', any, undefined>,
+        ReadRND extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Get', undefined, undefined>,
+        ReadOD extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Get', undefined, undefined>,
+        ReadOND extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Get', undefined, undefined>,
+        ModRef extends ITSModifiersRecord<any, IShapeRefContainers, any, any, any, ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>>,
         NeastedSchemas extends INeastedSchemaRecord>(
         name : Name,
         id : Id,
@@ -728,6 +734,7 @@ interface IModifiers<TOptions extends _OptionsAnontations> extends IShape<ID, Ne
 }
 
 interface ITSModifiers<
+    TShapeID extends ID,
     TRequired extends _Required,
     TReadonly extends _Readonly,
     TNullable extends _Nullable,
@@ -735,6 +742,7 @@ interface ITSModifiers<
     TRefType extends _RefType,
     TOptionsAnotations extends _OptionsAnontations
 > extends IModifiers<TOptionsAnotations> {
+    __ShapeID: TShapeID;
     __Type: TypesPrimative;
     __Required: TRequired;
     __Readonly: TReadonly;
@@ -756,11 +764,13 @@ interface ITSModifiers<
 
 
 interface ITSModifiersWithConstraints<
+    TShapeID extends ID,
     TRequired extends _Required,
     TReadonly extends _Readonly,
     TNullable extends _Nullable,
     TDefault extends _Default,
     TRefType extends _RefType,
+    TShapeIDConstraint extends ID,
     RequiredConstraint extends _Required | undefined, 
     ReadonlyConstraint extends _Readonly | undefined,
     NullableConstraint extends _Nullable | undefined,
@@ -768,7 +778,8 @@ interface ITSModifiersWithConstraints<
     RefTypeConstraint extends _RefType,
     TShape extends ITSShape<any,any>,
     TOptionsAnotations extends _OptionsAnontations,
-> extends ITSModifiers<TRequired, TReadonly, TNullable, TDefault, TRefType, TOptionsAnotations>{
+> extends ITSModifiers<TShapeID,TRequired, TReadonly, TNullable, TDefault, TRefType, TOptionsAnotations>{
+    __ShapeIDConstraints : TShapeIDConstraint
     __RequiredConstraints : RequiredConstraint
     __ReadonlyConstraints : ReadonlyConstraint
     __NullableConstraints : NullableConstraint
@@ -812,7 +823,7 @@ function NewModifiers<TAvaliableOptions extends _OptionsAnontations,
     >(shape : TShape, type : TypesPrimative, __options : TAvaliableOptions)
     {
         return new Modifiers<'Op', 'Set', 'Value', undefined, undefined, TShape, TAvaliableOptions>
-        (shape, type, 'Op', 'Set', 'Value', undefined, undefined, undefined) as any as ITSShapeModifiersFunWithConstraints<'Op', 'Set', 'Value', undefined, undefined, undefined, undefined, undefined, undefined, undefined, TShape, TAvaliableOptions>
+        (shape, type, 'Op', 'Set', 'Value', undefined, undefined, undefined) as any as ITSShapeModifiersFunWithConstraints<TShape['__ID'],'Op', 'Set', 'Value', undefined, ,undefined, undefined, undefined, undefined, undefined, undefined, TShape, TAvaliableOptions>
     }
 
     function NewModifiersWithConstraints<TAvaliableOptions extends _OptionsAnontations,
@@ -874,11 +885,13 @@ function NewModifiers<TAvaliableOptions extends _OptionsAnontations,
 // How ever, if this is for neasted types, then we are required to prset the RequiredConstraints
 // As they should be pass thought.
 interface IModifiersFunctions<
+TShapeID extends ID,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable,
 TDefault extends _Default,
 TRefType extends _RefType,
+TShapeIDConstraint extends ID,
 TRequiredConstraint extends _Required | undefined, 
 TReadonlyConstraint extends _Readonly | undefined,
 TNullableConstraint extends _Nullable | undefined,
@@ -887,31 +900,34 @@ TRefTypeConstraint extends _RefType,
 TShape extends ITSShape<any, any>,
 TAvaliableOptions extends _OptionsAnontations>
 {
-    Anotations(options : TAvaliableOptions): ITSShapeModifiersFunWithConstraints<TRequired, TReadonly, TNullable, TDefault, TRefType, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
-    Options(options : TAvaliableOptions): ITSShapeModifiersFunWithConstraints<TRequired, TReadonly, TNullable, TDefault, TRefType,TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
-    Required(): ITSShapeModifiersFunWithConstraints<'Req', TReadonly, TNullable, TDefault, TRefType, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
-    Optional(): ITSShapeModifiersFunWithConstraints<'Op', TReadonly, TNullable, TDefault, TRefType, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
-    Nullable() : ITSShapeModifiersFunWithConstraints<TRequired, TReadonly, 'Nullable', TDefault, TRefType, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
-    Readonly() : ITSShapeModifiersFunWithConstraints<TRequired, 'Get', TNullable, TDefault, TRefType, TRequiredConstraint, TReadonlyConstraint, TNullable, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
+    Anotations(options : TAvaliableOptions): ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShapeIDConstraint, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
+    Options(options : TAvaliableOptions): ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShapeIDConstraint, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
+    Required(): ITSShapeModifiersFunWithConstraints<TShapeID, 'Req', TReadonly, TNullable, TDefault, TRefType, TShapeIDConstraint, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
+    Optional(): ITSShapeModifiersFunWithConstraints<TShapeID, 'Op', TReadonly, TNullable, TDefault, TRefType, TShapeIDConstraint, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
+    Nullable() : ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, 'Nullable', TDefault, TRefType, TShapeIDConstraint, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
+    Readonly() : ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, 'Get', TNullable, TDefault, TRefType, TShapeIDConstraint, TRequiredConstraint, TReadonlyConstraint, TNullable, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
     Default<DValue extends TShape['neasted'] | (TNullable extends 'Nullable' ? null : never)>(dValue : DValue) : 
-    ITSShapeModifiersFunWithConstraints<TRequired, TReadonly, TNullable, DValue, TRefType, TRequiredConstraint, TReadonlyConstraint, TNullable, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
+    ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, TNullable, DValue, TRefType, TShapeIDConstraint, TRequiredConstraint, TReadonlyConstraint, TNullable, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
 }
 
 type ITSShapeModifiersFunWithConstraintsSimple<
+TShapeID extends ID,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable,
 TDefault extends _Default,
 TRefType extends _RefType,
 TShape extends ITSShape<any, any>,
-TAvaliableOptions extends _OptionsAnontations> = ITSShapeModifiersFunWithConstraints<TRequired, TReadonly, TNullable, TDefault, TRefType, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
+TAvaliableOptions extends _OptionsAnontations> = ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
 
-type ITSShapeModifiersFunWithConstraints<
+interface ITSShapeModifiersFunWithConstraints<
+TShapeID extends ID,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable,
 TDefault extends _Default,
 TRefType extends _RefType,
+TShapeIDConstraint extends ID | undefined,
 RequiredConstraint extends _Required | undefined, 
 ReadonlyConstraint extends _Readonly | undefined,
 NullableConstraint extends _Nullable | undefined,
@@ -919,34 +935,36 @@ DefaultConstraint extends _Default,
 RefTypeConstraint extends _RefType,
 TShape extends ITSShape<any, any>,
 TAvaliableOptions extends _OptionsAnontations
->
-= TShape & ITSModifiersWithConstraints<TRequired, TReadonly, TNullable, TDefault, TRefType,
-RequiredConstraint, ReadonlyConstraint, NullableConstraint, DefaultConstraint, RefTypeConstraint, TShape, TAvaliableOptions> &
-IModifiersFunctions<TRequired, TReadonly, TNullable, TDefault, TRefType,
-RequiredConstraint, ReadonlyConstraint, NullableConstraint, DefaultConstraint, RefTypeConstraint, TShape, TAvaliableOptions>
-
-
-interface IModifiersFunWithConstraints<
-TAvaliableOptions extends _OptionsAnontations,
-TShape extends ITSShape<any, any>,
-TRequired extends _Required,
-TReadonly extends _Readonly,
-TNullable extends _Nullable,
-TDefault extends _Default,
-TRefType extends _RefType,
-RequiredConstraint extends _Required | undefined = TRequired, 
-ReadonlyConstraint extends _Readonly | undefined = TReadonly,
-NullableConstraint extends _Nullable | undefined = TNullable,
-DefaultConstraint extends _Default = TDefault,
-RefTypeConstraint extends _RefType = TRefType>
-extends ITSModifiersWithConstraints<TRequired, TReadonly, TNullable, TDefault, TRefType,
-RequiredConstraint, ReadonlyConstraint, NullableConstraint, DefaultConstraint, RefTypeConstraint, TShape, TAvaliableOptions>, 
-IModifiersFunctions<TRequired, TReadonly, TNullable, TDefault, TRefType,
-RequiredConstraint, ReadonlyConstraint, NullableConstraint, DefaultConstraint, RefTypeConstraint, TShape, TAvaliableOptions> {
+> extends ITSModifiersWithConstraints<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType,
+TShapeIDConstraint, RequiredConstraint, ReadonlyConstraint, NullableConstraint, DefaultConstraint, RefTypeConstraint, TShape, TAvaliableOptions>,
+IModifiersFunctions<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType,
+TShapeIDConstraint, RequiredConstraint, ReadonlyConstraint, NullableConstraint, DefaultConstraint, RefTypeConstraint, TShape, TAvaliableOptions>
+{
 
 }
 
+// interface IModifiersFunWithConstraints<
+// TAvaliableOptions extends _OptionsAnontations,
+// TShape extends ITSShape<any, any>,
+// TRequired extends _Required,
+// TReadonly extends _Readonly,
+// TNullable extends _Nullable,
+// TDefault extends _Default,
+// TRefType extends _RefType,
+// RequiredConstraint extends _Required | undefined = TRequired, 
+// ReadonlyConstraint extends _Readonly | undefined = TReadonly,
+// NullableConstraint extends _Nullable | undefined = TNullable,
+// DefaultConstraint extends _Default = TDefault,
+// RefTypeConstraint extends _RefType = TRefType>
+// extends ITSModifiersWithConstraints<TRequired, TReadonly, TNullable, TDefault, TRefType,
+// RequiredConstraint, ReadonlyConstraint, NullableConstraint, DefaultConstraint, RefTypeConstraint, TShape, TAvaliableOptions>, 
+// IModifiersFunctions<TRequired, TReadonly, TNullable, TDefault, TRefType,
+// RequiredConstraint, ReadonlyConstraint, NullableConstraint, DefaultConstraint, RefTypeConstraint, TShape, TAvaliableOptions> {
+
+// }
+
 class Modifiers<
+TShapeID extends ID,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable,
@@ -956,7 +974,7 @@ TShape extends ITSShape<any, any>,
 TAvaliableOptions extends _OptionsAnontations>
 implements IModifiers<TAvaliableOptions>, 
 IShape<TShape['id'], TShape['neasted']>,
-IModifiersFunctions<TRequired, TReadonly, TNullable, TDefault, TRefType, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
+IModifiersFunctions<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
 {
     constructor(
         shape: TShape,
@@ -974,43 +992,43 @@ IModifiersFunctions<TRequired, TReadonly, TNullable, TDefault, TRefType, TRequir
     }
 
     // Problem here is that I am missing the funtion signatures..
-    public Anotations(options :TAvaliableOptions) : ITSShapeModifiersFunWithConstraints<TRequired, TReadonly, TNullable, TDefault, TRefType, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
+    public Anotations(options :TAvaliableOptions) : ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
     {
         this.options = options;
         return this as any;
     }
 
-    public Options(options : TAvaliableOptions) : ITSShapeModifiersFunWithConstraints<TRequired, TReadonly, TNullable, TDefault, TRefType, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
+    public Options(options : TAvaliableOptions) : ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TRequired, TShapeID, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
     {
         this.options = options;
         return this as any;
     }
 
-    public Required() : ITSShapeModifiersFunWithConstraints<'Req', TReadonly, TNullable, TDefault, TRefType, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
+    public Required() : ITSShapeModifiersFunWithConstraints<TShapeID, 'Req', TReadonly, TNullable, TDefault, TRefType, TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
     {
         this.required = 'Req';
         return this as any;
     }
 
-    public Optional() : ITSShapeModifiersFunWithConstraints<'Op', TReadonly, TNullable, TDefault, TRefType, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
+    public Optional() : ITSShapeModifiersFunWithConstraints<TShapeID, 'Op', TReadonly, TNullable, TDefault, TRefType, TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
     {        
         this.required = 'Op';
         return this as any;
     }
 
-    public Nullable() : ITSShapeModifiersFunWithConstraints<TRequired, TReadonly, 'Nullable', TDefault, TRefType, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
+    public Nullable() : ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, 'Nullable', TDefault, TRefType, TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
     {
         this.nullable = 'Nullable';
         return this as any;
     }
 
-    public Readonly() : ITSShapeModifiersFunWithConstraints<TRequired, 'Get', TNullable, TDefault, TRefType,  TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions,>
+    public Readonly() : ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, 'Get', TNullable, TDefault, TRefType, TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions,>
     {
         this.readonly = 'Get';
         return this as any;
     }
 
-    public Default<DValue extends TShape['neasted'] | (TNullable extends 'Nullable' ? null : never)>(dValue : DValue) : ITSShapeModifiersFunWithConstraints<TRequired, TReadonly, TNullable, DValue, TRefType, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
+    public Default<DValue extends TShape['neasted'] | (TNullable extends 'Nullable' ? null : never)>(dValue : DValue) : ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, TNullable, DValue, TRefType, TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
     {
         this.init = dValue;
         return this as any;
@@ -1019,17 +1037,19 @@ IModifiersFunctions<TRequired, TReadonly, TNullable, TDefault, TRefType, TRequir
 
 
 interface ITSModifiersRecord<
+TShapeID extends ID,
 TShape extends ITSShape<any,any>,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TDefault extends _Default,
 TRefType extends _RefType | undefined,
+TShapeIDConstraints extends ID | undefined = TShapeID,
 TRequiredConstraints extends _Required | undefined = TRequired | undefined, 
 TReadonlyConstraints extends _Readonly | undefined = TReadonly | undefined,
 TDefaultConstraints extends _Default| undefined = TDefault | undefined,
 TRefTypeConstraints extends _RefType | undefined = TRefType | undefined,
 > extends
-Record<string, ITSShapeModifiersFunWithConstraints<TRequired, TReadonly, any, TDefault, TRefType, TRequiredConstraints, TReadonlyConstraints, any, TDefaultConstraints, TRefTypeConstraints, TShape, any>>
+Record<string, ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, any, TDefault, TRefType, TShapeIDConstraints, TRequiredConstraints, TReadonlyConstraints, any, TDefaultConstraints, TRefTypeConstraints, TShape, any>>
 {
 } 
 
@@ -1051,9 +1071,9 @@ Record<string, ITSShapeModifiersFunWithConstraints<TRequired, TReadonly, any, TD
 
 // } 
 
-type INeastedSchemaRecord = Record<string, (ITSModifiersWithConstraints<any, any, any, any, any, any, any, any, any, any, any, IShapeContainers | IShapeTSSchema<any>>)>
+type INeastedSchemaRecord = Record<string, (ITSModifiersWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any, any, IShapeContainers | IShapeTSSchema<any>>)>
 
-type ExtractRecordModfierConstraints<T extends Record<string, ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any>>, 
+type ExtractRecordModfierConstraints<T extends Record<string, ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any, any, any>>, 
 Modifier extends '__Required' | '__Readonly' | '__Nullable' | '__Default' | '__RefType',
 ModifierConstraint extends '__RequiredConstraints' | '__ReadonlyConstraints' | '__NullableConstraints' | '__DefaultConstraints' | '__RefTypeConstraints'> = {
     [K in keyof T] : T[K][Modifier] | T[K][ModifierConstraint]
@@ -1063,15 +1083,15 @@ ModifierConstraint extends '__RequiredConstraints' | '__ReadonlyConstraints' | '
 interface ISchema<
     Name extends string,
     Id extends string,
-    ModRD extends ITSModifiersRecord<ITSShapes, 'Req', 'Set', any, undefined>,
-    ModRND extends ITSModifiersRecord<ITSShapes, 'Req', 'Set', undefined, undefined>,
-    ModOD extends ITSModifiersRecord<ITSShapes, 'Op', 'Set', any, undefined>,
-    ModOND extends ITSModifiersRecord<ITSShapes, 'Op', 'Set', undefined, undefined>,
-    ReadRD extends ITSModifiersRecord<ITSShapes, 'Req', 'Get', any, undefined>,
-    ReadRND extends ITSModifiersRecord<ITSShapes, 'Req', 'Get', undefined, undefined>,
-    ReadOD extends ITSModifiersRecord<ITSShapes, 'Op', 'Get', undefined, undefined>,
-    ReadOND extends ITSModifiersRecord<ITSShapes, 'Op', 'Get', undefined, undefined>,
-    ModRef extends ITSModifiersRecord<IShapeRefContainers, any, any, any, any>,
+    ModRD extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Set', any, undefined>,
+    ModRND extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Set', undefined, undefined>,
+    ModOD extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Set', any, undefined>,
+    ModOND extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Set', undefined, undefined>,
+    ReadRD extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Get', any, undefined>,
+    ReadRND extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Get', undefined, undefined>,
+    ReadOD extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Get', undefined, undefined>,
+    ReadOND extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Get', undefined, undefined>,
+    ModRef extends ITSModifiersRecord<any, IShapeRefContainers, any, any, any, any>,
     NeastedSchemas extends INeastedSchemaRecord,
     SchemaOptions extends Record<string, any> | undefined,
     >
@@ -1094,15 +1114,15 @@ interface ISchema<
 class Schema<
 Name extends string,
 Id extends string,
-ModRD extends ITSModifiersRecord<ITSShapes,'Req', 'Set', any, undefined>,
-ModRND extends ITSModifiersRecord<ITSShapes, 'Req', 'Set', undefined, undefined>,
-ModOD extends ITSModifiersRecord<ITSShapes, 'Op', 'Set', any, undefined>,
-ModOND extends ITSModifiersRecord<ITSShapes, 'Op', 'Set', undefined, undefined>,
-ReadRD extends ITSModifiersRecord<ITSShapes, 'Req', 'Get', any, undefined>,
-ReadRND extends ITSModifiersRecord<ITSShapes, 'Req', 'Get', undefined, undefined>,
-ReadOD extends ITSModifiersRecord<ITSShapes, 'Op', 'Get', undefined, undefined>,
-ReadOND extends ITSModifiersRecord<ITSShapes, 'Op', 'Get', undefined, undefined>,
-ModRef extends ITSModifiersRecord<IShapeRefContainers, any, any, any, any>,
+ModRD extends ITSModifiersRecord<any, ITSShapes,'Req', 'Set', any, undefined>,
+ModRND extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Set', undefined, undefined>,
+ModOD extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Set', any, undefined>,
+ModOND extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Set', undefined, undefined>,
+ReadRD extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Get', any, undefined>,
+ReadRND extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Get', undefined, undefined>,
+ReadOD extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Get', undefined, undefined>,
+ReadOND extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Get', undefined, undefined>,
+ModRef extends ITSModifiersRecord<any, IShapeRefContainers, any, any, any, any>,
 NeastedSchemas extends INeastedSchemaRecord,
 SchemaOptions extends Record<string,any> | undefined>
 implements ISchema<Name, Id, ModRD, ModRND, ModOD, ModOND, ReadRD, ReadRND, ReadOD, ReadOND, ModRef, NeastedSchemas, SchemaOptions>
