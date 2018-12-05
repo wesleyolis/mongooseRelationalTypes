@@ -190,6 +190,7 @@ IShapeTSType<any>
 | IShapeTSRef<any>
 | IShapeTSSchema<any>
 
+
 type IShapeContainers = IShapeTSRecord<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>
 type IShapeContainersID = IShapeTSRecord<any>['__ID'] | IShapeTSArrayNeasted<any>['__ID'] | IShapeTSArrayRecord<any>['__ID']
 
@@ -233,8 +234,8 @@ function ShapeTSType<T extends IShapeTSTypeExtends>()
     return new Shape<IShapeTSType<T>>('T').TSTypeCastUp();
 }
 
- 
-type IShapeRecordExtends = Record<string, ITSShapes> | null
+//type IShapeRecordExtends = Record<string, ITSShapes> | null
+type IShapeRecordExtends = Record<string, ITSShape<any, ID>> | null
 
 interface IShapeTSRecord<T extends IShapeRecordExtends> extends ITSShape<T, 'R'>
 {
@@ -246,7 +247,8 @@ function ShapeTSRecord<T extends IShapeRecordExtends>(rec : T)
     return new Shape<IShapeTSRecord<T>>('R', rec).TSTypeCastUp();
 }
 
-type IShapeArrayNeastedExtends = IShapeTSType<any> | IShapeTSRef<any> | IShapeTSSchema<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>;
+type IShapeArrayNeastedExtendsID = 'T' | 'S' | 'AN' | 'AR' | 'Ref'
+type IShapeArrayNeastedExtends = ITSShape<IShapeArrayNeastedExtendsID, any>//IShapeTSType<any> | IShapeTSRef<any> | IShapeTSSchema<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>;
 
 interface IShapeTSArrayNeasted<T extends IShapeArrayNeastedExtends> extends ITSShape<any, 'AN'>
 {
@@ -258,7 +260,7 @@ function ShapeTSArray<T extends IShapeArrayNeastedExtends>(record : T)
     return new Shape<IShapeTSArrayNeasted<T>>('AN', record).TSTypeCastUp();
 }
 
-type IShapeTSArrayRecordExtends = Record<string, ITSShapes> | null;
+type IShapeTSArrayRecordExtends = Record<string, ITSShape<ID, any>> | null;
 
 interface IShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends> extends ITSShape<T, 'AR'>
 {
@@ -270,7 +272,7 @@ function ShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends>(record : T)
     return new Shape<IShapeTSArrayRecord<T>>('AR', record).TSTypeCastUp();
 }
 
-interface IShapeTSRef<T extends TsTypesPrimatives> extends ITSShape<T,'Ref'>
+interface IShapeTSRef<T extends ISchemas<any, any, any, any, any, any, any, any, any, any, any, any>> extends ITSShape<T,'Ref'>
 {
     __tsType : T;
 }
@@ -279,7 +281,7 @@ interface IShapeTSRef<T extends TsTypesPrimatives> extends ITSShape<T,'Ref'>
 // the runtime type, which is what previously happened.
 // The right hand side of the schema wil be captured on the right.
 // lets just get this all working.
-function ShapeTSRef<T extends TsTypesPrimatives>()
+function ShapeTSRef<T extends ISchemas<any, any, any, any, any, any, any, any, any, any, any, any>>()
 {
     return new Shape<IShapeTSRef<T>>('Ref').TSTypeCastUp();
 }
@@ -293,7 +295,7 @@ extends ITSShape<T, 'S'>
 function ShapeTSSchema<T extends ISchemas<any, any, any, any, any, any, any, any, any, any, any, any>>()
 {
     return new Shape<IShapeTSSchema<T>>('S').TSTypeCastUp();
-// }
+}
 
 // type TesResult = ITSModifiersWithConstraints<any, any, any, any, any, any, any, any, any, any, IShapeTSType<number>, any> extends 
 // ITSModifiersWithConstraints<any,any,any,any,any,any,any,any,any,any, IShapeTSArrayNeasted<any>,any> ?
@@ -415,7 +417,7 @@ FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
         ReadRND extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Get', undefined, undefined>,
         ReadOD extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Get', undefined, undefined>,
         ReadOND extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Get', undefined, undefined>,
-        ModRef extends ITSModifiersRecord<any, IShapeRefContainers, any, any, any, ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>>,
+        ModRef extends ITSModifiersRecord<IShapeRefContainersID, any, any, any, any, any>,
         NeastedSchemas extends INeastedSchemaRecord>(
         name : Name,
         id : Id,
@@ -466,9 +468,10 @@ FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
         return NewModifiers(ShapeTSType<Date>(), 'Date', {} as FieldOptions);
     }
 
-    Record<Record extends ITSModifiersRecord<ITSShapes, any, any, any, any>>(rec : Record)
+    Record<Record extends ITSModifiersRecord<ID, any, any, any, any, any>>(rec : Record)
     {
         return NewModifiersWithConstraints(ShapeTSRecord(rec), 'Record', {} as FieldOptions,
+        {} as ExtractRecordModfierConstraints<Record,'__ID', '__ShapeIDConstraints'>
         {} as ExtractRecordModfierConstraints<Record,'__Required', '__RequiredConstraints'>,
         {} as ExtractRecordModfierConstraints<Record,'__Readonly','__ReadonlyConstraints'>,
         {} as ExtractRecordModfierConstraints<Record,'__Nullable','__NullableConstraints'>,
@@ -479,15 +482,16 @@ FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
     // Because types can't differentiate which method to call, there is no
     // way to capture the runtime differances, but with runTime methods with different names.
 
-    Array<Record extends ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, IShapeArrayNeastedExtends, any>
+    Array<Record extends ITSShapeModifiersFunWithConstraints<IShapeArrayNeastedExtendsID, any, any, any, any, any, IShapeArrayNeastedExtendsID | undefined, any, any, any, any, any, any, any>
     >(items : Record)
     {
         return NewModifiers(ShapeTSArray(items), 'ArrayNeasted', {} as FieldOptions);
     }
 
-    ArrayRecord<Record extends ITSModifiersRecord<ITSShapes, any, any, any, any>>(items : Record)
+    ArrayRecord<Record extends ITSModifiersRecord<ID, any, any, any, any, any>>(items : Record)
     {
         return NewModifiersWithConstraints(ShapeTSArrayRecord(items), 'ArrayRecord', {} as FieldOptions,
+        {} as ExtractRecordModfierConstraints<Record,'__ID', '__ShapeIDConstraints'>,
         {} as ExtractRecordModfierConstraints<Record,'__Required', '__RequiredConstraints'>,
         {} as ExtractRecordModfierConstraints<Record,'__Readonly','__ReadonlyConstraints'>,
         {} as ExtractRecordModfierConstraints<Record,'__Nullable','__NullableConstraints'>,
@@ -514,6 +518,7 @@ FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
     (record : Schema)
     {
         return NewModifiersWithConstraintsAndRefType(ShapeTSRef<Schema['__Id']>(), 'RefType', {} as FieldOptions,
+        undefined,// Doesn't make logical sense.
         {} as ExtractRecordModfierConstraints<Schema['__ModRD'],'__Required', '__RequiredConstraints'> |
                 ExtractRecordModfierConstraints<Schema['__ModRND'],'__Required', '__RequiredConstraints'>,
         {} as ExtractRecordModfierConstraints<Schema['__ModOD'],'__Readonly','__ReadonlyConstraints'> |
@@ -529,16 +534,21 @@ FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
 
     // At runtime, this could have been merge with the existing iteration stucture
     // It is only broken appart here for the typings.
-    Schema<Record extends IMongoosePartialSchema<any, any, any, any, any, any>,
-    ArrayItems extends IMongooseShape<ITSShape<any,any>, any, any, any, any>
-    >(object : Record)
+    Schema<Schema extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>>(object : Schema)
     {
-        return NewModifiersWithConstraints(ShapeTSSchema(object), 'Schema', {} as FieldOptions,
-        {} as ExtractRecordModfierConstraints<Record,'__Required', '__RequiredConstraints'>,
-        {} as ExtractRecordModfierConstraints<Record,'__Readonly','__ReadonlyConstraints'>,
-        {} as ExtractRecordModfierConstraints<Record,'__Nullable','__NullableConstraints'>,
-        {} as ExtractRecordModfierConstraints<Record,'__Default','__DefaultConstraints'>,
-        {} as ExtractRecordModfierConstraints<Record,'__RefType','__RefTypeConstraints'>);
+        return NewModifiersWithConstraints(ShapeTSSchema<Schema>(), 'Schema', {} as FieldOptions,
+        undefined,
+        {} as ExtractRecordModfierConstraints<Schema['__ModRD'],'__Required', '__RequiredConstraints'> |
+                ExtractRecordModfierConstraints<Schema['__ModRND'],'__Required', '__RequiredConstraints'>,
+        {} as ExtractRecordModfierConstraints<Schema['__ModOD'],'__Readonly','__ReadonlyConstraints'> |
+                ExtractRecordModfierConstraints<Schema['__ModOND'],'__Readonly','__ReadonlyConstraints'>,
+        undefined as undefined,
+        {} as ExtractRecordModfierConstraints<Schema['__ReadRD'],'__Default','__DefaultConstraints'> | 
+                ExtractRecordModfierConstraints<Schema['__ReadRND'],'__Default','__DefaultConstraints'>,
+        {} as ExtractRecordModfierConstraints<Schema['__ReadOD'],'__RefType','__RefTypeConstraints'> |
+                ExtractRecordModfierConstraints<Schema['__ReadOND'],'__RefType','__RefTypeConstraints'>,
+       // {} as Schema
+        );
     }
 }   
 
@@ -614,7 +624,7 @@ const schemaA = GSchema.NewSchema('collectionName','', {
     arrayPrimative : GSchema.Array(GSchema.Number().Required()).Required(),
     // arrayofRecord : GSchema.Array(GSchema.Record({
     //     a : GSchema.Boolean()
-    // })).Required(), Must rather use ArrayRecord
+    // })).Required(),// Must rather use ArrayRecord
     arrayArray : GSchema.Array(GSchema.Array(GSchema.Number().Required())).Required(),
    //, arrayArrayRecord : GSchema.ArrayRecord(GSchema.Number().Required()).Required(), -- This should be Invalid.
     arrayRecord : GSchema.ArrayRecord({
@@ -627,7 +637,7 @@ const schemaA = GSchema.NewSchema('collectionName','', {
     //     a: GSchema.Number().Required()
     // }).Required()).Required(),
 
-    //refType : GSchema.RefType(schemaARight).Required()// Invalid - But not pretty to debug the message, because of the type
+    //,refType : GSchema.RefType(schemaARight).Required()// Invalid - But not pretty to debug the message, because of the type
     // capturing.. Mabye later, could just be a name list were they are all first regsitered, so that
     // We can reduce the list name to , difficault, because would be no ways to validate things, until runtime, which not what is wanted.
 },{
@@ -643,8 +653,8 @@ const schemaA = GSchema.NewSchema('collectionName','', {
     //primative : GSchema.Boolean(),
     refType : GSchema.RefType(schemaARight).Required(),
     neasted : GSchema.Record({
-        //Na : GSchema.Number().Required()
-        Nb : GSchema.RefType(schemaARight).Required()
+        Na : GSchema.Number().Required() // Need to fix constraints from here again.*********************************************************************
+       // Nb : GSchema.RefType(schemaARight).Required()
     }).Required()
 },{},{Mongoose:{collation:'',}});
 
@@ -658,12 +668,12 @@ type res = typeof Neasted__['__RefTypeConstraints'];
 
 
 
-type EROM<Mod extends ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any>, T extends any> = ({
+type EROM<Mod extends ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any, any, any>, T extends any> = ({
     'Req' : T 
     'Op' : T | undefined
 })[Mod['__Required']];
 
-type ESRec<T extends ITSModifiersRecord<any, any, any, any, any>> = {
+type ESRec<T extends ITSModifiersRecord<any, any, any, any, any, any>> = {
     [P in keyof T] : 
     ({
         'T' : EROM<T[P], T[P]['__tsType']>,
@@ -675,6 +685,19 @@ type ESRec<T extends ITSModifiersRecord<any, any, any, any, any>> = {
     })[T[P]['__ID']]
 }
 
+
+type ESRecT<T extends Record<string, ITSShapes>> = {
+    [P in keyof T] : 
+    ({
+        'T' : EROM<T[P], T[P]['__tsType']>,
+        'R' : EROM<T[P], ESRec<T[P]['__tsType']>>,
+        'AN' : EROM<T[P],ESRec<T[P]['__tsType']>['w'][]>,
+        'AR' : EROM<T[P],ESRec<T[P]['__tsType']>[]>
+        'Ref' : EROM<T[P],T[P]['__tsType']['__ID']>
+        'S' : 'Invalid Option Here'
+    })[T[P]['__ID']]
+}
+
 type TSchema = typeof schemaA['__ModRD']//['a']['__ID'];
 
 type TSSchema = ESRec<TSchema>
@@ -683,7 +706,7 @@ const tsSchema : TSSchema = {
     b : 234,
     c : '',
     neasted : {
-        nA : true,
+        nA :true,
         neasted : {
             NNe :'',
             NNf : 234
@@ -720,10 +743,10 @@ type _Default = TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPr
 type _RefType = ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any> | undefined 
 type _OptionsAnontations = Record<string, any>
 
-interface IModifiers<TOptions extends _OptionsAnontations> extends IShape<ID, Neasted>
+interface IModifiers<TOptions extends _OptionsAnontations> extends IShape<ID, any>
 {
     id : ID,
-    neasted : Neasted;
+    neasted : any;  // This can be better typed later on.
     type: TypesPrimative;
     required: _Required;
     readonly: _Readonly;
@@ -740,15 +763,17 @@ interface ITSModifiers<
     TNullable extends _Nullable,
     TDefault extends _Default,
     TRefType extends _RefType,
+    TSType extends any, // Required for pass tought of types formats, to match that of the Shapes.
     TOptionsAnotations extends _OptionsAnontations
-> extends IModifiers<TOptionsAnotations> {
-    __ShapeID: TShapeID;
+> extends IModifiers<TOptionsAnotations>, ITSShape<any, ID>{
+    __ID: TShapeID;
     __Type: TypesPrimative;
     __Required: TRequired;
     __Readonly: TReadonly;
     __Nullable: TNullable;
     __Default: TDefault;
     __RefType: TRefType;
+    __tsType : TSType;
 }
 
 // type ITSShapeModifiers<
@@ -770,7 +795,7 @@ interface ITSModifiersWithConstraints<
     TNullable extends _Nullable,
     TDefault extends _Default,
     TRefType extends _RefType,
-    TShapeIDConstraint extends ID,
+    TShapeIDConstraint extends ID | undefined,
     RequiredConstraint extends _Required | undefined, 
     ReadonlyConstraint extends _Readonly | undefined,
     NullableConstraint extends _Nullable | undefined,
@@ -778,8 +803,8 @@ interface ITSModifiersWithConstraints<
     RefTypeConstraint extends _RefType,
     TShape extends ITSShape<any,any>,
     TOptionsAnotations extends _OptionsAnontations,
-> extends ITSModifiers<TShapeID,TRequired, TReadonly, TNullable, TDefault, TRefType, TOptionsAnotations>{
-    __ShapeIDConstraints : TShapeIDConstraint
+> extends ITSModifiers<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape['__tsType'], TOptionsAnotations>{
+    __IDConstraints : TShapeIDConstraint
     __RequiredConstraints : RequiredConstraint
     __ReadonlyConstraints : ReadonlyConstraint
     __NullableConstraints : NullableConstraint
@@ -823,11 +848,12 @@ function NewModifiers<TAvaliableOptions extends _OptionsAnontations,
     >(shape : TShape, type : TypesPrimative, __options : TAvaliableOptions)
     {
         return new Modifiers<'Op', 'Set', 'Value', undefined, undefined, TShape, TAvaliableOptions>
-        (shape, type, 'Op', 'Set', 'Value', undefined, undefined, undefined) as any as ITSShapeModifiersFunWithConstraints<TShape['__ID'],'Op', 'Set', 'Value', undefined, ,undefined, undefined, undefined, undefined, undefined, undefined, TShape, TAvaliableOptions>
+        (shape, type, 'Op', 'Set', 'Value', undefined, undefined, undefined) as any as ITSShapeModifiersFunWithConstraints<TShape['__ID'], 'Op', 'Set', 'Value', undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, TShape, TAvaliableOptions>
     }
 
     function NewModifiersWithConstraints<TAvaliableOptions extends _OptionsAnontations,
     TShape extends ITSShape<any, any>,
+    TShapeConstraintsID extends ID | undefined,
     TRequiredConstraint extends _Required | undefined, 
     TReadonlyConstraint extends _Readonly | undefined,
     TNullableConstraint extends _Nullable | undefined,
@@ -835,6 +861,7 @@ function NewModifiers<TAvaliableOptions extends _OptionsAnontations,
     TRefTypeConstraint extends _RefType,
     TRefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>
     >(shape : TShape, type : TypesPrimative, __options : TAvaliableOptions,
+        __ShapeIDConstraints : TShapeConstraintsID,
         __RequiredConstraints : TRequiredConstraint,
         __ReadonlyConstraints : TReadonlyConstraint,
         __NullableConstraints : TNullableConstraint,
@@ -843,11 +870,12 @@ function NewModifiers<TAvaliableOptions extends _OptionsAnontations,
         )
     {
         return new Modifiers<'Op', 'Set', 'Value', undefined, undefined, TShape, TAvaliableOptions>
-        (shape, type, 'Op', 'Set', 'Value', undefined, undefined) as any as ITSShapeModifiersFunWithConstraints<'Op', 'Set', 'Value', undefined, undefined, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
+        (shape, type, 'Op', 'Set', 'Value', undefined, undefined) as any as ITSShapeModifiersFunWithConstraints<TShape['__ID'],'Op', 'Set', 'Value', undefined, undefined, TShapeConstraintsID, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
     }
 
     function NewModifiersWithConstraintsAndRefType<TAvaliableOptions extends _OptionsAnontations,
     TShape extends ITSShape<any, any>,
+    TShapeConstraintsID extends ID | undefined,
     TRequiredConstraint extends _Required | undefined, 
     TReadonlyConstraint extends _Readonly | undefined,
     TNullableConstraint extends _Nullable | undefined,
@@ -855,6 +883,7 @@ function NewModifiers<TAvaliableOptions extends _OptionsAnontations,
     TRefTypeConstraint extends _RefType,
     TRefType extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>
     >(shape : TShape, type : TypesPrimative, __options : TAvaliableOptions,
+        __ShapeIDConstraints : TShapeConstraintsID,
         __RequiredConstraints : TRequiredConstraint,
         __ReadonlyConstraints : TReadonlyConstraint,
         __NullableConstraints : TNullableConstraint,
@@ -864,7 +893,7 @@ function NewModifiers<TAvaliableOptions extends _OptionsAnontations,
         )
     {
         return new Modifiers<'Op', 'Set', 'Value', undefined, undefined, TShape, TAvaliableOptions>
-        (shape, type, 'Op', 'Set', 'Value', undefined, __RefType ? __RefType['__Name'] : undefined) as any as ITSShapeModifiersFunWithConstraints<'Op', 'Set', 'Value', undefined, TRefType, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
+        (shape, type, 'Op', 'Set', 'Value', undefined, __RefType ? __RefType['__Name'] : undefined) as any as ITSShapeModifiersFunWithConstraints<TShape['__ID'], 'Op', 'Set', 'Value', undefined, TRefType, TShapeConstraintsID, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
     }
 
 // function Mutate<TAvaliableOptions extends Record<string, any>,
@@ -891,7 +920,7 @@ TReadonly extends _Readonly,
 TNullable extends _Nullable,
 TDefault extends _Default,
 TRefType extends _RefType,
-TShapeIDConstraint extends ID,
+TShapeIDConstraint extends ID | undefined,
 TRequiredConstraint extends _Required | undefined, 
 TReadonlyConstraint extends _Readonly | undefined,
 TNullableConstraint extends _Nullable | undefined,
@@ -964,17 +993,17 @@ TShapeIDConstraint, RequiredConstraint, ReadonlyConstraint, NullableConstraint, 
 // }
 
 class Modifiers<
-TShapeID extends ID,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable,
 TDefault extends _Default,
 TRefType extends _RefType,
 TShape extends ITSShape<any, any>,
-TAvaliableOptions extends _OptionsAnontations>
+TAvaliableOptions extends _OptionsAnontations,
+TShapeID extends ID = any>
 implements IModifiers<TAvaliableOptions>, 
 IShape<TShape['id'], TShape['neasted']>,
-IModifiersFunctions<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
+IModifiersFunctions<any, TRequired, TReadonly, TNullable, TDefault, TRefType, any, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
 {
     constructor(
         shape: TShape,
@@ -998,7 +1027,7 @@ IModifiersFunctions<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefTyp
         return this as any;
     }
 
-    public Options(options : TAvaliableOptions) : ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TRequired, TShapeID, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
+    public Options(options : TAvaliableOptions) : ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
     {
         this.options = options;
         return this as any;
@@ -1043,7 +1072,7 @@ TRequired extends _Required,
 TReadonly extends _Readonly,
 TDefault extends _Default,
 TRefType extends _RefType | undefined,
-TShapeIDConstraints extends ID | undefined = TShapeID,
+TShapeIDConstraints extends ID | undefined = TShapeID | undefined,
 TRequiredConstraints extends _Required | undefined = TRequired | undefined, 
 TReadonlyConstraints extends _Readonly | undefined = TReadonly | undefined,
 TDefaultConstraints extends _Default| undefined = TDefault | undefined,
@@ -1074,8 +1103,8 @@ Record<string, ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonl
 type INeastedSchemaRecord = Record<string, (ITSModifiersWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any, any, IShapeContainers | IShapeTSSchema<any>>)>
 
 type ExtractRecordModfierConstraints<T extends Record<string, ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any, any, any>>, 
-Modifier extends '__Required' | '__Readonly' | '__Nullable' | '__Default' | '__RefType',
-ModifierConstraint extends '__RequiredConstraints' | '__ReadonlyConstraints' | '__NullableConstraints' | '__DefaultConstraints' | '__RefTypeConstraints'> = {
+Modifier extends '__ID' | '__Required' | '__Readonly' | '__Nullable' | '__Default' | '__RefType',
+ModifierConstraint extends '__ShapeIDConstraints' | '__RequiredConstraints' | '__ReadonlyConstraints' | '__NullableConstraints' | '__DefaultConstraints' | '__RefTypeConstraints'> = {
     [K in keyof T] : T[K][Modifier] | T[K][ModifierConstraint]
 }[keyof T]
 
