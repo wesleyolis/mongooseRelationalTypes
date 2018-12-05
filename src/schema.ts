@@ -242,7 +242,7 @@ function ShapeTSRecord<T extends IShapeRecordExtends>(rec : T)
     return new Shape<IShapeTSRecord<T>>('R', rec).TSTypeCastUp();
 }
 
-type IShapeArrayNeastedExtends = ITSShapes | null;
+type IShapeArrayNeastedExtends = IShapeTSType<any> | IShapeTSRef<any> | IShapeTSSchema<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>;
 
 interface IShapeTSArrayNeasted<T extends IShapeArrayNeastedExtends> extends ITSShape<any, 'AN'>
 {
@@ -460,7 +460,6 @@ FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
 
     Record<Record extends ITSModifiersRecord<ITSShapes, any, any, any, any>>(rec : Record)
     {
-        const record = ShapeTSRecord(rec);
         return NewModifiersWithConstraints(ShapeTSRecord(rec), 'Record', {} as FieldOptions,
         {} as ExtractRecordModfierConstraints<Record,'__Required', '__RequiredConstraints'>,
         {} as ExtractRecordModfierConstraints<Record,'__Readonly','__ReadonlyConstraints'>,
@@ -472,10 +471,10 @@ FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
     // Because types can't differentiate which method to call, there is no
     // way to capture the runtime differances, but with runTime methods with different names.
 
-    ArrayPrimative<Record extends ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, IShapeTSType<any>, any>
+    Array<Record extends ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, IShapeArrayNeastedExtends, any>
     >(items : Record)
     {
-        return NewModifiers(ShapeTSArray(items), 'ArrayPrimative', {} as FieldOptions);
+        return NewModifiers(ShapeTSArray(items), 'ArrayNeasted', {} as FieldOptions);
     }
 
     ArrayRecord<Record extends ITSModifiersRecord<ITSShapes, any, any, any, any>>(items : Record)
@@ -592,8 +591,25 @@ const schemaA = GSchema.NewSchema('collectionName','', {
             NNf : GSchema.Number().Required()
         }).Required(),
     }).Required(),
-    array : GSchema.ArrayPrimative(GSchema.Number().Required()).Required(),
-    arrayObject : GSchema.ArrayRecord(GSchema.Record({})).Required()
+    // The extaction forms of this are not perfect, because I assumed, its primative
+    // but it is not neaasry a primative.
+    arrayPrimative : GSchema.Array(GSchema.Number().Required()).Required(),
+    // arrayofRecord : GSchema.Array(GSchema.Record({
+    //     a : GSchema.Boolean()
+    // })).Required(), Must rather use ArrayRecord
+    arrayArray : GSchema.Array(GSchema.Array(GSchema.Number().Required())).Required(),
+   //, arrayArrayRecord : GSchema.ArrayRecord(GSchema.Number().Required()).Required(), -- This should be Invalid.
+    arrayRecord : GSchema.ArrayRecord({
+        a: GSchema.Number().Required(),
+        b: GSchema.Record({
+            c: GSchema.Number().Required()
+        }).Required(),
+    }).Required(),
+    // arrayRecordRecord : GSchema.ArrayRecord(GSchema.Record({
+    //     a: GSchema.Number().Required()
+    // }).Required()).Required(),
+
+    refType : GSchema.RefType()
 },{
     //c : GSchema.Boolean().Required().Default(false), // Invalid Default false - Good
     //d : GSchema.Number().Required().Default(34), // Invalid Default false - Good
@@ -617,7 +633,7 @@ type ESRec<T extends ITSModifiersRecord<any, any, any, any, any>> = {
         'T' : EROM<T[P], T[P]['__tsType']>,
         'R' : EROM<T[P], ESRec<T[P]['__tsType']>>,
         'AN' : EROM<T[P],ESRec<T[P]['__tsType']>['w'][]>,
-        //'AR' : EROM<T[P],ESRec<T[P]['__tsType']>[]>
+        'AR' : EROM<T[P],ESRec<T[P]['__tsType']>[]>
         //'Ref' : 'Invalid Option here'
         //'S' : 'Invalid Option Here'
     })[T[P]['__ID']]
@@ -637,7 +653,15 @@ const tsSchema : TSSchema = {
             NNf : 234
         }
     },
-    array: [1]
+    arrayPrimative: [1],
+    arrayArray : [[1]],
+    arrayRecord: [{ 
+        a : 324,
+        b : {
+            c : 324
+        }
+    }]
+        
 }
 
 // Layer 2 were we want the typing speed improvements
@@ -651,7 +675,7 @@ const modelA = model('collectionName', Schema);
 // from 
 //type SchemaA = ExtractTSSchema<typeof schemaA>;
 
-type TypesPrimative = 'Boolean' | 'Number' | 'String' | 'Date' | 'Record' | 'ArrayPrimative' | 'ArrayRecord' | 'RefType' | 'Schema' | 'ObjectIdString' | undefined
+type TypesPrimative = 'Boolean' | 'Number' | 'String' | 'Date' | 'Record' | 'ArrayNeasted' | 'ArrayRecord' | 'RefType' | 'Schema' | 'ObjectIdString' | undefined
 
 type _Required = 'Req' | 'Op'
 type _Readonly = 'Get' | 'Set'
