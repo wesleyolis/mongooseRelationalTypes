@@ -472,7 +472,7 @@ FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
     // Because types can't differentiate which method to call, there is no
     // way to capture the runtime differances, but with runTime methods with different names.
 
-    ArrayPrimative<Record extends IMongooseShape<IShapeTSTypeConstraint, any, any, any, any>
+    ArrayPrimative<Record extends ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, IShapeTSType<any>, any>
     >(items : Record)
     {
         return NewModifiers(ShapeTSArray(items), 'ArrayPrimative', {} as FieldOptions);
@@ -581,48 +581,64 @@ const GSchema = new SchemaGenerator(adapter);
 const mongooseRunTime = GSchema.Generate('Mongoose', [SchemaA]);
 
 
-const GRecord =  GSchema.Record({
-     //nA : GSchema.Boolean()
- });
-
- type GRecordR = typeof GRecord['__RequiredConstraints'];
- 
- type GRecordRead = typeof GRecord['__ReadonlyConstraints'];
- type GRecordNullable = typeof GRecord['__NullableConstraints'];
- type GRecordDefault = typeof GRecord['__DefaultConstraints'];
-
-// If that ends up being a never then I have a problem,
-// because never is not usuable.. as a constraints,
-// so initialising for simple plain types the __ReadonlyConstraints to undefined,
-// is a problem for empty objects, going to require additional logic there.
-
- //type testing = any extends undefined ? 'T' : 'F'
-
-
-// Needs to be like this, to allow extraction,
-// like to embed the correct, could be member, but
-// probably simple to have de coupled to reduce the overhead.
-
-// How can I hide, the TS Captured Shape..
-// The only way to do this is to move it to the back..
-
 const schemaA = GSchema.NewSchema('collectionName','', {
     a : GSchema.Boolean().Required().Nullable().Default(null).Anotations({'Mongoose':{select:true}}),
     b : GSchema.Number().Required(),
     c : GSchema.String().Required().Nullable().Default(''),
     neasted : GSchema.Record({
-        nA : GSchema.Boolean().Required()
-    }).Required()
+        nA : GSchema.Boolean().Required(),
+        neasted : GSchema.Record({
+            NNe : GSchema.String().Required(),
+            NNf : GSchema.Number().Required()
+        }).Required(),
+    }).Required(),
+    array : GSchema.ArrayPrimative(GSchema.Number().Required()).Required(),
+    arrayObject : GSchema.ArrayRecord(GSchema.Record({})).Required()
 },{
-    c : GSchema.Boolean().Required().Default(false), // Invalid Default false - Good
-    d : GSchema.Number().Required().Default(34), // Invalid Default false - Good
+    //c : GSchema.Boolean().Required().Default(false), // Invalid Default false - Good
+    //d : GSchema.Number().Required().Default(34), // Invalid Default false - Good
     e : GSchema.Number().Required().Nullable().Anotations({'Mongoose' : {}}),
     neasted : GSchema.Record({
         NNa : GSchema.Boolean().Required()
     }).Required()  // Any Record
 },{
-    
+
 },{},{},{},{},{},{},{},{Mongoose:{collation:'',}});
+
+
+type EROM<Mod extends ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any>, T extends any> = ({
+    'Req' : T 
+    'Op' : T | undefined
+})[Mod['__Required']];
+
+type ESRec<T extends ITSModifiersRecord<any, any, any, any, any>> = {
+    [P in keyof T] : 
+    ({
+        'T' : EROM<T[P], T[P]['__tsType']>,
+        'R' : EROM<T[P], ESRec<T[P]['__tsType']>>,
+        'AN' : EROM<T[P],ESRec<T[P]['__tsType']>['w'][]>,
+        //'AR' : EROM<T[P],ESRec<T[P]['__tsType']>[]>
+        //'Ref' : 'Invalid Option here'
+        //'S' : 'Invalid Option Here'
+    })[T[P]['__ID']]
+}
+
+type TSchema = typeof schemaA['__ModRD']//['a']['__ID'];
+
+type TSSchema = ESRec<TSchema>
+const tsSchema : TSSchema = {
+    a : true,
+    b : 234,
+    c : '',
+    neasted : {
+        nA : true,
+        neasted : {
+            NNe :'',
+            NNf : 234
+        }
+    },
+    array: [1]
+}
 
 // Layer 2 were we want the typing speed improvements
 // were the model definition will extra this informaiton.
@@ -1829,103 +1845,103 @@ e: MTypes.Array(MTypes.Number({required:'Req'})), f: MTypes.Array({z:MTypes.Numb
 
 const mTypes = MTypes.Ref(mRight, {required:'Req'});
 
-type EROM<Mod extends IMTypeModifiersWithNeastedConstraints<any,any,any,any>, T extends any> = ({
-    'Req' : T 
-    'Op' : T | undefined
-})[Mod['__Optional']];
+// type EROM<Mod extends IMTypeModifiersWithNeastedConstraints<any,any,any,any>, T extends any> = ({
+//     'Req' : T 
+//     'Op' : T | undefined
+// })[Mod['__Optional']];
 
-type ESRec<T extends IMTypeModifiersRecord<any,any,any,any>> = {
-    [P in keyof T] : 
-    ({
-        'T' : EROM<T[P], T[P]['__tsType']>,
-        'R' : EROM<T[P], ESRec<T[P]['__tsType']>>,
-        'AN' : EROM<T[P],ESRec<T[P]['__tsType']>['w'][]>,
-        'AR' : EROM<T[P],ESRec<T[P]['__tsType']>[]>
-        'Ref' : 'Invalid Option here'
-        'S' : 'Invalid Option Here'
-    })[T[P]['__ID']]
-}
+// type ESRec<T extends IMTypeModifiersRecord<any,any,any,any>> = {
+//     [P in keyof T] : 
+//     ({
+//         'T' : EROM<T[P], T[P]['__tsType']>,
+//         'R' : EROM<T[P], ESRec<T[P]['__tsType']>>,
+//         'AN' : EROM<T[P],ESRec<T[P]['__tsType']>['w'][]>,
+//         'AR' : EROM<T[P],ESRec<T[P]['__tsType']>[]>
+//         'Ref' : 'Invalid Option here'
+//         'S' : 'Invalid Option Here'
+//     })[T[P]['__ID']]
+// }
 
-type ESRedId<T extends INeastedSchemaRecord<any, any, any, any, any, any>, Path = '__Mod'> =
-{
-    [P in keyof T] : 
-    ({
-        'T' : 'Invalid Option Here'
-        'R' : EROM<T[P], ESSRedId<T[P]['__tsType']>>
-        'AN' : EROM<T[P], ESSRedId<T[P]['__tsType']>['w'][]>
-        'AR' : EROM<T[P], ESSRedId<T[P]['__tsType']>[]>
-        'Ref' : T[P]['__tsType']
-        'S' : 'Invalid Option Here'
-    })[T[P]['__ID']]
-}
-
-
-type ESSRec<T extends IMTypeModifiersRecord<any,any,any,any>,
-Path extends '__ModRD' | '__ModRND' | '__ModOD' | '__ModOND' | '__ReadRD' | '__ReadRND' | '__ReadOD' | '__ReadOND'> = {
-    [P in keyof T] : 
-    ({
-        'T' : EROM<T[P], T[P]['__tsType']>,
-        'R' : EROM<T[P], ESSRec<T[P]['__tsType'], Path>>,
-        'AN' : EROM<T[P],ESSRec<T[P]['__tsType'], Path>['w'][]>,
-        'AR' : EROM<T[P],ESSRec<T[P]['__tsType'], Path>[]>
-        'Ref' : 'Invalid Option here'
-        'S' : ESSRec<T[P]['__tsType'][Path], Path>
-    })[T[P]['__ID']]
-}
-
-type ESRefP<T extends IMTypeModifiersRecord<any,any,any,any>, Paths extends Record<string, any> = {}, KeysOfPaths = keyof Paths> = {
-    [P in keyof T] : 
-    ({
-        'T' : EROM<T[P], T[P]['__tsType']>,
-        'R' : EROM<T[P], ESRefP<T[P]['__tsType']>>,
-        'AN' : EROM<T[P], ESRefP<T[P]['__tsType']>['w'][]>,
-        'AR' : EROM<T[P], ESRefP<T[P]['__tsType']>[]>
-        'Ref' : P extends keyof Paths ? ESRefP<T[P]['__RefType'], Paths[P]> : T[P],
-        'S' : 'Invalid Option Here'
-    })[T[P]['__ID']]
-}
+// type ESRedId<T extends INeastedSchemaRecord<any, any, any, any, any, any>, Path = '__Mod'> =
+// {
+//     [P in keyof T] : 
+//     ({
+//         'T' : 'Invalid Option Here'
+//         'R' : EROM<T[P], ESSRedId<T[P]['__tsType']>>
+//         'AN' : EROM<T[P], ESSRedId<T[P]['__tsType']>['w'][]>
+//         'AR' : EROM<T[P], ESSRedId<T[P]['__tsType']>[]>
+//         'Ref' : T[P]['__tsType']
+//         'S' : 'Invalid Option Here'
+//     })[T[P]['__ID']]
+// }
 
 
-type ESResRef<T extends IMTypeModifiersRecord<any,any,any,any>, Paths extends Record<string, any> = {}, KeysOfPaths = keyof Paths> = {
-    [P in keyof T] : 
-    ({
-        'T' : EROM<T[P], T[P]['__tsType']>,
-        'R' : EROM<T[P], ESResRef<T[P]['__tsType']>>,
-        'AN' : EROM<T[P], ESResRef<T[P]['__tsType']>['w'][]>,
-        'AR' : EROM<T[P], ESResRef<T[P]['__tsType']>[]>
-        'Ref' : P extends keyof Paths ? ESResRef<T[P]['__RefType'], Paths[P]> : T[P]['__tsType'],
-        'S' : 'Invalid Option Here'
-    })[T[P]['__ID']]
-}
+// type ESSRec<T extends IMTypeModifiersRecord<any,any,any,any>,
+// Path extends '__ModRD' | '__ModRND' | '__ModOD' | '__ModOND' | '__ReadRD' | '__ReadRND' | '__ReadOD' | '__ReadOND'> = {
+//     [P in keyof T] : 
+//     ({
+//         'T' : EROM<T[P], T[P]['__tsType']>,
+//         'R' : EROM<T[P], ESSRec<T[P]['__tsType'], Path>>,
+//         'AN' : EROM<T[P],ESSRec<T[P]['__tsType'], Path>['w'][]>,
+//         'AR' : EROM<T[P],ESSRec<T[P]['__tsType'], Path>[]>
+//         'Ref' : 'Invalid Option here'
+//         'S' : ESSRec<T[P]['__tsType'][Path], Path>
+//     })[T[P]['__ID']]
+// }
+
+// type ESRefP<T extends IMTypeModifiersRecord<any,any,any,any>, Paths extends Record<string, any> = {}, KeysOfPaths = keyof Paths> = {
+//     [P in keyof T] : 
+//     ({
+//         'T' : EROM<T[P], T[P]['__tsType']>,
+//         'R' : EROM<T[P], ESRefP<T[P]['__tsType']>>,
+//         'AN' : EROM<T[P], ESRefP<T[P]['__tsType']>['w'][]>,
+//         'AR' : EROM<T[P], ESRefP<T[P]['__tsType']>[]>
+//         'Ref' : P extends keyof Paths ? ESRefP<T[P]['__RefType'], Paths[P]> : T[P],
+//         'S' : 'Invalid Option Here'
+//     })[T[P]['__ID']]
+// }
 
 
-type ESSNoResRef<T extends INeastedSchemaRecord<any, any, any, any, any, any>,
-Path extends string = '__ModRD' | '__ModRND' | '__ModOD' | '__ModOND' | '__ReadRD' | '__ReadRND' | '__ReadOD' | '__ReadOND'> =
-{
-    [P in keyof T] : 
-    ({
-        'T' : 'Invalid Option Here'
-        'R' : EROM<T[P], ESSNoResRef<T[P]['__tsType']>>
-        'AN' : EROM<T[P], ESSNoResRef<T[P]['__tsType']>['w'][]>
-        'AR' : EROM<T[P], ESSNoResRef<T[P]['__tsType']>[]>
-        'Ref' : T[P] // Unmodified.
-        'S' : ESSNoResRef<T[P]['__tsType'][Path]>
-    })[T[P]['__ID']]
-}
+// type ESResRef<T extends IMTypeModifiersRecord<any,any,any,any>, Paths extends Record<string, any> = {}, KeysOfPaths = keyof Paths> = {
+//     [P in keyof T] : 
+//     ({
+//         'T' : EROM<T[P], T[P]['__tsType']>,
+//         'R' : EROM<T[P], ESResRef<T[P]['__tsType']>>,
+//         'AN' : EROM<T[P], ESResRef<T[P]['__tsType']>['w'][]>,
+//         'AR' : EROM<T[P], ESResRef<T[P]['__tsType']>[]>
+//         'Ref' : P extends keyof Paths ? ESResRef<T[P]['__RefType'], Paths[P]> : T[P]['__tsType'],
+//         'S' : 'Invalid Option Here'
+//     })[T[P]['__ID']]
+// }
 
-type ESSRedId<T extends INeastedSchemaRecord<any, any, any, any, any, any>,
-Path extends string = '__Mod' | '__NonOpReadDefault' | '__NonOpROptional' | '__NDefault'> =
-{
-    [P in keyof T] : 
-    ({
-        'T' : 'Invalid Option Here'
-        'R' : EROM<T[P], ESSRedId<T[P]['__tsType']>>
-        'AN' : EROM<T[P], ESSRedId<T[P]['__tsType']>['w'][]>
-        'AR' : EROM<T[P], ESSRedId<T[P]['__tsType']>[]>
-        'Ref' : T[P]['__tsType']
-        'S' : ESSRedId<T[P]['__tsType'][Path]>
-    })[T[P]['__ID']]
-}
+
+// type ESSNoResRef<T extends INeastedSchemaRecord<any, any, any, any, any, any>,
+// Path extends string = '__ModRD' | '__ModRND' | '__ModOD' | '__ModOND' | '__ReadRD' | '__ReadRND' | '__ReadOD' | '__ReadOND'> =
+// {
+//     [P in keyof T] : 
+//     ({
+//         'T' : 'Invalid Option Here'
+//         'R' : EROM<T[P], ESSNoResRef<T[P]['__tsType']>>
+//         'AN' : EROM<T[P], ESSNoResRef<T[P]['__tsType']>['w'][]>
+//         'AR' : EROM<T[P], ESSNoResRef<T[P]['__tsType']>[]>
+//         'Ref' : T[P] // Unmodified.
+//         'S' : ESSNoResRef<T[P]['__tsType'][Path]>
+//     })[T[P]['__ID']]
+// }
+
+// type ESSRedId<T extends INeastedSchemaRecord<any, any, any, any, any, any>,
+// Path extends string = '__Mod' | '__NonOpReadDefault' | '__NonOpROptional' | '__NDefault'> =
+// {
+//     [P in keyof T] : 
+//     ({
+//         'T' : 'Invalid Option Here'
+//         'R' : EROM<T[P], ESSRedId<T[P]['__tsType']>>
+//         'AN' : EROM<T[P], ESSRedId<T[P]['__tsType']>['w'][]>
+//         'AR' : EROM<T[P], ESSRedId<T[P]['__tsType']>[]>
+//         'Ref' : T[P]['__tsType']
+//         'S' : ESSRedId<T[P]['__tsType'][Path]>
+//     })[T[P]['__ID']]
+// }-
 
 // See if I can make mutiple different version of ModelRecordTsType, that check Required, Optional, Readonly
 // But this can only really be done in the latest typesript versions.
