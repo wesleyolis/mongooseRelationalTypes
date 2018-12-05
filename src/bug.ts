@@ -298,3 +298,38 @@
 //         return this as any;
 //     }
 // }
+
+type ID = 'A' | 'B' | 'C' | 'D' | 'E'
+
+interface TSShape<TID extends ID, T>
+{
+    FieldA : ID
+    FieldB : T
+}
+
+type TSShapes = TSShapeA | TSShapeB | TSShapeC | TSShapeD;
+
+interface TSShapeA extends TSShape<'A', number> {
+}
+
+interface TSShapeB extends TSShape<'A', number> {
+}
+
+interface TSShapeC extends TSShape<'A', number> {
+}
+
+interface TSShapeD extends TSShape<'A', number> {
+}
+
+interface Base
+{
+    FieldC : number
+}
+
+interface Parts<TShape extends TSShape<any, any>> extends Base
+{
+    FieldA : TShape['FieldA']
+    FieldB : TShape['FieldB']
+}
+
+type Test = Record<string, Parts<TSShapeA>> extends Record<string, Parts<TSShapes>> ? 'T' : 'F'
