@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/wesleyolis/mongooseRelationalTypes#readme",
   "dependencies": {
-    "@types/mongoose": "^5.2.9",
+    "@types/mongoose": "3.8.x",
     "mongoose": "^5.2.12",
     "npm": "^6.4.1"
   },
