@@ -1492,8 +1492,13 @@ declare module 'mongoose'
 export type ObjectGetValue<O extends Record<string,any>, K extends string> = O[K]
       
 // Need to just decided on how and when to apply the transform.
-export type QueryResultsDocumentModel<RecordTransformed, ArrayOfResults extends 'A' | 'O', Primative extends undefined | unknown,
-Lean extends 'T' | 'F', TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>> =
+export type QueryResultsDocumentModel<TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>,
+TPopulate extends Record<string, any>,
+ArrayOfResults extends 'A' | 'O',
+Primative extends undefined | unknown,
+Lean extends 'T' | 'F',
+RecordTransformed =  keyof TPopulate extends never ? MResults<TModelParts> : MResults<MResults<TModelParts>>
+> =
        Lean extends 'T' ? 
             Primative extends undefined ? 
                 ArrayOfResults extends 'O' ? 
@@ -1683,41 +1688,47 @@ _ResultRecordNewDocument = _ResultRecord & DocumentNewEnhanced<TModelParts>> //e
 
 export interface QueryEnhanced<
 TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>,
+DeepPopulate extends Record<string, any> = {},
 ArrayOfResults extends 'A' | 'O' = 'O',
 Primative extends unknown | undefined = unknown,
-Lean extends 'T' |'F' = 'F'>
+Lean extends 'T' |'F' = 'F',
+>
     {
-    lean() : QueryEnhanced<TModelParts, ArrayOfResults, Primative ,'T'>;
-    lean(value : true) : QueryEnhanced<TModelParts, ArrayOfResults, Primative, 'T'>;
-    lean(value : false) : QueryEnhanced<TModelParts, ArrayOfResults, Primative, 'F'>;
-    lean(value : undefined) : QueryEnhanced<TModelParts, ArrayOfResults, Primative, 'F'>;
+    lean() : QueryEnhanced<TModelParts, DeepPopulate, ArrayOfResults, Primative ,'T'>;
+    lean(value : true) : QueryEnhanced<TModelParts, DeepPopulate, ArrayOfResults, Primative, 'T'>;
+    lean(value : false) : QueryEnhanced<TModelParts, DeepPopulate, ArrayOfResults, Primative, 'F'>;
+    lean(value : undefined) : QueryEnhanced<TModelParts, DeepPopulate, ArrayOfResults, Primative, 'F'>;
 
-    exec(callback?: (err: any, res: QueryResultsDocumentModel<RawSchema, SchemaReadOnly, ArrayOfResults, Primative, Lean, SchemaPartial, Schema>) => void):
-    Promise<QueryResultsDocumentModel<RawSchema, SchemaReadOnly, ArrayOfResults, Primative, Lean, SchemaPartial, Schema>>;
-    exec(operation: string, callback?: (err: any, res: QueryResultsDocumentModel<RawSchema, SchemaReadOnly, ArrayOfResults, Primative, Lean, SchemaPartial, Schema>) => void):
-    Promise<QueryResultsDocumentModel<RawSchema, SchemaReadOnly, ArrayOfResults, Primative, Lean, SchemaPartial, Schema>>;
-    exec(operation: Function, callback?: (err: any, res: QueryResultsDocumentModel<RawSchema, SchemaReadOnly, ArrayOfResults, Primative, Lean, SchemaPartial, Schema>) => void):
-    Promise<QueryResultsDocumentModel<RawSchema, SchemaReadOnly, ArrayOfResults, Primative, Lean, SchemaPartial, Schema>>;
+    exec(callback?: (err: any, res: QueryResultsDocumentModel<TModelParts, DeepPopulate, ArrayOfResults, Primative, Lean>) => void):
+    Promise<QueryResultsDocumentModel<TModelParts, DeepPopulate, ArrayOfResults, Primative, Lean>>;
+    exec(operation: string, callback?: (err: any, res: QueryResultsDocumentModel<TModelParts, DeepPopulate, ArrayOfResults, Primative, Lean>) => void):
+    Promise<QueryResultsDocumentModel<TModelParts, DeepPopulate, ArrayOfResults, Primative, Lean>>;
+    exec(operation: Function, callback?: (err: any, res: QueryResultsDocumentModel<TModelParts, DeepPopulate, ArrayOfResults, Primative, Lean>) => void):
+    Promise<QueryResultsDocumentModel<TModelParts, DeepPopulate, ArrayOfResults, Primative, Lean>>;
 
     // populate<K extends keyof TModelParts['__ModRefIds'], Sel extends keyof TransformPartial<SchemaPartial,K>[K]>
     // (path: K, select: Sel, match?: Object, options?: Object):
     // QueryEnhanced<RawSchema, {}, ObjectKeyPick<TransformPartial<SchemaPartial,K>,K,Sel>, ArrayOfResults, Primative, Lean>;
 
     populate<K extends keyof TModelParts['__ModRefIds']>(path: K, select: undefined, match?: Object, options?: Object):
-    QueryEnhanced<RawSchema, SchemaReadOnly, TransformPartial<SchemaPartial,K>, ArrayOfResults, Primative, Lean>;
+    QueryEnhanced<TModelParts, DeepPopulate & {K:{}}, ArrayOfResults, Primative, Lean>;
 
-    populate<K extends keyof TModelParts['__ModRefIds'], Sel extends keyof TransformPartial<SchemaPartial,K>[K]>(path: K, select: string, match?: Object, options?: Object):
-    QueryEnhanced<RawSchema, SchemaReadOnly, ObjectKeyPick<TransformPartial<SchemaPartial,K>,K,Sel>, ArrayOfResults, Primative, Lean>;
+    // // Need to figure out how to do this one again.
+    // populate<K extends keyof TModelParts['__ModRefIds'], Sel extends keyof TransformPartial<SchemaPartial,K>[K]>(path: K, select: string, match?: Object, options?: Object):
+    // QueryEnhanced<TModelParts, ObjectKeyPick<TransformPartial<SchemaPartial,K>,K,Sel>, ArrayOfResults, Primative, Lean>;
 
     populate<K extends keyof TModelParts['__ModRefIds'],>(path: K, select?: undefined, match?: Object, options?: Object):
-    QueryEnhanced<RawSchema, SchemaReadOnly, TransformPartial<SchemaPartial,K>, ArrayOfResults, Primative, Lean>;
+    QueryEnhanced<TModelParts, DeepPopulate & {K:{}}, ArrayOfResults, Primative, Lean>;
 
     // still required to write a partial conversion form of this.
-    populate<Which extends 'neasted', Paths extends ExtractTranformValidate<SchemaPartial,Paths>>(path: string, select?: undefined, match?: Object, options?: Object):
-    QueryEnhanced<RawSchema, SchemaReadOnly, TransformPartialRaw<SchemaPartial,Paths>, ArrayOfResults, Primative, Lean>;
+    // populate<Which extends 'neasted', Paths extends ExtractTranformValidate<SchemaPartial,Paths>>(path: string, select?: undefined, match?: Object, options?: Object):
+    // QueryEnhanced<TModelParts, TransformPartialRaw<SchemaPartial,Paths>, ArrayOfResults, Primative, Lean>, DeepPopulatePaths;
+    
+    populate<Which extends 'neasted', Paths extends Record<string,any>>(path: string, select?: undefined, match?: Object, options?: Object):
+    QueryEnhanced<TModelParts, DeepPopulate & Paths, ArrayOfResults, Primative, Lean>;
 
-    populate<Opt extends ExtractPopulateOption<Schema,Opt>>(opt: Opt): 
-    QueryEnhanced<RawSchema, SchemaReadOnly, TransformPartialRaw<SchemaPartial,ObjectGetValue<Opt,'Path'>>, ArrayOfResults, Primative, Lean>;
+    // populate<Opt extends ExtractPopulateOption<Schema,Opt>>(opt: Opt): 
+    // QueryEnhanced<TModelParts, TransformPartialRaw<SchemaPartial,ObjectGetValue<Opt,'Path'>>, ArrayOfResults, Primative, Lean>;
     
     // Still required to write a partial version of this.
     //populate<Opt extends ExtractPopulateOption<SchemaPartial,Opt>>(opt: Opt, 
@@ -1725,105 +1736,112 @@ Lean extends 'T' |'F' = 'F'>
 
     // deep populate now just stops everything else, need to implemented a look at head
     // Record<string, any> = > Record<string,Record<string(dontcare),Record<string,any>>
-    deepPopulate<Paths extends ExtractTranformValidate<Schema,Paths>>(paths: string) :
-    QueryEnhanced<RawSchema, SchemaReadOnly, TransformPartialRaw<SchemaPartial,Paths>, ArrayOfResults, Primative, Lean>;
+    // deepPopulate<Paths extends ExtractTranformValidate<Schema, Paths>>(paths: string) :
+    // QueryEnhanced<TModelParts, ArrayOfResults, Primative, Lean, Paths>;
 
-    deepPopulate<Paths extends ExtractTranformValidate<Schema,Paths>>(paths: Array<string>) :
-    QueryEnhanced<RawSchema, SchemaReadOnly, TransformPartialRaw<SchemaPartial,Paths>, ArrayOfResults, Primative, Lean>;
+    // deepPopulate<Paths extends ExtractTranformValidate<Schema, Paths>>(paths: Array<string>) :
+    // QueryEnhanced<TModelParts, ArrayOfResults, Primative, Lean, Paths>;
+
+    deepPopulate<Paths extends Record<string, any>>(paths: string) :
+    QueryEnhanced<TModelParts, Paths, ArrayOfResults, Primative, Lean>;
+
+    deepPopulate<Paths extends Record<string, any>>(paths: Array<string>) :
+    QueryEnhanced<TModelParts, Paths, ArrayOfResults, Primative, Lean>;
 
 
     //  QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, ArrayOfResults ,'T'>;
-
     //  distinct(callback?: (err: any, res: T) => void): Query<T>;
     //  distinct(field: string, callback?: (err: any, res: T) => void): Query<T>;
     //  distinct(criteria: Object, field: string, callback?: (err: any, res: T) => void): Query<T>;
     //  distinct(criteria: Query<T>, field: string, callback?: (err: any, res: T) => void): Query<T>;
 
 
-    distinct<K extends keyof Schema>(field: K, callback?: (err: any, res: Schema[K][]) => void): QueryEnhanced<Schema[K],{},Schema[K], 'A', Primative, Lean>;
-    distinct<K extends keyof Schema = never>(field: string, callback?: (err: any, res: Schema[K][]) => void): QueryEnhanced<Schema[K],{},Schema[K],'A', Primative, Lean>;
+    distinct<K extends keyof MResults<TModelParts>>(field: K, callback?: (err: any, res: MResults<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, DeepPopulate, 'A', MResults<TModelParts>[K], Lean>;
+    distinct<K extends keyof MResults<TModelParts> = never>(field: string, callback?: (err: any, res: MResults<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, DeepPopulate,'A', MResults<TModelParts>[K], Lean>;
 
-    distinct<K extends keyof Schema>(conditions: Object,field: K,callback?: (err: any, res: Schema[K][]) => void): QueryEnhanced<Schema[K],{},Schema[K],'A', Primative, Lean>
-    distinct<K extends keyof Schema = never>(conditions: Object, field: string,  callback?: (err: any, res: Schema[K][]) => void): QueryEnhanced<Schema[K],{},Schema[K],'A', Primative, Lean>;
+    distinct<K extends keyof MResults<TModelParts>>(conditions: Object,field: K,callback?: (err: any, res: MResults<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, DeepPopulate,'A', MResults<TModelParts>[K], Lean>
+    distinct<K extends keyof MResults<TModelParts> = never>(conditions: Object, field: string,  callback?: (err: any, res: MResults<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, DeepPopulate,'A', MResults<TModelParts>[K], Lean>;
 
 
     // Typiclally all of these should start from scratch again, were Lean should be reset.
 
     find(callback?: (err: any, res: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'A', Primative, Lean, SchemaPartial, Schema>) => void):
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'A', Primative, Lean>;
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'A', Primative, Lean>) => void):
+        QueryEnhanced<TModelParts, DeepPopulate, 'A', Primative, Lean>;
     find(criteria: Object, callback?: (err: any, res: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'A', Primative, Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'A', Primative, Lean>;
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'A', Primative, Lean>) => void): 
+        QueryEnhanced<TModelParts, DeepPopulate, 'A', Primative, Lean>;
     findOne(callback?: (err: any, res: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative, Lean>) => void): 
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     findOne(criteria: Object, callback?: (err: any, res: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative,  Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative,  Lean>) => void): 
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     findOneAndRemove(callback?: (err: any, res: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative,  Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative,  Lean>;
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative,  Lean>) => void): 
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative,  Lean>;
     findOneAndRemove(cond: Object, callback?: (err: any, res: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative, Lean>) => void): 
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     findOneAndRemove(cond: Object, options: Object, callback?: (err: any, res: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative, Lean>) => void): 
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     findOneAndUpdate(callback?: (err: any, res: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative, Lean>) => void): 
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     findOneAndUpdate(update: Object, callback?: (err: any, res: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative, Lean>) => void): 
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     findOneAndUpdate(cond: Object, update: Object, callback?: (err: any, res: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative, Lean>) => void): 
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     findOneAndUpdate(cond: Object, update: Object, options: FindAndUpdateOption, callback?: (err: any, res: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative, Lean>) => void): 
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
     // PRIMATIVE OPTION REQUIRED, TAKE SUBKEY PARAMETER
     //limit(val: number): Query<T>;
 
     remove(callback?: (err: any, res: 
         QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O',Primative, Lean, SchemaPartial, Schema>) => void):
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
     remove(criteria: Object, callback?: (err: any, res: 
         QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
-    sort(arg: Object): QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
-    sort(arg: string): QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+    sort(arg: Object): QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
+    sort(arg: string): QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
+
 
     update(callback?: (err: any, affectedRows: number, doc: 
         QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
     update(doc: Object, callback?: (err: any, affectedRows: number, doc: 
         QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
     update(criteria: Object, doc: Object, callback?: (err: any, affectedRows: number, doc: 
         QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
     update(criteria: Object, doc: Object, options: Object, callback?: (err: any, affectedRows: number, doc: 
         QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+                QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
+
 
 
     count(callback?: (err: any, count: number) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, {Primative:number}, 'O', 'P', Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', number, Lean>;
 
     count(criteria: Object, callback?: (err: any, count: number) => void): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, {Primative: number}, 'O', 'P', Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', number, Lean>;
 
-    limit(val: number): QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+    limit(val: number): QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
-    select<K extends keyof SchemaPartial>(arg: K):
-        QueryEnhanced<RawSchema, SchemaReadOnly, {Primative:Pick<SchemaPartial, K> & {_id:ObjectGetValue<SchemaPartial, '_id'>}}, 'O', 'P', Lean>;
+    select<K extends keyof MResults<TModelParts>>(arg: K):
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Pick<MResults<TModelParts>, K> & {_id:ObjectGetValue<MResults<TModelParts>, '_id'>}, Lean>;
 
     select<Paths extends ExtractTranformValidate<Schema,Paths>>(arg: string):
         QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
@@ -1861,9 +1879,9 @@ Lean extends 'T' |'F' = 'F'>
     exists(path: string, val?: boolean): QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
 
     $where(condition?: string): 
-    QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O'>;
+    QueryEnhanced<TModelParts, 'O'>;
 
-    $where(funCondition: (this: (TransformRaw<SchemaPartial,{}>)) => bool): 
+    $where(funCondition: (this: (TransformRaw<SchemaPartial,{}>)) => boolean): 
     QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O'>;
 
     /*
