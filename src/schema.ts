@@ -1341,49 +1341,9 @@ type ESRefs<T extends ITSModifiersRecord<any, any, any, any, any, any>, Paths ex
 //     })[T[P]['__ID']]
 // }-
 
-// This is not turning out to be ideal, and would probably be much better to use IRefType
-// stuff because pattern is simple and less interigation.
-// but this first for performance, then move to the more complex one.
-// This method below, we do loose the undefiend context of things... so there are flaws.
-// this is definitly going to be more complex..
-// This means that I now need to add things in side each intepretation.
-// this getting too complex, need interigate the key in each format.
-// I am going to abondend this now, for other method.
 
-type uuuuu = ExtractMRefTypes2<{a: number, b: string},{a:'ref'}>
-
-
-type mmm = '' extends '' ? 'T' :'F'
-
-// type ExtractMRefTypes55<T extends Record<string, any>,
-// Path extends Record<string,any>,
-// Paths extends Record<keyof T, any> = Record<keyof T, undefined> & Path;
-
-type ExtractMRefTypes2<T extends Record<string, any>,
-Path extends Record<string,any>,
-Paths extends Record<keyof T, any> = Record<keyof T, undefined> > = {
-    [K in keyof T] : Paths[K]
-}
-
+// Required to still add support for nullable and undefined.
 type ExtractMRefTypes<T extends Record<string, any>,
-Path extends Record<string,any>,
-PathExclude extends Record<keyof T, any> = Path & Exclude<Record<keyof T, undefined>, keyof Path>,
-Paths extends Record<keyof T, any> =  PathExclude,
-PathKeys extends keyof Paths = keyof Paths> =
-{
-    [K in keyof T] : 
-    ({
-        'T' : 'Invalid Option Here'
-        'R' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>
-        'AN' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>['w'][]
-        'AR' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>[]
-        'Ref' : Paths[K] extends  'ref'? 'Y'//ExtractMRefTypes<T[K]['__tsType']['__ModRef'], Paths[K]>
-            : T[K]['__tsType']['__Id']
-    })[T[K]['__ID']]
-}
-
-
-type ExtractMRefTypes4<T extends Record<string, any>,
 Paths extends Record<string, any>,
 KeysOfPaths extends keyof Paths = keyof Paths> =
 {
@@ -1391,62 +1351,28 @@ KeysOfPaths extends keyof Paths = keyof Paths> =
     ({
         'T' : 'Invalid Option Here'
         'R' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>
-        'AN' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>['w'][]
-        'AR' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>[]
-        'Ref' : Paths[K] extends  'ref'? 'Y'//ExtractMRefTypes<T[K]['__tsType']['__ModRef'], Paths[K]>
-            : T[K]['__tsType']['__Id']
+        'AN' : ExtractMRefTypes<T[K]['__tsType'], {w:Paths[K]}>['w']
+        'AR' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>
+        'Ref' : Paths[K] extends Record<string, any> ? (MResults<T[K]> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], Paths[K]>) : T[K]['__tsType']['__Id']
     })[T[K]['__ID']]
-    : undefined // but since only contains what we want, should be a problem.
+    :  T[K]['__tsType']['__Id']
 }
-    
-    
 
 
-type ExtractMRefTypes5<Paths extends Record<string, any>,
-T extends Record<keyof Paths, any>,
-PathKeys extends keyof Paths = keyof Paths> =
+type ExtractValidate<T extends Record<string, any>,
+Paths extends Record<string, any>,
+KeysOfPaths extends keyof Paths = keyof Paths> =
 {
-    [K in keyof T] : 
+    [K in keyof T] ? : K extends KeysOfPaths ?
     ({
         'T' : 'Invalid Option Here'
-        'R' : ExtractMRefTypes5<Paths[K], T[K]['__tsType'] >
-        // 'AN' : ExtractMRefTypes<Paths[K], T[K]['__tsType']>['w'][]
-        // 'AR' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>[]
-        'Ref' : Paths[K] extends  'ref'? 'Y'//ExtractMRefTypes<T[K]['__tsType']['__ModRef'], Paths[K]>
-            : T[K]['__tsType']['__Id']
+        'R' : ExtractValidate<T[K]['__tsType'], Paths[K]>
+        'AN' : ExtractValidate<T[K]['__tsType'], {w:Paths[K]}>['w']
+        'AR' : ExtractValidate<T[K]['__tsType'], Paths[K]>
+        'Ref' : Paths[K] extends Record<string, never> ? {}: ExtractValidate<T[K]['__tsType']['__ModRef'], Paths[K]>
     })[T[K]['__ID']]
+    : never
 }
-
-
-// Have to use a pick or unknown..
-type ExtractMRefTypes6<T extends Record<keyof Paths, any>, Paths extends Record<string, any>> =
-{
-    [K in keyof Paths] : ({
-        'T' : 'Invalid Option Here'
-        'R' : ExtractMRefTypes6<T[K]['__tsType'], Paths[K]>
-        'AN' : ExtractMRefTypes6<T[K]['__tsType']['w'], {w:'ref'}> // Requires look at head.
-        'AR' : ExtractMRefTypes6<T[K]['__tsType'], Paths[K]>
-        'Ref' : Paths[K] extends Record<string, never> ? ExtractMRefTypes6<T[K]['__tsType']['__ModRef'], Paths[K]> : T[K]['__tsType']['__ModRef']
-    })[T[K]['__ID']]
-    //: T[K]['__tsType']['__ModRef']
-}
-    
-    
-
-
-// type ExtractMRefTypesValidator<T extends Record<string, any>, Paths extends Record<string, any>> =
-// {
-//     [K in keyof T] : K extends keyof Paths ?
-//         T[K] extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any> | undefined ?
-//                 MResults<T[K]> & ExtractMRefTypes<T[K]['__ModRef'], Paths[K]>
-//             : T[K] extends Record<string, any> | undefined ?
-//                 ExtractMRefTypes<T[K], Paths[K]>
-//             : T[K] extends Array<infer A> | undefined ?
-//                 ExtractMRefTypes<A, Paths[K]> []
-//             : 'Mismatch shape'
-//     : never
-// }
-
 
 type MRequired<T extends Record<string, any>> = 
 {
@@ -1711,11 +1637,9 @@ _ResultRecordDocumentKeys extends keyof _ResultRecordDocument = keyof _ResultRec
 
     // After using deepPopulate in our current version of mongo, populate methods can't be used again.
     // Issues apply the path constraints here recusively for some reason...
-    //Paths extends keyof Extract<ExtractPathValidator<TModelParts['__ModRefIds'], Paths>
-    deepPopulate<Paths extends Record<string,any>>(paths: string) : QueryEnhanced<TModelParts, Paths>;
+    deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: string) : QueryEnhanced<TModelParts, Paths>;
 
-    deepPopulate<Paths extends Record<string,any>>(paths: Array<string>) : QueryEnhanced<TModelParts, Paths>;
-
+    deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: Array<keyof Paths>) : QueryEnhanced<TModelParts, Paths>;
 
     create(doc: _NewRecordDocument, fn?: (err: any, res: MResults<TModelParts> & DocumentNewEnhanced<TModelParts>) => void): Promise<_ResultRecordNewDocument>;
     create(doc1: _NewRecordDocument, doc2: _NewRecordDocument, fn?: (err: any, res1: _ResultRecordNewDocument, res2: _ResultRecordNewDocument) => void): Promise<_ResultRecordNewDocument[]>;
@@ -1896,18 +1820,16 @@ Lean extends 'T' |'F' = 'F',
     populate<K extends keyof TModelParts['__ModRefIds']>(path: K, select: undefined, match?: Object, options?: Object):
     QueryEnhanced<TModelParts, DeepPopulate & {K:{}}, ArrayOfResults, Primative, Lean>;
 
-    // // Need to figure out how to do this one again.
-    // populate<K extends keyof TModelParts['__ModRefIds'], Sel extends keyof TransformPartial<SchemaPartial,K>[K]>(path: K, select: string, match?: Object, options?: Object):
-    // QueryEnhanced<TModelParts, ObjectKeyPick<TransformPartial<SchemaPartial,K>,K,Sel>, ArrayOfResults, Primative, Lean>;
+    //ExtractValidate<TModelParts['__ModRef'], Paths>
 
-    populate<K extends keyof TModelParts['__ModRefIds'],>(path: K, select?: undefined, match?: Object, options?: Object):
-    QueryEnhanced<TModelParts, DeepPopulate & {K:{}}, ArrayOfResults, Primative, Lean>;
+    // Need to figure out how to do this one again.
+    // populate<K extends keyof ExtractValidate<TModelParts['__ModRef'],{K:{}}>, Sel extends [K]>(path: K, select: string, match?: Object, options?: Object):
+    // QueryEnhanced<TModelParts, DeepPopulate & {K:{}} ObjectKeyPick<TransformPartial<SchemaPartial,K>,K,Sel>, ArrayOfResults, Primative, Lean>;
 
-    // still required to write a partial conversion form of this.
-    // populate<Which extends 'neasted', Paths extends ExtractTranformValidate<SchemaPartial,Paths>>(path: string, select?: undefined, match?: Object, options?: Object):
-    // QueryEnhanced<TModelParts, TransformPartialRaw<SchemaPartial,Paths>, ArrayOfResults, Primative, Lean>, DeepPopulatePaths;
+    // populate<K extends keyof TModelParts['__ModRefIds'],>(path: K, select?: undefined, match?: Object, options?: Object):
+    // QueryEnhanced<TModelParts, DeepPopulate & {K:{}}, ArrayOfResults, Primative, Lean>;
     
-    populate<Which extends 'neasted', Paths extends Record<string,any>>(path: string, select?: undefined, match?: Object, options?: Object):
+    populate<Which extends 'neasted', Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(path: string, select?: undefined, match?: Object, options?: Object):
     QueryEnhanced<TModelParts, DeepPopulate & Paths, ArrayOfResults, Primative, Lean>;
 
     // populate<Opt extends ExtractPopulateOption<Schema,Opt>>(opt: Opt): 
@@ -1917,18 +1839,10 @@ Lean extends 'T' |'F' = 'F',
     //populate<Opt extends ExtractPopulateOption<SchemaPartial,Opt>>(opt: Opt, 
     //  callback?: (err: any, res: any) => void): any
 
-    // deep populate now just stops everything else, need to implemented a look at head
-    // Record<string, any> = > Record<string,Record<string(dontcare),Record<string,any>>
-    // deepPopulate<Paths extends ExtractTranformValidate<Schema, Paths>>(paths: string) :
-    // QueryEnhanced<TModelParts, ArrayOfResults, Primative, Lean, Paths>;
-
-    // deepPopulate<Paths extends ExtractTranformValidate<Schema, Paths>>(paths: Array<string>) :
-    // QueryEnhanced<TModelParts, ArrayOfResults, Primative, Lean, Paths>;
-
-    deepPopulate<Paths extends Record<string, any>>(paths: string) :
+    deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: string) :
     QueryEnhanced<TModelParts, Paths, ArrayOfResults, Primative, Lean>;
 
-    deepPopulate<Paths extends Record<string, any>>(paths: Array<string>) :
+    deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: Array<keyof Paths>) :
     QueryEnhanced<TModelParts, Paths, ArrayOfResults, Primative, Lean>;
 
 
@@ -2100,10 +2014,12 @@ type IModB = IMModelParts<string, {
 },
 {},
 {
-    refB : IModB,
-    refNeastedB : Array<IModB>,
-    refNeastedBUndefined : Array<IModB> | undefined,
-    refNeastedBArrayUndefined : Array<IModB | undefined>
+    refB: IShapeTSRef<IModB>,
+    refNeastedB : IShapeTSArrayNeasted<mm>, 
+    refNeastedBRecord : IShapeTSArrayRecord<{
+        ref : IShapeTSRef<IModB>
+    }>,
+    refBB : IShapeTSRef<IModB>,
 }>;
 
 const modelB = {} as IModel<IModB>
@@ -2133,56 +2049,26 @@ const modelA = {} as IModel<IMModelParts<string, {
 {},
 {
     refA : IShapeTSRef<IModB>,
-    // refNeastedA : Array<IModB>,
-    // refNeastedAUndefined : Array<IModB> | undefined,
-    // refNeastedAArrayUndefined : Array<IModB | undefined>
-}>>
-
-
-//modelA.update({id: ''},{}) // This is working.
-
-modelA.deepPopulate<{refA:{}, refNeastedA:{}}>('refA').lean(true).exec(function (err, results) {
-
-    results.refA.
-
-});
-
-type mm = IShapeTSRef<IModB>;
-
-type rr = mm['__tsType']
-
-type Results = ExtractMRefTypes6<{
-    refA : IShapeTSRef<IModB>,
     refNeastedA : IShapeTSArrayNeasted<mm>, // this requires lookahead.
     refNeastedRecord : IShapeTSArrayRecord<{
         ref : IShapeTSRef<IModB>
     }>,
     refAA : IShapeTSRef<IModB>,
-
-},{
-    refAA : 'ref',
-    refNeastedA: 'rf',
-    refNeastedRecord : {ref:'ref'},
-
-}>
+}>>
 
 
-// type Results = ExtractMRefTypes6<
-// {
-//     refAA : 'ref',
-//     refNeastedA: 'ref'
+//modelA.update({id: ''},{}) // This is working.
 
-// },
-// {
+// type rrr = ExtractValidate<{
 //     refA : IShapeTSRef<IModB>,
-//     refNeastedA : IShapeTSArrayNeasted<mm>,
+//     refNeastedA : IShapeTSArrayNeasted<mm>, // this requires lookahead.
 //     refNeastedRecord : IShapeTSArrayRecord<{
 //         ref : IShapeTSRef<IModB>
 //     }>,
 //     refAA : IShapeTSRef<IModB>,
+// },{}>
 
-// }>
+modelA.deepPopulate(['refA']).lean(true).exec(function (err, results) {
 
- const result : Results;
-
-result.refNeastedA
+    results.refA.
+});
