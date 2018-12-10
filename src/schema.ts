@@ -2,6 +2,7 @@
 import * as mongoose from 'mongoose';
 import { FindAndUpdateOption } from 'mongoose';
 import { Query } from 'mongoose';
+import { ModelEnhanced } from '.';
 //import {Schema, SchemaDefinition, SchemaTypeOpts, SchemaType, Types} from 'mongoose'
 //import {If, ObjectHasKey, ObjectOptional, ObjectOmit, ObjectClean, Bool, StringOmit, StringEq, ObjectOverwrite, Option} from './tstypelevel';
 //import { StringContains, ObjectDiff } from './tstypelevel';
@@ -1205,7 +1206,7 @@ const tsSchema : TSSchema = {
 // were the model definition will extra this informaiton.
 // What we could do is the full type type out here, but then check that
 // Schema conforms to that, but the simpified 
-const modelA = model('collectionName', Schema);
+const modelsdA = model('collectionName', Schema);
 
 // This basically what the model would be doing up front.
 // If we wanted to speed things up and not do the type extraction
@@ -1306,18 +1307,43 @@ type ESRefs<T extends ITSModifiersRecord<any, any, any, any, any, any>, Paths ex
 //     })[T[P]['__ID']]
 // }-
 
+// This is not turning out to be ideal, and would probably be much better to use IRefType
+// stuff because pattern is simple and less interigation.
+// but this first for performance, then move to the more complex one.
+// This method below, we do loose the undefiend context of things... so there are flaws.
+// this is definitly going to be more complex..
+// This means that I now need to add things in side each intepretation.
+// this getting too complex, need interigate the key in each format.
+// I am going to abondend this now, for other method.
 type ExtractMRefTypes<T extends Record<string, any>, Paths extends Record<string, any>> =
 {
     [K in keyof T] : K extends keyof Paths ?
-        T[K] extends IShapeTSRef<any> | undefined ?
-            T[K]['__tsType']
+        T[K] extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any> | undefined ?
+                MResults<T[K]> & ExtractMRefTypes<T[K]['__ModRef'], Paths[K]>
+            : T[K] extends Array<infer Arr | undefined> | undefined? 
+                Arr extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, infer ModRef> ?
+                (MResults<Arr>) & ExtractMRefTypes<ModRef, Paths[K]>
+                : ExtractMRefTypes<Arr, Paths[K]> []
             : T[K] extends Record<string, any> | undefined ?
-                ExtractMRefTypes<T[K]['__tsType'], Paths[K]>
-            : T[K] extends Array<infer A> | undefined ?
-                ExtractMRefTypes<A, Paths[K]> []
+                ExtractMRefTypes<T[K], Paths[K]>
             : 'Mismatch shape'
-    : never
+    : T[K]['__Id']
 }
+
+
+// type ExtractMRefTypesValidator<T extends Record<string, any>, Paths extends Record<string, any>> =
+// {
+//     [K in keyof T] : K extends keyof Paths ?
+//         T[K] extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any> | undefined ?
+//                 MResults<T[K]> & ExtractMRefTypes<T[K]['__ModRef'], Paths[K]>
+//             : T[K] extends Record<string, any> | undefined ?
+//                 ExtractMRefTypes<T[K], Paths[K]>
+//             : T[K] extends Array<infer A> | undefined ?
+//                 ExtractMRefTypes<A, Paths[K]> []
+//             : 'Mismatch shape'
+//     : never
+// }
+
 
 type MRequired<T extends Record<string, any>> = 
 {
@@ -1335,6 +1361,21 @@ interface IMModelRecordTsTypes<T extends Record<string,any>> extends Record<stri
 
 }
 
+
+interface IMTSModifiersRecord<
+TModelParts extends {}
+> extends
+Record<string, undefined 
+| TModelParts
+| IMTSModifiersRecord<TModelParts>
+| Array<
+| undefined
+| TModelParts
+| IMTSModifiersRecord<TModelParts>
+>>
+{
+} 
+
 // I would need to add the model for parts, that from int he shape of IAdapters system.
 // I am going to take a short cut here first, but simpler swap out after ways.
 
@@ -1350,9 +1391,9 @@ ReadRD extends IMModelRecordTsTypes<any>,
 ReadRND extends IMModelRecordTsTypes<any>,
 ReadOD extends IMModelRecordTsTypes<any>,
 ReadOND extends IMModelRecordTsTypes<any>,
-ModRefIds extends IMModelRecordTsTypes<any>,      // Used to spesify it must have these fields, irrelavant if modRef is populated, only there for sub sections.
-ModRefTypes extends IMModelRecordTsTypes<any>,    // Can add in a specially modifier.   // User to spesify it msut have there fields irrelacant if Mod Ref is populated, only there for sub sections.
-ModRef extends ITSModifiersRecord<any, any, any, any, any, any>> // Use the populates or extraction method... but should be removed as soon as it is not required.
+ModRefIds extends IMTSModifiersRecord<string>,      // Used to spesify it must have these fields, irrelavant if modRef is populated, only there for sub sections.
+ModRefPop extends IMTSModifiersRecord<any>,    // Can add in a specially modifier.   // User to spesify it msut have there fields irrelacant if Mod Ref is populated, only there for sub sections.
+ModRef extends IMTSModifiersRecord<IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>>> // Use the populates or extraction method... but should be removed as soon as it is not required.
 {
     __Id: Id;
     __ModRD: ModRD,
@@ -1364,7 +1405,7 @@ ModRef extends ITSModifiersRecord<any, any, any, any, any, any>> // Use the popu
     __ReadOD: ReadOD,
     __ReadOND: ReadOND,
     __ModRefIds : ModRefIds;
-    __ModRefTypes : ModRefTypes;    // These are all the readonly version of the referance.
+    __ModRefTypes : ModRefPop;    // These are all the readonly version of the referance.
     __ModRef: ModRef;
 }
 
@@ -1497,19 +1538,17 @@ TPopulate extends Record<string, any>,
 ArrayOfResults extends 'A' | 'O',
 Primative extends undefined | unknown,
 Lean extends 'T' | 'F',
-RecordTransformed =  keyof TPopulate extends never ? MResults<TModelParts> : MResults<MResults<TModelParts>>
-> =
-       Lean extends 'T' ? 
-            Primative extends undefined ? 
-                ArrayOfResults extends 'O' ? 
-                    RecordTransformed
-               : Array<RecordTransformed>
-               : Primative
-       : ArrayOfResults extends 'O' ? 
-           Primative extends undefined ?
-                RecordTransformed & DocumentEnhanced<TModelParts>
-                : Primative & DocumentEnhanced<TModelParts>
-           : Array<RecordTransformed & DocumentEnhanced<TModelParts>>
+RecordTransformed =  keyof TPopulate extends never ? MResults<TModelParts> : MResults<TModelParts> & ExtractMRefTypes<TModelParts['__ModRef'], TPopulate>
+> = Lean extends 'T' ? Primative extends undefined ? 
+        ArrayOfResults extends 'O' ? 
+            RecordTransformed
+        : Array<RecordTransformed>
+        : Primative
+    : ArrayOfResults extends 'O' ? 
+        Primative extends undefined ?
+            RecordTransformed & DocumentEnhanced<TModelParts>
+            : Primative & DocumentEnhanced<TModelParts>
+        : Array<RecordTransformed & DocumentEnhanced<TModelParts>>
 
 
 interface IModel<TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>,
@@ -1529,9 +1568,9 @@ _ResultRecordDocumentKeys extends keyof _ResultRecordDocument = keyof _ResultRec
     // After using deepPopulate in our current version of mongo, populate methods can't be used again.
     // Issues apply the path constraints here recusively for some reason...
     //Paths extends keyof Extract<ExtractPathValidator<TModelParts['__ModRefIds'], Paths>
-    deepPopulate<Paths extends Record<string,any>>(paths: string) : QueryEnhanced<TModelParts>;
+    deepPopulate<Paths extends Record<string,any>>(paths: string) : QueryEnhanced<TModelParts, Paths>;
 
-    deepPopulate<Paths extends Record<string,any>>(paths: Array<string>) : QueryEnhanced<TModelParts>;
+    deepPopulate<Paths extends Record<string,any>>(paths: Array<string>) : QueryEnhanced<TModelParts, Paths>;
 
 
     create(doc: _NewRecordDocument, fn?: (err: any, res: MResults<TModelParts> & DocumentNewEnhanced<TModelParts>) => void): Promise<_ResultRecordNewDocument>;
@@ -1559,47 +1598,47 @@ _ResultRecordDocumentKeys extends keyof _ResultRecordDocument = keyof _ResultRec
     
     findById(id: TModelParts['__Id'], callback?: (err: any, res: _ResultRecordDocument) => void) : QueryEnhanced<TModelParts>;
             
-    find(): QueryEnhanced<TModelParts, 'A'>;
+    find(): QueryEnhanced<TModelParts, {}, 'A'>;
     // I haven't taken the array wrapping into arroud for transform, I will need to strip that.
-    find(cond: Object, callback?: (err: any, res: _ResultRecordDocument[]) => void): QueryEnhanced<TModelParts, 'A'>;
-    find(cond: Object, fields: Object, callback?: (err: any, res: _ResultRecordDocument[]) => void): QueryEnhanced<TModelParts, 'A'>;
-    find(cond: Object, fields: Object, options: Object, callback?: (err: any, res: _ResultRecordDocument[]) => void): QueryEnhanced<TModelParts, 'A'>;
-    findById(id: TModelParts['__Id'], callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, 'O'>;
-    findById(id: TModelParts['__Id'], fields: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, 'O'>;
-    findById(id: TModelParts['__Id'], fields: Object, options: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, 'O'>;
-    findByIdAndRemove(id: TModelParts['__Id'], callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, 'O'>;
-    findByIdAndRemove(id: TModelParts['__Id'], options: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, 'O'>;
-    findByIdAndUpdate(id: TModelParts['__Id'], update: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, 'O'>;
-    findByIdAndUpdate(id: TModelParts['__Id'], update: Object, options: FindAndUpdateOption, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, 'O'>;
-    findOne(cond?: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts,  'O'>;
-    findOne(cond: Object, fields: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts,  'O'>;
-    findOne(cond: Object, fields: Object, options: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, 'O'>;
-    findOneAndRemove(cond: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, 'O'>;
-    findOneAndRemove(cond: Object, options: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, 'O'>;
-    findOneAndUpdate(cond: Object, update: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, 'O'>;
-    findOneAndUpdate(cond: Object, update: Object, options: FindAndUpdateOption, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, 'O'>;
+    find(cond: Object, callback?: (err: any, res: _ResultRecordDocument[]) => void): QueryEnhanced<TModelParts, {}, 'A'>;
+    find(cond: Object, fields: Object, callback?: (err: any, res: _ResultRecordDocument[]) => void): QueryEnhanced<TModelParts, {}, 'A'>;
+    find(cond: Object, fields: Object, options: Object, callback?: (err: any, res: _ResultRecordDocument[]) => void): QueryEnhanced<TModelParts, {}, 'A'>;
+    findById(id: TModelParts['__Id'], callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findById(id: TModelParts['__Id'], fields: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findById(id: TModelParts['__Id'], fields: Object, options: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findByIdAndRemove(id: TModelParts['__Id'], callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findByIdAndRemove(id: TModelParts['__Id'], options: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findByIdAndUpdate(id: TModelParts['__Id'], update: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findByIdAndUpdate(id: TModelParts['__Id'], update: Object, options: FindAndUpdateOption, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOne(cond?: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOne(cond: Object, fields: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOne(cond: Object, fields: Object, options: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOneAndRemove(cond: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOneAndRemove(cond: Object, options: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOneAndUpdate(cond: Object, update: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOneAndUpdate(cond: Object, update: Object, options: FindAndUpdateOption, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
 
     //populate<U>(doc: U, options: Object, callback?: (err: any, res: U) => void): Promise<U>;
     //populate<U>(doc: U[], options: Object, callback?: (err: any, res: U[]) => void): Promise<U[]>;
 
     // These schema may need to change but I will have to look that up.
-    update(cond: Object, update: MUpdate<TModelParts>, callback?: (err: any, affectedRows: number, raw: any) => void): QueryEnhanced<TModelParts, 'O'>;
-    update(cond: Object, update: MUpdate<TModelParts>, options: Object, callback?: (err: any, affectedRows: number, raw: any) => void): QueryEnhanced<TModelParts, 'O'>;
+    update(cond: Object, update: MUpdate<TModelParts>, callback?: (err: any, affectedRows: number, raw: any) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    update(cond: Object, update: MUpdate<TModelParts>, options: Object, callback?: (err: any, affectedRows: number, raw: any) => void): QueryEnhanced<TModelParts, {}, 'O'>;
     remove(cond: Object, callback?: (err: any) => void): Query<{}>;
 
-    save(callback?: (err: any, result: _ResultRecordDocument, numberAffected: number) => void): QueryEnhanced<TModelParts, 'O'>;
+    save(callback?: (err: any, result: _ResultRecordDocument, numberAffected: number) => void): QueryEnhanced<TModelParts, {}, 'O'>;
 
     // Need to look into this.
     //where(path: string, val?: Object): Query<T[]>;
 
     // These can be broken up even better, to improve performance.
-    count(callback?: (err: any, count: number) => void): QueryEnhanced<TModelParts, 'O', number>;
+    count(callback?: (err: any, count: number) => void): QueryEnhanced<TModelParts, {}, 'O', number>;
 
-    count(criteria: Object, callback?: (err: any, count: number) => void): QueryEnhanced<TModelParts, 'O', number>;
+    count(criteria: Object, callback?: (err: any, count: number) => void): QueryEnhanced<TModelParts, {}, 'O', number>;
 
-    $where(condition?: string): QueryEnhanced<TModelParts, 'O'>;
+    $where(condition?: string): QueryEnhanced<TModelParts, {}, 'O'>;
 
-    $where(funCondition: (this: (_ResultRecord)) => boolean): QueryEnhanced<TModelParts, 'O'>;
+    $where(funCondition: (this: (_ResultRecord)) => boolean): QueryEnhanced<TModelParts, {}, 'O'>;
 }
 
 
@@ -1690,7 +1729,7 @@ export interface QueryEnhanced<
 TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>,
 DeepPopulate extends Record<string, any> = {},
 ArrayOfResults extends 'A' | 'O' = 'O',
-Primative extends unknown | undefined = unknown,
+Primative extends unknown | undefined = undefined,
 Lean extends 'T' |'F' = 'F',
 >
     {
@@ -1803,11 +1842,11 @@ Lean extends 'T' |'F' = 'F',
     //limit(val: number): Query<T>;
 
     remove(callback?: (err: any, res: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O',Primative, Lean, SchemaPartial, Schema>) => void):
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O',Primative, Lean>) => void):
         QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
     remove(criteria: Object, callback?: (err: any, res: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
     sort(arg: Object): QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
@@ -1815,19 +1854,19 @@ Lean extends 'T' |'F' = 'F',
 
 
     update(callback?: (err: any, affectedRows: number, doc: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
     update(doc: Object, callback?: (err: any, affectedRows: number, doc: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
     update(criteria: Object, doc: Object, callback?: (err: any, affectedRows: number, doc: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
     update(criteria: Object, doc: Object, options: Object, callback?: (err: any, affectedRows: number, doc: 
-        QueryResultsDocumentModel<RawSchema, SchemaReadOnly, 'O', Primative, Lean, SchemaPartial, Schema>) => void): 
+        QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', Primative, Lean>) => void): 
                 QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
 
@@ -1843,46 +1882,46 @@ Lean extends 'T' |'F' = 'F',
     select<K extends keyof MResults<TModelParts>>(arg: K):
         QueryEnhanced<TModelParts, DeepPopulate, 'O', Pick<MResults<TModelParts>, K> & {_id:ObjectGetValue<MResults<TModelParts>, '_id'>}, Lean>;
 
-    select<Paths extends ExtractTranformValidate<Schema,Paths>>(arg: string):
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+    //select<Paths extends ExtractTranformValidate<Schema,Paths>>(arg: string):
+    //    QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
 
-    select<Paths extends ExtractTranformValidate<Schema,Paths>>(arg: Object):
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>
+    //select<Paths extends ExtractTranformValidate<Schema,Paths>>(arg: Object):
+    //   QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>
 
     where(path?: string, val?: any): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     where(path?: Object, val?: any): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
     gt(val: number): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     gt(path: string, val: number): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     gte(val: number): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     gte(path: string, val: number): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     lt(val: number): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     lt(path: string, val: number): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     lte(val: number): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     lte(path: string, val: number): 
-        QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
     // Typicaly these need to be check that they have been preceed by some previous operation.
     // this woudl require nother parameter.
-    equals(val: Object): QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+    equals(val: Object): QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
-    exists(val?: boolean): QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
-    exists(path: string, val?: boolean): QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+    exists(val?: boolean): QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
+    exists(path: string, val?: boolean): QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
     $where(condition?: string): 
-    QueryEnhanced<TModelParts, 'O'>;
+    QueryEnhanced<TModelParts, DeepPopulate, 'O'>;
 
-    $where(funCondition: (this: (TransformRaw<SchemaPartial,{}>)) => boolean): 
-    QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O'>;
+    //$where(funCondition: (this: (TransformRaw<SchemaPartial,{}>)) => boolean): 
+    //QueryEnhanced<TModelParts, DeepPopulate, 'O'>;
 
     /*
     lt(val: number): Query<T>;
@@ -1892,5 +1931,88 @@ Lean extends 'T' |'F' = 'F',
     */
 }
 
-const model = mongoose.model(schemaLeft);
 
+type IModB = IMModelParts<string, {
+    modBRD : 'RequiredDefault'
+}, {
+    modBRND  : 'RequiredNoDefault'
+}, {
+    modBOD  : 'OptionalDefault'
+}, {
+    modBOND  : 'OptionalNoDefault'
+}, {
+   readonly ReadBRD  : 'RequiredDefault'
+}, {
+    readonly ReadBRND  : 'RequiredNoDefault'
+}, {
+    readonly ReadBOD  : 'OptionalDefault'
+}, {
+    readonly ReadBOND  : 'OptionalNoDefault'
+}, {
+    refB : string,
+    refNeastedB : string,
+    refNeastedBUndefined : string,
+    refNeastedBArrayUndefined : Array<string>
+},
+{},
+{
+    refB : IModB,
+    refNeastedB : Array<IModB>,
+    refNeastedBUndefined : Array<IModB> | undefined,
+    refNeastedBArrayUndefined : Array<IModB | undefined>
+}>;
+
+const modelB = {} as IModel<IModB>
+
+const modelA = {} as IModel<IMModelParts<string, {
+    modRD : 'RequiredDefault', 
+}, {
+    modRND  : 'RequiredNoDefault'
+}, {
+    modOD  : 'OptionalDefault'
+}, {
+    modOND  : 'OptionalNoDefault'
+}, {
+   readonly ReadRD  : 'RequiredDefault'
+}, {
+    readonly ReadRND  : 'RequiredNoDefault'
+}, {
+    readonly ReadOD  : 'OptionalDefault'
+}, {
+    readonly ReadOND  : 'OptionalNoDefault'
+}, {
+    refA : string,
+    refNeastedA : string,
+    refNeastedAUndefined : string,
+    refNeastedAArrayUndefined : Array<string>
+},
+{},
+{
+    refA : IModB,
+    refNeastedA : Array<IModB>,
+    refNeastedAUndefined : Array<IModB> | undefined,
+    refNeastedAArrayUndefined : Array<IModB | undefined>
+}>>
+
+
+//modelA.update({id: ''},{}) // This is working.
+
+modelA.deepPopulate<{refA:{}, refNeastedA:{}}>('refA').lean(true).exec(function (err, results) {
+
+    results.refA.
+
+});
+
+type Results = ExtractMRefTypes<{
+    refA : IModB,
+    refNeastedA : Array<IModB>,
+    refNeastedAUndefined : Array<IModB> | undefined,
+    refNeastedAArrayUndefined : Array<IModB | undefined>
+},{
+    refA : {},    
+    refNeastedA : {}
+}>
+
+ const result : Results;
+
+result.refNeastedAArrayUndefined
