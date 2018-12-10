@@ -207,7 +207,19 @@ interface IShape<TID extends ID, TNeasted>{
     neasted : TNeasted
 }
 
-interface ITSShape<T, TID extends ID> extends IShape<ID, T>
+// Thesse are required to be know, when we need to know the TSShape container
+// So that we can acess spesific properties, and preserve the properties
+// modifiers when minipulating referances or neasted schemas.
+interface TSModifiers<
+TRequired extends _Required,
+TReadonly extends _Readonly,
+TNullable extends _Nullable> {
+    __Required: TRequired;
+    __Readonly: TReadonly;
+    __Nullable: TNullable;
+}
+
+interface ITSShape<T, TID extends ID>extends IShape<ID, T>
 {
     __tsType: T;
     __ID: TID;
@@ -251,7 +263,7 @@ function ShapeTSRecord<T extends IShapeRecordExtends>(rec : T)
 }
 
 type IShapeArrayNeastedExtendsID = 'T' | 'S' | 'AN' | 'AR' | 'Ref'
-type IShapeArrayNeastedExtends = ITSShape<IShapeArrayNeastedExtendsID, any>//IShapeTSType<any> | IShapeTSRef<any> | IShapeTSSchema<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>;
+type IShapeArrayNeastedExtends = ITSShape<any, IShapeArrayNeastedExtendsID>//IShapeTSType<any> | IShapeTSRef<any> | IShapeTSSchema<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>;
 
 interface IShapeTSArrayNeasted<T extends IShapeArrayNeastedExtends> extends ITSShape<any, 'AN'>
 {
@@ -263,7 +275,7 @@ function ShapeTSArray<T extends IShapeArrayNeastedExtends>(record : T)
     return new Shape<IShapeTSArrayNeasted<T>>('AN', record).TSTypeCastUp();
 }
 
-type IShapeTSArrayRecordExtends = Record<string, ITSShape<ID, any>> | null;
+type IShapeTSArrayRecordExtends = Record<string, ITSShape<any, ID>> | null;
 
 interface IShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends> extends ITSShape<T, 'AR'>
 {
@@ -275,10 +287,17 @@ function ShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends>(record : T)
     return new Shape<IShapeTSArrayRecord<T>>('AR', record).TSTypeCastUp();
 }
 
-interface IShapeTSRef<T extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>> extends ITSShape<T,'Ref'>
+interface IShapeTSRef<T extends ISchemaParts<any, any, any, any, any, any, any, any, any, any>> extends ITSShape<T,'Ref'>
 {
     __tsType : T;
 }
+
+
+// interface IShapeTSRef<T extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>> extends ITSShape<T,'Ref'>
+// {
+//     __tsType : T;
+// }
+
 
 // Going to have to put in some work here.. as number capture, doesn't reveal
 // the runtime type, which is what previously happened.
@@ -930,7 +949,22 @@ interface ISchema<
     ModRef extends ITSModifiersRecord<IShapeRefContainersID, any, any, any, any, any>,
     NeastedSchemas extends INeastedSchemaRecord,
     SchemaOptions extends Record<string, any> | undefined,
+    > 
+    /*
+    Figure out these constriants later.
+    extends ISchemaParts<
+    Id,
+    ModRD,
+    ModRND,
+    ModOD,
+    ModOND,
+    ReadRD,
+    ReadRND,
+    ReadOD,
+    ReadOND,
+    ModRef
     >
+    */
 {
         __Name : Name,
         __Id : Id,
@@ -1315,20 +1349,89 @@ type ESRefs<T extends ITSModifiersRecord<any, any, any, any, any, any>, Paths ex
 // This means that I now need to add things in side each intepretation.
 // this getting too complex, need interigate the key in each format.
 // I am going to abondend this now, for other method.
-type ExtractMRefTypes<T extends Record<string, any>, Paths extends Record<string, any>> =
-{
-    [K in keyof T] : K extends keyof Paths ?
-        T[K] extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any> | undefined ?
-                MResults<T[K]> & ExtractMRefTypes<T[K]['__ModRef'], Paths[K]>
-            : T[K] extends Array<infer Arr | undefined> | undefined? 
-                Arr extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, infer ModRef> ?
-                (MResults<Arr>) & ExtractMRefTypes<ModRef, Paths[K]>
-                : ExtractMRefTypes<Arr, Paths[K]> []
-            : T[K] extends Record<string, any> | undefined ?
-                ExtractMRefTypes<T[K], Paths[K]>
-            : 'Mismatch shape'
-    : T[K]['__Id']
+
+type uuuuu = ExtractMRefTypes2<{a: number, b: string},{a:'ref'}>
+
+
+type mmm = '' extends '' ? 'T' :'F'
+
+// type ExtractMRefTypes55<T extends Record<string, any>,
+// Path extends Record<string,any>,
+// Paths extends Record<keyof T, any> = Record<keyof T, undefined> & Path;
+
+type ExtractMRefTypes2<T extends Record<string, any>,
+Path extends Record<string,any>,
+Paths extends Record<keyof T, any> = Record<keyof T, undefined> > = {
+    [K in keyof T] : Paths[K]
 }
+
+type ExtractMRefTypes<T extends Record<string, any>,
+Path extends Record<string,any>,
+PathExclude extends Record<keyof T, any> = Path & Exclude<Record<keyof T, undefined>, keyof Path>,
+Paths extends Record<keyof T, any> =  PathExclude,
+PathKeys extends keyof Paths = keyof Paths> =
+{
+    [K in keyof T] : 
+    ({
+        'T' : 'Invalid Option Here'
+        'R' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>
+        'AN' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>['w'][]
+        'AR' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>[]
+        'Ref' : Paths[K] extends  'ref'? 'Y'//ExtractMRefTypes<T[K]['__tsType']['__ModRef'], Paths[K]>
+            : T[K]['__tsType']['__Id']
+    })[T[K]['__ID']]
+}
+
+
+type ExtractMRefTypes4<T extends Record<string, any>,
+Paths extends Record<string, any>,
+KeysOfPaths extends keyof Paths = keyof Paths> =
+{
+    [K in keyof T] : K extends KeysOfPaths ?
+    ({
+        'T' : 'Invalid Option Here'
+        'R' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>
+        'AN' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>['w'][]
+        'AR' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>[]
+        'Ref' : Paths[K] extends  'ref'? 'Y'//ExtractMRefTypes<T[K]['__tsType']['__ModRef'], Paths[K]>
+            : T[K]['__tsType']['__Id']
+    })[T[K]['__ID']]
+    : undefined // but since only contains what we want, should be a problem.
+}
+    
+    
+
+
+type ExtractMRefTypes5<Paths extends Record<string, any>,
+T extends Record<keyof Paths, any>,
+PathKeys extends keyof Paths = keyof Paths> =
+{
+    [K in keyof T] : 
+    ({
+        'T' : 'Invalid Option Here'
+        'R' : ExtractMRefTypes5<Paths[K], T[K]['__tsType'] >
+        // 'AN' : ExtractMRefTypes<Paths[K], T[K]['__tsType']>['w'][]
+        // 'AR' : ExtractMRefTypes<T[K]['__tsType'], Paths[K]>[]
+        'Ref' : Paths[K] extends  'ref'? 'Y'//ExtractMRefTypes<T[K]['__tsType']['__ModRef'], Paths[K]>
+            : T[K]['__tsType']['__Id']
+    })[T[K]['__ID']]
+}
+
+
+// Have to use a pick or unknown..
+type ExtractMRefTypes6<T extends Record<keyof Paths, any>, Paths extends Record<string, any>> =
+{
+    [K in keyof Paths] : ({
+        'T' : 'Invalid Option Here'
+        'R' : ExtractMRefTypes6<T[K]['__tsType'], Paths[K]>
+        'AN' : ExtractMRefTypes6<T[K]['__tsType']['w'], {w:'ref'}> // Requires look at head.
+        'AR' : ExtractMRefTypes6<T[K]['__tsType'], Paths[K]>
+        'Ref' : Paths[K] extends Record<string, never> ? ExtractMRefTypes6<T[K]['__tsType']['__ModRef'], Paths[K]> : T[K]['__tsType']['__ModRef']
+    })[T[K]['__ID']]
+    //: T[K]['__tsType']['__ModRef']
+}
+    
+    
 
 
 // type ExtractMRefTypesValidator<T extends Record<string, any>, Paths extends Record<string, any>> =
@@ -1374,6 +1477,12 @@ Record<string, undefined
 | IMTSModifiersRecord<TModelParts>
 >>
 {
+}
+
+
+interface IMTSModifiersRefRecord extends
+Record<string, IShapeContainers | IShapeTSRef<any> | IMTSModifiersRefRecord>
+{
 } 
 
 // I would need to add the model for parts, that from int he shape of IAdapters system.
@@ -1381,6 +1490,30 @@ Record<string, undefined
 
 // See if I can make mutiple different version of ModelRecordTsType, that check Required, Optional, Readonly
 // But this can only really be done in the latest typesript versions.
+interface ISchemaParts<
+Id extends string, 
+ModRD extends IMModelRecordTsTypes<any>,
+ModRND extends IMModelRecordTsTypes<any>,
+ModOD extends IMModelRecordTsTypes<any>,
+ModOND extends IMModelRecordTsTypes<any>,
+ReadRD extends IMModelRecordTsTypes<any>,
+ReadRND extends IMModelRecordTsTypes<any>,
+ReadOD extends IMModelRecordTsTypes<any>,
+ReadOND extends IMModelRecordTsTypes<any>,
+ModRef extends IMTSModifiersRefRecord> // Use the populates or extraction method... but should be removed as soon as it is not required.
+{
+    __Id: Id;
+    __ModRD: ModRD,
+    __ModRND: ModRND,
+    __ModOD: ModOD,
+    __ModOND: ModOND,
+    __ReadRD: ReadRD,
+    __ReadRND: ReadRND,
+    __ReadOD: ReadOD,
+    __ReadOND: ReadOND,
+    __ModRef: ModRef;
+}
+
 interface IMModelParts<
 Id extends string, 
 ModRD extends IMModelRecordTsTypes<any>,
@@ -1393,8 +1526,19 @@ ReadOD extends IMModelRecordTsTypes<any>,
 ReadOND extends IMModelRecordTsTypes<any>,
 ModRefIds extends IMTSModifiersRecord<string>,      // Used to spesify it must have these fields, irrelavant if modRef is populated, only there for sub sections.
 ModRefPop extends IMTSModifiersRecord<any>,    // Can add in a specially modifier.   // User to spesify it msut have there fields irrelacant if Mod Ref is populated, only there for sub sections.
-ModRef extends IMTSModifiersRecord<IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>>> // Use the populates or extraction method... but should be removed as soon as it is not required.
-{
+ModRef extends IMTSModifiersRefRecord> // Use the populates or extraction method... but should be removed as soon as it is not required.
+extends ISchemaParts<
+Id,
+ModRD,
+ModRND,
+ModOD,
+ModOND,
+ReadRD,
+ReadRND,
+ReadOD,
+ReadOND,
+ModRef
+>{
     __Id: Id;
     __ModRD: ModRD,
     __ModRND: ModRND,
@@ -1988,10 +2132,10 @@ const modelA = {} as IModel<IMModelParts<string, {
 },
 {},
 {
-    refA : IModB,
-    refNeastedA : Array<IModB>,
-    refNeastedAUndefined : Array<IModB> | undefined,
-    refNeastedAArrayUndefined : Array<IModB | undefined>
+    refA : IShapeTSRef<IModB>,
+    // refNeastedA : Array<IModB>,
+    // refNeastedAUndefined : Array<IModB> | undefined,
+    // refNeastedAArrayUndefined : Array<IModB | undefined>
 }>>
 
 
@@ -2003,16 +2147,42 @@ modelA.deepPopulate<{refA:{}, refNeastedA:{}}>('refA').lean(true).exec(function 
 
 });
 
-type Results = ExtractMRefTypes<{
-    refA : IModB,
-    refNeastedA : Array<IModB>,
-    refNeastedAUndefined : Array<IModB> | undefined,
-    refNeastedAArrayUndefined : Array<IModB | undefined>
+type mm = IShapeTSRef<IModB>;
+
+type rr = mm['__tsType']
+
+type Results = ExtractMRefTypes6<{
+    refA : IShapeTSRef<IModB>,
+    refNeastedA : IShapeTSArrayNeasted<mm>, // this requires lookahead.
+    refNeastedRecord : IShapeTSArrayRecord<{
+        ref : IShapeTSRef<IModB>
+    }>,
+    refAA : IShapeTSRef<IModB>,
+
 },{
-    refA : {},    
-    refNeastedA : {}
+    refAA : 'ref',
+    refNeastedA: 'rf',
+    refNeastedRecord : {ref:'ref'},
+
 }>
+
+
+// type Results = ExtractMRefTypes6<
+// {
+//     refAA : 'ref',
+//     refNeastedA: 'ref'
+
+// },
+// {
+//     refA : IShapeTSRef<IModB>,
+//     refNeastedA : IShapeTSArrayNeasted<mm>,
+//     refNeastedRecord : IShapeTSArrayRecord<{
+//         ref : IShapeTSRef<IModB>
+//     }>,
+//     refAA : IShapeTSRef<IModB>,
+
+// }>
 
  const result : Results;
 
-result.refNeastedAArrayUndefined
+result.refNeastedA
