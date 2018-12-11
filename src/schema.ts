@@ -1934,7 +1934,27 @@ export type ObjectGetValue<O extends Record<string,any>, K extends string> = O[K
 // to ensure that when someone spesifies a partial model,
 // that the same set of deepPopulate and populate and refids,
 // that are required to exists exists in the format expected.
-// We have used this in existing code, have other work arounds for it.
+// We have used this in existing code, have other work arounds for it
+// The problem with starting undefind, means all are present, but if was empty record
+// structure then, should be taken as is in that document without question.
+// undefined can mean everything while empty record can mean nothing,
+// but a full set would never be the same as everything for the typing system
+// and would be a corner case. in such a case, one should choose undefined.
+// If you look at the bottom I have some test examples.
+// What I now need to do, implement, deePopuldate and populdate generic fields
+// then also implement extract and merging routine below,
+// that merge the results.
+// Also how can I do validation to ensure that the same fields that are populdate or deepPopulated
+// are not spesified in __ModRefids... then string | RightHandSide does it make sence or what.
+// Because I am doing one of the other, but both became a problem when we tried it,
+// as caused too many things to not work. so we opted for leaving the fields out missing,
+// which worked much better for us in 2.8.4
+// Just think of this for a few seconds, is this 100% the right thing to do here.
+// Later mongoose version, pull ids of Right hand side of the relationship
+// automatically with id, so id, wouldn't be missing.
+// It going to be much better that if someone want to use gards and handle both that the expclity spesify that in
+// __ModRefIds. I can't see a reason why not to do that there not a common case anyways.
+// Cool lets get on with things I guess..
 
       
 // Need to just decided on how and when to apply the transform.
