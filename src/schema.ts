@@ -1405,6 +1405,85 @@ type uuu =   Record<string,never> extends unknown ? 'T' :'F'
 
 type uuuuu = keyof unknown extends never ? 'T' : 'F';
 
+// // Required to still add support for nullable and undefined.
+// type ExtractMRefTypes<T extends Record<string, any>,
+// Path extends Record<string,any>,
+// IDS extends 'T' | 'F',
+// Paths extends any = Path,
+// KeysOfPaths extends keyof Paths = keyof Paths> =
+// {
+//     [K in keyof T] :
+//     ({
+//         'T' : 'Invalid Option Here'
+//         'R' : ExtractMRefTypes<T[K]['__tsType'], {}, IDS, Paths[K]>
+//         'AN' : ExtractMRefTypes<T[K]['__tsType'], {}, IDS, {w:Paths[K]}>['w']//K extends KeysOfPaths ? {w:Paths[K]} : {}>['w']//{w:Paths[K]}, IDS>['w'] // The problem here is that the wrapper,
+//         // causes the key to match, in this case the key is w..
+//         // which means the way in which we compare the key is a problem.
+//         // the only otherway to handle this is with look ahead, 
+//         // or in this cases
+//         'AR' : ExtractMRefTypes<T[K]['__tsType'], {}, IDS, Paths[K]>
+//         'Ref' : 
+//                 // K extends KeysOfPaths ? 
+//                 //     keyof Paths[K] extends never ?
+//                 //         Paths[K] extends Record<string, never> ? '{}TT' : 
+//                 //         'No Key - FakeKey' // Look Head for 
+//                 //     : 'A' & Paths[K] //extends Record<string, never> ? 'TT' :  
+//                 //     //MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]>
+//                 // :'No Key'
+
+//                 K extends KeysOfPaths ? 
+//                 keyof Paths[K] extends never ?
+//                     Paths[K] extends Record<string, never> ? 
+//                         MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]>
+//                         : T[K]['__tsType']['__Id'] // Look Head for 
+//                 : MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]>
+//                 : T[K]['__tsType']['__Id']
+
+
+//                 // If we have a fake key, which matches, is there another way in  next iteration, when key matches
+//                 // to detect if we want it. well I can use Record<string,any>..
+
+//                 // keyof Paths[K] extends never ? 
+//                 //     Paths[K] extends Record<string, never> ? e
+//                 //         MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,{}> : 
+//                 //         Paths// & {lll:K} //T[K]['__tsType']['__Id']
+//                 //         : MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'],{}, IDS,  Paths[K]>
+//                // K extends KeysOfPaths ? 
+//                  //   'TT'://MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]> : 
+//                     //Paths[K] extends Record<string, any> ?
+//                     //'TTTTT' 
+//                     //MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  {}>  
+//                    //  'FFFFF'
+//                  // Paths[K] extends Record<string, never> ? 
+//                 //     T[K]['__tsType']['__Id'] :
+//                 //     MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  {}>  
+
+//                 // //keyof Paths[K] extends never ? 
+//                   //   Paths[K]// extends Record<string, never> ? 'T' : 'F' 
+//                     // keyof Paths[K] extends Record<string, any> ?
+//                     // ? MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,{}> : 
+                       
+                        
+
+
+//                 // 'FFF'
+
+//                 // : 'Stop ID'
+//                 // : 'Typically a RecordWantIT- Iterate'
+
+//             //     keyof Paths[K] extends never ? Paths[K] extends Record<string, never> ? 'Want IT - Stop'
+        
+//             //     : 'Stop ID'
+//             //  : 'Typically a RecordWantIT- Iterate'
+//             //  T[K]['__tsType']['__Id']
+        
+//         //Paths[K] extends Record<string, any> ? 'TTTTT' :'FFFF'
+//             // (MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], Paths[K], IDS>)
+//             // : IDS extends 'T' ? T[K]['__tsType']['__Id'] : unknown 
+//     })[T[K]['__ID']]
+// }
+
+
 // Required to still add support for nullable and undefined.
 type ExtractMRefTypes<T extends Record<string, any>,
 Path extends Record<string,any>,
@@ -1416,21 +1495,46 @@ KeysOfPaths extends keyof Paths = keyof Paths> =
     ({
         'T' : 'Invalid Option Here'
         'R' : ExtractMRefTypes<T[K]['__tsType'], {}, IDS, Paths[K]>
-        'AN' : ExtractMRefTypes<T[K]['__tsType'], {}, IDS, {w:Paths[K]}>['w']//{w:Paths[K]}, IDS>['w']
+        // This is the slight complication...
+        'AN' : ExtractMRefTypes<T[K]['__tsType'], {}, IDS, K extends KeysOfPaths ? {w:Paths[K]} : {}>['w']//{w:Paths[K]}, IDS>['w'] // The problem here is that the wrapper,
+        // causes the key to match, in this case the key is w..
+        // which means the way in which we compare the key is a problem.
+        // the only otherway to handle this is with look ahead, 
+        // or in this cases
         'AR' : ExtractMRefTypes<T[K]['__tsType'], {}, IDS, Paths[K]>
         'Ref' : 
-        
+                // K extends KeysOfPaths ? 
+                //     keyof Paths[K] extends never ?
+                //         Paths[K] extends Record<string, never> ? '{}TT' : 
+                //         'No Key - FakeKey' // Look Head for 
+                //     : 'A' & Paths[K] //extends Record<string, never> ? 'TT' :  
+                //     //MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]>
+                // :'No Key'
+
+                K extends KeysOfPaths ? 
+                //keyof Paths[K] extends never ?
+                  //  Paths[K] extends Record<string, never> ? 
+                    //    MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]>
+                      //  : T[K]['__tsType']['__Id'] // Look Head for 
+                //: 
+                MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]>
+                : T[K]['__tsType']['__Id']
+
+
+                // If we have a fake key, which matches, is there another way in  next iteration, when key matches
+                // to detect if we want it. well I can use Record<string,any>..
+
                 // keyof Paths[K] extends never ? 
                 //     Paths[K] extends Record<string, never> ? e
                 //         MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,{}> : 
                 //         Paths// & {lll:K} //T[K]['__tsType']['__Id']
                 //         : MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'],{}, IDS,  Paths[K]>
-                K extends KeysOfPaths ? 
-                    'TT'://MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]> : 
+               // K extends KeysOfPaths ? 
+                 //   'TT'://MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]> : 
                     //Paths[K] extends Record<string, any> ?
                     //'TTTTT' 
                     //MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  {}>  
-                     'FFFFF'
+                   //  'FFFFF'
                  // Paths[K] extends Record<string, never> ? 
                 //     T[K]['__tsType']['__Id'] :
                 //     MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  {}>  
@@ -1464,49 +1568,51 @@ KeysOfPaths extends keyof Paths = keyof Paths> =
 // this is not going to work
 
 // Required to still add support for nullable and undefined.
-type ExtractMRefTypes2<T extends Record<keyof Paths, any>, Paths extends Record<string, any>,
-IDS extends 'T' | 'F',
-KeysOfPaths extends keyof Paths = keyof Paths,
-KeysOfExcludPaths extends keyof T = Exclude<keyof T, KeysOfPaths>> =
-{
-    [K in KeysOfPaths] : 
-    ({
-        'T' : 'Invalid Option Here'
-        'R' : ExtractMRefTypes2<T[K]['__tsType'], Paths[K], IDS>
-        'AN' : ExtractMRefTypes2<T[K]['__tsType'], {w:Paths[K]}, IDS>['w']
-        'AR' : ExtractMRefTypes2<T[K]['__tsType'], Paths[K], IDS>
-        'Ref' : 
-        Paths[K] extends Record<string, any> ? (MResults<T[K]['__tsType']> & ExtractMRefTypes2<T[K]['__tsType']['__ModRef'], Paths[K], IDS>)
-          :'FFF'  
-        //: IDS extends 'T' ? T[K]['__tsType']['__Id'] : 'FFF' 
-    })[T[K]['__ID']]
-    //: IDS extends 'T' ? ExtractMRefTypes<T[K]['__tsType'], {}, IDS> :'FFFF'//T[K]['__tsType']['__Id'] : 'GGG'// Required to still iterate and preserve the existing structure until we find that item.
-}
-&
-{
-    [K in KeysOfExcludPaths] : K extends KeysOfPaths ? unknown : ({
-        'T' : 'Invalid Option Here'
-        'R' : ExtractMRefTypes2<T[K]['__tsType'], {}, IDS>
-        'AN' : ExtractMRefTypes2<T[K]['__tsType'], {}, IDS> // problem here that the inlcude and out Paths are now the keys, so it knows, problem for us.
-        'AR' : ExtractMRefTypes2<T[K]['__tsType'], {}, IDS>
-        'Ref' : T[K]['__tsType']['__Id']
-    })[T[K]['__ID']]
-}
+// type ExtractMRefTypes2<T extends Record<keyof Paths, any>, Paths extends Record<string, any>,
+// IDS extends 'T' | 'F',
+// KeysOfPaths extends keyof Paths = keyof Paths,
+// KeysOfExcludPaths extends keyof T = Exclude<keyof T, KeysOfPaths>> =
+// {
+//     [K in KeysOfPaths] : 
+//     ({
+//         'T' : 'Invalid Option Here'
+//         'R' : ExtractMRefTypes2<T[K]['__tsType'], Paths[K], IDS>
+//         'AN' : ExtractMRefTypes2<T[K]['__tsType'], {w:Paths[K]}, IDS>['w']
+//         'AR' : ExtractMRefTypes2<T[K]['__tsType'], Paths[K], IDS>
+//         'Ref' : 
+//         Paths[K] extends Record<string, any> ? (MResults<T[K]['__tsType']> & ExtractMRefTypes2<T[K]['__tsType']['__ModRef'], Paths[K], IDS>)
+//           :'FFF'  
+//         //: IDS extends 'T' ? T[K]['__tsType']['__Id'] : 'FFF' 
+//     })[T[K]['__ID']]
+//     //: IDS extends 'T' ? ExtractMRefTypes<T[K]['__tsType'], {}, IDS> :'FFFF'//T[K]['__tsType']['__Id'] : 'GGG'// Required to still iterate and preserve the existing structure until we find that item.
+// }
+// &
+// {
+//     [K in KeysOfExcludPaths] : K extends KeysOfPaths ? unknown : ({
+//         'T' : 'Invalid Option Here'
+//         'R' : ExtractMRefTypes2<T[K]['__tsType'], {}, IDS>
+//         'AN' : ExtractMRefTypes2<T[K]['__tsType'], {}, IDS> // problem here that the inlcude and out Paths are now the keys, so it knows, problem for us.
+//         'AR' : ExtractMRefTypes2<T[K]['__tsType'], {}, IDS>
+//         'Ref' : T[K]['__tsType']['__Id']
+//     })[T[K]['__ID']]
+// }
 
 type ExtractMRefTypesStr<T extends Record<string, any>, Paths extends string, IDS extends 'T' | 'F'> =
 {
-    [K in keyof T] : K extends Paths ?
+    [K in keyof T] : 
     ({
         'T' : 'Invalid Option Here'
-        'R' : 'Neasted Invalid Option Here'
-        'AN' : ExtractMRefTypesStr<T[K]['__tsType'], '', IDS>['w']
-        'AR' : 'Neasted Invalid Option Here'
-        'Ref' : MResults<T[K]['__tsType']> 
+        'R' : ExtractMRefTypesStr<T[K]['__tsType'], never, IDS>
+        'AN' : ExtractMRefTypesStr<T[K]['__tsType'], K extends Paths ? 'w' : '', IDS>['w']
+        'AR' : ExtractMRefTypesStr<T[K]['__tsType'], never, IDS>
+        'Ref' : K extends Paths ? MResults<T[K]['__tsType']> & 
+            ExtractMRefTypesStr<T[K]['__tsType']['__ModRef'], never, IDS>
+        : T[K]['__tsType']['__Id']
     })[T[K]['__ID']]
-    : IDS extends 'T' ? T[K]['__tsType']['__Id'] : unknown
 }
 
-
+// The thing about this validator is that would only be usefully to validate the value.
+// to be correct, because all keys have to be optional anyway.
 type ExtractValidate<T extends Record<string, any>,
 Paths extends Record<string, any>,
 KeysOfPaths extends keyof Paths = keyof Paths> =
@@ -2178,7 +2284,7 @@ type IModB = IMModelParts<string, {
 {},
 {
     refB: IShapeTSRef<IModB>,
-    refNeastedB : IShapeTSArrayNeasted<mm>, 
+    refNeastedB : IShapeTSArrayNeasted<IShapeTSRef<IModB>>, 
     refNeastedBRecord : IShapeTSArrayRecord<{
         ref : IShapeTSRef<IModB>
     }>,
@@ -2229,7 +2335,7 @@ const modelA = {} as IModel<ModelAParts>
 //     refAA : IShapeTSRef<IModB>,
 // },{}>
 
-type results = ExtractMRefTypesStr<ModelAParts['__ModRef'], 'refA','T'>;
+type results = ExtractMRefTypesStr<ModelAParts['__ModRef'], 'refA' | 'refAA' | 'refNeastedA','T'>;
 
 const test : results = {
     refA:{
@@ -2237,10 +2343,16 @@ const test : results = {
     }
 }
 
-const res =;
+const res : results;
+
+res.refNeastedRecord.ref.
 
 
-type rrrrr = ExtractMRefTypes<ModelAParts['__ModRef'], {refA:{refB:{refBB:{}}}, refAA:{}}, 'F'>
+type rrrrr = ExtractMRefTypes<ModelAParts['__ModRef'], {refA:{refB:{refBB:{refNeastedBRecord:{ref:{}}}}}, refNeastedA:{
+    refNeastedBRecord:{ref:{}}
+}, refAA:{
+    refB:{}
+}, refNeastedRecord:{ref:{refAA:{}}}}, 'F'>
 
 const rrrr : rrrrr = {
 refA: {
@@ -2249,7 +2361,13 @@ refB
 
 }
 
-rrrr.refNeastedRecord.ref
+rrrr.refNeastedA.refNeastedBRecord.ref.refNeastedBRecord.ref;
+rrrr.refA.refB.refBB.refNeastedBRecord.ref.refNeastedBRecord.ref;
+rrrr.refAA.refB.refNeastedBRecord.ref;
+rrrr.refNeastedRecord.ref.refNeastedBRecord.ref;
+
+
+
 
 type uuuu = Record<string,never> extends typeof rrrr.refNeastedA ? 'T' :'F'
 
