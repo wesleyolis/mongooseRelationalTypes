@@ -1892,6 +1892,50 @@ declare module 'mongoose'
 }
 
 export type ObjectGetValue<O extends Record<string,any>, K extends string> = O[K]
+
+// Dealing with the ability to exclude or include id fields, so 
+// that one can perform operation on subset results, with like a save function
+// or just expect a subset of fields, to exists to push tought a function.
+// I need the ability to say these fields are missing,
+// so a Record witout certain fields, needs to be present,
+// which is the current situation..
+// The Record version is the one that needs improvement, but that for later, right now
+// we look at DocumentEnhanced
+// with documentEnhanded, one needs to communicate, which fields
+// are required to be present, or are assumed to be present
+// sucht that populate is not called again on the dataset,
+// when that information has already been retrived.
+// Model = Record<string> & Document<'' which fields,>, where certain
+// ref may or mayn't need to be populdate.
+// we need to explit state include the ids..
+// using id as the value, and special mode of transform.
+// need to communicate population string, so that on execute
+// the same set of fields would be avaliable.
+// The problem is there are two formates as of current for
+// populate and they are not interchangable, which means if deep populate
+// is used, then choose to do a populate, then there is a problem.
+// currently can't use populate and deeppopuldate on the same query.
+// It is one or the other.
+// There for one needs to populdate fields, deep, populate
+// so that communicate existing stat of the model.
+// The other thing is now how to communicate which ids'
+// all, or only spesified id's, but how to communicate which
+// needs to be used when.
+// The only time want ids to be missing is for Record & Document results,
+// which is a mode when using a subset of a model intialization, so that save is expected to exist.
+// To achive this, on the ModelParts there is a field __ModRefids, which the intent
+// was to be to make clear that those fields would be required, verus potentially missing
+// PopuldateStr, doesn't support concept or ids versus missing extraction, would only be used
+// for spesifying, populdate, but that is typically fine, because one would rather spesify
+// the other required fields using this __MOdRefIds fields.
+// I was thinking that undefined, that means include all model fields in the results,
+// but that mean, when gotten a resultsing document, fomr execute
+// that we need to extract and populdate the __ModRefIds fields.
+// to ensure that when someone spesifies a partial model,
+// that the same set of deepPopulate and populate and refids,
+// that are required to exists exists in the format expected.
+// We have used this in existing code, have other work arounds for it.
+
       
 // Need to just decided on how and when to apply the transform.
 export type QueryResultsDocumentModel<TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>,
