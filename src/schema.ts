@@ -188,17 +188,17 @@ type TsTypesPrimatives = boolean | number | string | Date;
 type ID = 'T' | 'R' | 'AR' | 'AN' | 'Ref' | 'S'
 
 type ITSShapes = 
-IShapeTSType<any> 
+IShapeTSType<any, any, any, any> 
 | IShapeContainers
-| IShapeTSRef<any>
-| IShapeTSSchema<any>
+| IShapeTSRef<any, any, any, any>
+| IShapeTSSchema<any, any, any, any>
 
 
-type IShapeContainers = IShapeTSRecord<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>
-type IShapeContainersID = IShapeTSRecord<any>['__ID'] | IShapeTSArrayNeasted<any>['__ID'] | IShapeTSArrayRecord<any>['__ID']
+type IShapeContainers = IShapeTSRecord<any, any, any, any> | IShapeTSArrayNeasted<any, any, any, any> | IShapeTSArrayRecord<any, any, any, any>
+type IShapeContainersID = IShapeTSRecord<any, any, any, any>['__ID'] | IShapeTSArrayNeasted<any, any, any, any>['__ID'] | IShapeTSArrayRecord<any, any, any, any>['__ID']
 
-type IShapeRefContainers = IShapeContainers | IShapeTSRef<any>;//IShapeTSSchema
-type IShapeRefContainersID = IShapeContainersID | IShapeTSRef<any>['__ID']
+type IShapeRefContainers = IShapeContainers | IShapeTSRef<any, any, any, any>;//IShapeTSSchema
+type IShapeRefContainersID = IShapeContainersID | IShapeTSRef<any, any, any, any>['__ID']
 
 type Neasted = IShapeContainers | undefined;
 
@@ -210,7 +210,9 @@ interface IShape<TID extends ID, TNeasted>{
 // Thesse are required to be know, when we need to know the TSShape container
 // So that we can acess spesific properties, and preserve the properties
 // modifiers when minipulating referances or neasted schemas.
-interface TSModifiers<
+// with unow, if eerything was option, would be quite interesting, as just have
+// an auxliarty type into which everything can be mixed in.
+interface ITSShapeModifiers<
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable> {
@@ -219,13 +221,17 @@ TNullable extends _Nullable> {
     __Nullable: TNullable;
 }
 
-interface ITSShape<T, TID extends ID>extends IShape<ID, T>
+interface ITSShape<T, TID extends ID,
+TRequired extends _Required,
+TReadonly extends _Readonly,
+TNullable extends _Nullable
+> extends IShape<ID, T>, ITSShapeModifiers<TRequired, TReadonly, TNullable>
 {
     __tsType: T;
     __ID: TID;
 }
 
-class Shape<TShape extends ITSShape<any, any>> implements IShape<TShape['__ID'], TShape['neasted'] >
+class Shape<TShape extends ITSShape<any, any, any, any, any>> implements IShape<TShape['__ID'], TShape['neasted'] >
 {
     constructor(public id: TShape['__ID'], public neasted : TShape['neasted'] | undefined = undefined)
     {
@@ -236,58 +242,73 @@ class Shape<TShape extends ITSShape<any, any>> implements IShape<TShape['__ID'],
     }
 }
 
-type IShapeTSTypeConstraint = IShapeTSType<IShapeTSTypeExtends>;
+type IShapeTSTypeConstraint = IShapeTSType<IShapeTSTypeExtends, any, any, any>;
 
 type IShapeTSTypeExtends = boolean | number | string | Date;
 
-interface IShapeTSType<T extends IShapeTSTypeExtends> extends ITSShape<T, 'T'> {
+interface IShapeTSType<T extends IShapeTSTypeExtends,
+TRequired extends _Required,
+TReadonly extends _Readonly,
+TNullable extends _Nullable> extends ITSShape<T, 'T', TRequired, TReadonly, TNullable> {
     __tsType : T;
 }
 
 function ShapeTSType<T extends IShapeTSTypeExtends>()
 {
-    return new Shape<IShapeTSType<T>>('T').TSTypeCastUp();
+    return new Shape<IShapeTSType<T, any, any, any>>('T').TSTypeCastUp();
 }
 
 //type IShapeRecordExtends = Record<string, ITSShapes> | null
-type IShapeRecordExtends = Record<string, ITSShape<any, ID>> | null
+type IShapeRecordExtends = Record<string, ITSShape<any, ID, any, any, any>> | null
 
-interface IShapeTSRecord<T extends IShapeRecordExtends> extends ITSShape<T, 'R'>
+interface IShapeTSRecord<T extends IShapeRecordExtends,
+TRequired extends _Required,
+TReadonly extends _Readonly,
+TNullable extends _Nullable> extends ITSShape<T, 'R', TRequired, TReadonly, TNullable>
 {
     __tsType : T;
 }
 
 function ShapeTSRecord<T extends IShapeRecordExtends>(rec : T)
 {
-    return new Shape<IShapeTSRecord<T>>('R', rec).TSTypeCastUp();
+    return new Shape<IShapeTSRecord<T, any, any, any>>('R', rec).TSTypeCastUp();
 }
 
 type IShapeArrayNeastedExtendsID = 'T' | 'S' | 'AN' | 'AR' | 'Ref'
-type IShapeArrayNeastedExtends = ITSShape<any, IShapeArrayNeastedExtendsID>//IShapeTSType<any> | IShapeTSRef<any> | IShapeTSSchema<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>;
+type IShapeArrayNeastedExtends = ITSShape<any, IShapeArrayNeastedExtendsID, any, any, any>//IShapeTSType<any> | IShapeTSRef<any> | IShapeTSSchema<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>;
 
-interface IShapeTSArrayNeasted<T extends IShapeArrayNeastedExtends> extends ITSShape<any, 'AN'>
+interface IShapeTSArrayNeasted<T extends IShapeArrayNeastedExtends,
+TRequired extends _Required,
+TReadonly extends _Readonly,
+TNullable extends _Nullable> extends ITSShape<any, 'AN', TRequired, TReadonly, TNullable>
 {
     __tsType : {w:T};
 }
 
 function ShapeTSArray<T extends IShapeArrayNeastedExtends>(record : T)
 {
-    return new Shape<IShapeTSArrayNeasted<T>>('AN', record).TSTypeCastUp();
+    return new Shape<IShapeTSArrayNeasted<T, any, any, any>>('AN', record).TSTypeCastUp();
 }
 
-type IShapeTSArrayRecordExtends = Record<string, ITSShape<any, ID>> | null;
+type IShapeTSArrayRecordExtends = Record<string, ITSShape<any, ID, any, any, any>> | null;
 
-interface IShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends> extends ITSShape<T, 'AR'>
+interface IShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends,
+TRequired extends _Required,
+TReadonly extends _Readonly,
+TNullable extends _Nullable> extends ITSShape<T, 'AR', TRequired, TReadonly, TNullable>
 {
     __tsType : T;
 }
 
 function ShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends>(record : T)
 {
-    return new Shape<IShapeTSArrayRecord<T>>('AR', record).TSTypeCastUp();
+    return new Shape<IShapeTSArrayRecord<T , any, any, any>>('AR', record).TSTypeCastUp();
 }
 
-interface IShapeTSRef<T extends ISchemaParts<any, any, any, any, any, any, any, any, any, any>> extends ITSShape<T,'Ref'>
+interface IShapeTSRef<T extends ISchemaParts<any, any, any, any, any, any, any, any, any, any>,
+TRequired extends _Required,
+TReadonly extends _Readonly,
+TNullable extends _Nullable> extends ITSShape<T,'Ref', TRequired, TReadonly, TNullable>
 {
     __tsType : T;
 }
@@ -303,20 +324,24 @@ interface IShapeTSRef<T extends ISchemaParts<any, any, any, any, any, any, any, 
 // the runtime type, which is what previously happened.
 // The right hand side of the schema wil be captured on the right.
 // lets just get this all working.
-function ShapeTSRef<T extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>>()
+function ShapeTSRef<T extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>,
+>()
 {
-    return new Shape<IShapeTSRef<T>>('Ref').TSTypeCastUp();
+    return new Shape<IShapeTSRef<T, any, any, any>>('Ref').TSTypeCastUp();
 }
 
-interface IShapeTSSchema<T extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>>
-extends ITSShape<T, 'S'> 
+interface IShapeTSSchema<T extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>,
+TRequired extends _Required,
+TReadonly extends _Readonly,
+TNullable extends _Nullable>
+extends ITSShape<T, 'S', TRequired, TReadonly, TNullable> 
 {
     __tsType : T;
 }
 
 function ShapeTSSchema<T extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>>()
 {
-    return new Shape<IShapeTSSchema<T>>('S').TSTypeCastUp();
+    return new Shape<IShapeTSSchema<T, any, any, any>>('S').TSTypeCastUp();
 }
 
 // type TesResult = ITSModifiersWithConstraints<any, any, any, any, any, any, any, any, any, any, IShapeTSType<number>, any> extends 
@@ -605,7 +630,7 @@ interface ITSModifiers<
     TRefType extends _RefType,
     TSType extends any, // Required for pass tought of types formats, to match that of the Shapes.
     TOptionsAnotations extends _OptionsAnontations
-> extends IModifiers<TOptionsAnotations>, ITSShape<any, ID>{
+> extends IModifiers<TOptionsAnotations>, ITSShape<any, ID, TRequired, TReadonly, TNullable>{
     __ID: TShapeID;
     __Type: TypesPrimative;
     __Required: TRequired;
@@ -641,7 +666,7 @@ interface ITSModifiersWithConstraints<
     NullableConstraint extends _Nullable | undefined,
     DefaultConstraint extends _Default,
     RefTypeConstraint extends _RefType,
-    TShape extends ITSShape<any,any>,
+    TShape extends ITSShape<any, any, TRequired, TReadonly, TNullable>,
     TOptionsAnotations extends _OptionsAnontations,
 > extends ITSModifiers<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape['__tsType'], TOptionsAnotations>{
     __IDConstraints : TShapeIDConstraint
@@ -670,7 +695,7 @@ interface ITSModifiersWithConstraints<
 // RequiredConstraint, ReadonlyConstraint, NullableConstraint, DefaultConstraint, RefTypeConstraint>
 
 function NewModifiers<TAvaliableOptions extends _OptionsAnontations,
-    TShape extends ITSShape<any, any>
+    TShape extends ITSShape<any, any, any, any, any>
     >(shape : TShape, type : TypesPrimative, __options : TAvaliableOptions)
     {
         return new Modifiers<'Op', 'Set', 'Value', undefined, undefined, TShape, TAvaliableOptions>
@@ -678,7 +703,7 @@ function NewModifiers<TAvaliableOptions extends _OptionsAnontations,
     }
 
     function NewModifiersWithConstraints<TAvaliableOptions extends _OptionsAnontations,
-    TShape extends ITSShape<any, any>,
+    TShape extends ITSShape<any, any, any, any, any>,
     TShapeConstraintsID extends ID | undefined,
     TRequiredConstraint extends _Required | undefined, 
     TReadonlyConstraint extends _Readonly | undefined,
@@ -700,7 +725,7 @@ function NewModifiers<TAvaliableOptions extends _OptionsAnontations,
     }
 
     function NewModifiersWithConstraintsAndRefType<TAvaliableOptions extends _OptionsAnontations,
-    TShape extends ITSShape<any, any>,
+    TShape extends ITSShape<any, any, any, any, any>,
     TShapeConstraintsID extends ID | undefined,
     TRequiredConstraint extends _Required | undefined, 
     TReadonlyConstraint extends _Readonly | undefined,
@@ -752,7 +777,7 @@ TReadonlyConstraint extends _Readonly | undefined,
 TNullableConstraint extends _Nullable | undefined,
 TDefaultConstraint extends _Default,
 TRefTypeConstraint extends _RefType,
-TShape extends ITSShape<any, any>,
+TShape extends ITSShape<any, any, any, any, any>,
 TAvaliableOptions extends _OptionsAnontations>
 {
     Anotations(options : TAvaliableOptions): ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShapeIDConstraint, TRequiredConstraint, TReadonlyConstraint, TNullableConstraint, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
@@ -772,7 +797,7 @@ TReadonly extends _Readonly,
 TNullable extends _Nullable,
 TDefault extends _Default,
 TRefType extends _RefType,
-TShape extends ITSShape<any, any>,
+TShape extends ITSShape<any, any, any, any, any>,
 TAvaliableOptions extends _OptionsAnontations> = ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
 
 interface ITSShapeModifiersFunWithConstraints<
@@ -788,7 +813,7 @@ ReadonlyConstraint extends _Readonly | undefined,
 NullableConstraint extends _Nullable | undefined,
 DefaultConstraint extends _Default,
 RefTypeConstraint extends _RefType,
-TShape extends ITSShape<any, any>,
+TShape extends ITSShape<any, any, any, any, any>,
 TAvaliableOptions extends _OptionsAnontations
 > extends ITSModifiersWithConstraints<TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType,
 TShapeIDConstraint, RequiredConstraint, ReadonlyConstraint, NullableConstraint, DefaultConstraint, RefTypeConstraint, TShape, TAvaliableOptions>,
@@ -824,7 +849,7 @@ TReadonly extends _Readonly,
 TNullable extends _Nullable,
 TDefault extends _Default,
 TRefType extends _RefType,
-TShape extends ITSShape<any, any>,
+TShape extends ITSShape<any, any, any, any, any>,
 TAvaliableOptions extends _OptionsAnontations,
 TShapeID extends ID = any>
 implements IModifiers<TAvaliableOptions>, 
@@ -893,7 +918,7 @@ IModifiersFunctions<any, TRequired, TReadonly, TNullable, TDefault, TRefType, an
 
 interface ITSModifiersRecord<
 TShapeID extends ID,
-TShape extends ITSShape<any,any>,
+TShape extends ITSShape<any,any, any, any, any>,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TDefault extends _Default,
@@ -1201,10 +1226,10 @@ type EROM<Mod extends ITSShapeModifiersFunWithConstraints<any, any, any, any, an
 type ESRec<T extends ITSModifiersRecord<any, any, any, any, any, any>> = {
     [P in keyof T] : 
     ({
-        'T' : EROM<T[P], T[P]['__tsType']>,
-        'R' : EROM<T[P], ESRec<T[P]['__tsType']>>,
-        'AN' : EROM<T[P],ESRec<T[P]['__tsType']>['w'][]>,
-        'AR' : EROM<T[P],ESRec<T[P]['__tsType']>[]>
+        'T' : ApplyMods<T[P], T[P]['__tsType']>,
+        'R' : ApplyMods<T[P], ESRec<T[P]['__tsType']>>,
+        'AN' : ApplyMods<T[P],ESRec<T[P]['__tsType']>['w'][]>,
+        'AR' : ApplyMods<T[P],ESRec<T[P]['__tsType']>[]>
         //'Ref' : 'Invalid Option here'
         //'S' : 'Invalid Option Here'
     })[T[P]['__ID']]
@@ -1484,6 +1509,18 @@ type uuuuu = keyof unknown extends never ? 'T' : 'F';
 // }
 
 
+type ModReq<Mod extends ITSShapeModifiers<any, any, any>, T extends any> = ({
+    'Req' : T 
+    'Op' : T | undefined
+})[Mod['__Required']];
+
+type ModNull<Mod extends ITSShapeModifiers<any, any, any>, T extends any> = ({
+    'Nullable' : T | null
+    'Value' : T
+})[Mod['__Nullable']];
+
+type ApplyMods<Mod extends ITSShapeModifiers<any, any, any>, T extends any> = ModReq<Mod, ModNull<Mod, T>>
+
 // Required to still add support for nullable and undefined.
 type ExtractMRefTypes<T extends Record<string, any>,
 Path extends Record<string,any>,
@@ -1494,14 +1531,14 @@ KeysOfPaths extends keyof Paths = keyof Paths> =
     [K in keyof T] :
     ({
         'T' : 'Invalid Option Here'
-        'R' : ExtractMRefTypes<T[K]['__tsType'], {}, IDS, Paths[K]>
+        'R' : ApplyMods<T[K], ExtractMRefTypes<T[K]['__tsType'], {}, IDS, Paths[K]>>
         // This is the slight complication...
-        'AN' : ExtractMRefTypes<T[K]['__tsType'], {}, IDS, K extends KeysOfPaths ? {w:Paths[K]} : {}>['w']//{w:Paths[K]}, IDS>['w'] // The problem here is that the wrapper,
+        'AN' : ApplyMods<T[K], ExtractMRefTypes<T[K]['__tsType'], {}, IDS, K extends KeysOfPaths ? {w:Paths[K]} : {}>['w']>//{w:Paths[K]}, IDS>['w'] // The problem here is that the wrapper,
         // causes the key to match, in this case the key is w..
         // which means the way in which we compare the key is a problem.
         // the only otherway to handle this is with look ahead, 
         // or in this cases
-        'AR' : ExtractMRefTypes<T[K]['__tsType'], {}, IDS, Paths[K]>
+        'AR' : ApplyMods<T[K], ExtractMRefTypes<T[K]['__tsType'], {}, IDS, Paths[K]>>
         'Ref' : 
                 // K extends KeysOfPaths ? 
                 //     keyof Paths[K] extends never ?
@@ -1511,14 +1548,14 @@ KeysOfPaths extends keyof Paths = keyof Paths> =
                 //     //MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]>
                 // :'No Key'
 
-                K extends KeysOfPaths ? 
+                ApplyMods<T[K], K extends KeysOfPaths ? 
                 //keyof Paths[K] extends never ?
                   //  Paths[K] extends Record<string, never> ? 
                     //    MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]>
                       //  : T[K]['__tsType']['__Id'] // Look Head for 
                 //: 
                 MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]>
-                : T[K]['__tsType']['__Id']
+                : T[K]['__tsType']['__Id']>
 
 
                 // If we have a fake key, which matches, is there another way in  next iteration, when key matches
@@ -1602,12 +1639,12 @@ type ExtractMRefTypesStr<T extends Record<string, any>, Paths extends string, ID
     [K in keyof T] : 
     ({
         'T' : 'Invalid Option Here'
-        'R' : ExtractMRefTypesStr<T[K]['__tsType'], never, IDS>
-        'AN' : ExtractMRefTypesStr<T[K]['__tsType'], K extends Paths ? 'w' : '', IDS>['w']
-        'AR' : ExtractMRefTypesStr<T[K]['__tsType'], never, IDS>
-        'Ref' : K extends Paths ? MResults<T[K]['__tsType']> & 
-            ExtractMRefTypesStr<T[K]['__tsType']['__ModRef'], never, IDS>
-        : T[K]['__tsType']['__Id']
+        'R' : ApplyMods<T[K], ExtractMRefTypesStr<T[K]['__tsType'], never, IDS>>
+        'AN' : ApplyMods<T[K], ExtractMRefTypesStr<T[K]['__tsType'], K extends Paths ? 'w' : '', IDS>['w']>
+        'AR' : ApplyMods<T[K], ExtractMRefTypesStr<T[K]['__tsType'], never, IDS>>
+        'Ref' : ApplyMods<T[K], K extends Paths ? MResults<T[K]['__tsType']> & 
+             ExtractMRefTypesStr<T[K]['__tsType']['__ModRef'], never, IDS>
+        : T[K]['__tsType']['__Id']>
     })[T[K]['__ID']]
 }
 
@@ -1633,7 +1670,7 @@ type MRequired<T extends Record<string, any>> =
     [K in keyof T] -?: NonNullable<T[K]>
 }
 
-interface ModelRecordTSRefType extends Record<string, ModelRecordTSRefType | IShapeTSRef<any>>
+interface ModelRecordTSRefType extends Record<string, ModelRecordTSRefType | IShapeTSRef<any, any, any, any>>
 {
 }
 
@@ -1661,7 +1698,7 @@ Record<string, undefined
 
 
 interface IMTSModifiersRefRecord extends
-Record<string, IShapeContainers | IShapeTSRef<any> | IMTSModifiersRefRecord>
+Record<string, IShapeContainers | IShapeTSRef<any, any, any, any> | IMTSModifiersRefRecord>
 {
 } 
 
@@ -2283,12 +2320,12 @@ type IModB = IMModelParts<string, {
 },
 {},
 {
-    refB: IShapeTSRef<IModB>,
-    refNeastedB : IShapeTSArrayNeasted<IShapeTSRef<IModB>>, 
+    refB: IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
+    refNeastedB : IShapeTSArrayNeasted<IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>, 'Req', 'Get', 'Nullable'>, 
     refNeastedBRecord : IShapeTSArrayRecord<{
-        ref : IShapeTSRef<IModB>
-    }>,
-    refBB : IShapeTSRef<IModB>,
+        ref : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>
+    }, 'Req', 'Get', 'Nullable'>,
+    refBB : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
 }>;
 
 const modelB = {} as IModel<IModB>
@@ -2313,12 +2350,12 @@ type ModelAParts = IMModelParts<string, {
     undefined,
 {},
 {
-    refA : IShapeTSRef<IModB>,
-    refNeastedA : IShapeTSArrayNeasted<IShapeTSRef<IModB>>, // this requires lookahead.
+    refA : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
+    refNeastedA : IShapeTSArrayNeasted<IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>, 'Op', 'Get', 'Nullable'>, // this requires lookahead.
     refNeastedRecord : IShapeTSArrayRecord<{
-        ref : IShapeTSRef<IModB>
-    }>,
-    refAA : IShapeTSRef<IModB>,
+        ref : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>
+    }, 'Req', 'Get', 'Nullable'>,
+    refAA : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
 }>
 
 const modelA = {} as IModel<ModelAParts>
@@ -2345,7 +2382,7 @@ const test : results = {
 
 const res : results;
 
-res.refNeastedRecord.ref.
+res!.refNeastedRecord!.ref
 
 
 type rrrrr = ExtractMRefTypes<ModelAParts['__ModRef'], {refA:{refB:{refBB:{refNeastedBRecord:{ref:{}}}}}, refNeastedA:{
@@ -2360,8 +2397,8 @@ refB
 }
 
 }
-
-rrrr.refNeastedA.refNeastedBRecord.ref.refNeastedBRecord.ref;
+rrrr!.refA = null
+rrrr!.refNeastedA!.refNeastedBRecord!.ref!.refNeastedBRecord!.ref;
 rrrr.refA.refB.refBB.refNeastedBRecord.ref.refNeastedBRecord.ref;
 rrrr.refAA.refB.refNeastedBRecord.ref;
 rrrr.refNeastedRecord.ref.refNeastedBRecord.ref;
