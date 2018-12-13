@@ -1,32 +1,129 @@
-//import {ExtractArrayItems, itemElements, KeyInPathsAtDepthKey} from './index'
-import * as mongoose from 'mongoose';
+import * as Mongoose from 'mongoose'
+// import { MDocument } from './mongoose';
+import { Model as MonModel, Document, Query, Types, model } from "mongoose";
 import { FindAndUpdateOption } from 'mongoose';
-import { Query } from 'mongoose';
-import { ModelEnhanced } from '.';
-//import {Schema, SchemaDefinition, SchemaTypeOpts, SchemaType, Types} from 'mongoose'
-//import {If, ObjectHasKey, ObjectOptional, ObjectOmit, ObjectClean, Bool, StringOmit, StringEq, ObjectOverwrite, Option} from './tstypelevel';
-//import { StringContains, ObjectDiff } from './tstypelevel';
-//import { Module } from 'module';
-//import { ENGINE_METHOD_PKEY_METHS } from 'constants';
+// import { Aggregate } from 'mongoose';
 
-/*
---------------------------
-Helpers Routines
---------------------------
-*/
 
-/*
-RecusivePick using extends, which using type interigation.
-*/
-//const ___CPTSymbol = Symbol()
+import { mongoose } from './index';
 
-type ICPT<T> = {
+
+export type ObjectId = Mongoose.Types.ObjectId;
+
+
+export interface ISchemaPropsRaw {
+    _id?: ObjectId;
+    id?: string;
+}
+
+export interface IDocumentModel
+{
+    id: string;
+}
+
+// export type OidOrStringRaw = IPlainType<ObjectId | string>;
+
+// Enhance the mongoose class with the missing function that should be found.
+declare module 'mongoose'
+{
+
+    //function model<Schema extends MDocument>(name: string, schema?: Schema, collection?: string, skipInit?: boolean): Model<Schema>;
+
+    export module Types {
+
+        interface ObjectId
+        {
+            toString: () => string;   
+        }
+    }
+
+    // export type QueryIdRequired<T> = Query<MakeIdRequired<T>>
+    // export type MakeIdRequired<T> = ObjectOmit<T,'id'> & {
+    //     id : string
+    // }
+
+    // export type MakeRecord<T> = ObjectOmit<T, StringOmit<keyof Document,'_id'>>
+
+    // export type MakeNewRecordDoc<T> = ObjectOmit<T, StringOmit<keyof Document, 'id'>>
+
+    // export type MakeResultRecordDoc<T> = ObjectOmit<T, '_id' | 'id'>
+
+    // export interface Model<T extends Document>
+    // //extends NodeJS.EventEmitter 
+    // {
+    //     newType : MakeNewRecordDoc<T>;
+
+    //     new(doc?: MakeNewRecordDoc<T>, fields?: Object, skipInit?: boolean): MakeResultRecordDoc<T>;
+
+    //     new(doc?: Object, fields?: Object, skipInit?: boolean): 'Invalid Record' & void;
+
+    //     aggregate<X>(...aggregations: Object[]): Aggregate<X[]>;
+    //     aggregate<X>(aggregation: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
+    //     aggregate<X>(aggregation1: Object, aggregation2: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
+    //     aggregate<X>(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
+
+    //     aggregate(...aggregations: Object[]): 'Invalid Record' & void;
+    //     aggregate(aggregation: Object, callback: (err: any, res: T[]) => void): 'Invalid Record' & void;
+    //     aggregate(aggregation1: Object, aggregation2: Object, callback: (err: any, res: T[]) => void): 'Invalid Record' & void;
+    //     aggregate(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: any, res: T[]) => void): 'Invalid Record' & void;
+        
+    //     distinct<X>(field: string, callback?: (err: any, res: X[]) => void): Query<X[]>;
+    //     distinct<X>(field: string, conditions: Object, callback?: (err: any, res: X[]) => void): Query<X[]>;
+
+    //     distinct(field: string, callback?: (err: any, res: T[]) => void): 'Invalid Record' & void;
+    //     distinct(field: string, conditions: Object, callback?: (err: any, res: T[]) => void): 'Invalid Record' & void;
+
+    //     findById(id: string | ObjectId, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findById(id: string | ObjectId, fields: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findById(id: string | ObjectId, fields: Object, options: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findByIdAndRemove(id: string | ObjectId, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findByIdAndRemove(id: string | ObjectId, options: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findByIdAndUpdate(id: string | ObjectId, update: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findByIdAndUpdate(id: string | ObjectId, update: Object, options: FindAndUpdateOption, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    
+    //     // sdsdfsdf
+    //     find(): QueryIdRequired<T[]>;
+    //     find(cond: Object, callback?: (err: any, res: MakeIdRequired<T>[]) => void): QueryIdRequired<T[]>;
+    //     find(cond: Object, fields: Object, callback?: (err: any, res: MakeIdRequired<T>[]) => void): QueryIdRequired<T[]>;
+    //     find(cond: Object, fields: Object, options: Object, callback?: (err: any, res: MakeIdRequired<T>[]) => void): QueryIdRequired<T[]>;
+        
+    //     findOne(cond?: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findOne(cond: Object, fields: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findOne(cond: Object, fields: Object, options: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+
+    //     create(doc: MakeRecord<T>, fn?: (err: any, res: MakeIdRequired<T>) => void): Promise<QueryIdRequired<T>>;
+    //     create(doc1: MakeRecord<T>, doc2: Object, fn?: (err: any, res1: MakeIdRequired<T>, res2: MakeIdRequired<T>) => void): Promise<QueryIdRequired<T>[]>;
+    //     create(doc1: MakeRecord<T>, doc2: Object, doc3: Object, fn?: (err: any, res1: MakeIdRequired<T>, res2: MakeIdRequired<T>, res3: MakeIdRequired<T>) => void): Promise<QueryIdRequired<T>[]>;
+    
+    //     // Could here never here, but it doesn't work. so a message and void would be better as the person knows what actually wrong.
+    //     // since the compiler doen't actually sort things out properly.
+    //     create(doc: Object, fn?: (err: any, res: T) => void) : 'Invalid Record' & void;
+    //     create(doc1: Object, doc2: Object, fn?: (err: any, res1: T, res2: T) => void): 'Invalid Record' & void;
+    //     create(doc1: Object, doc2: Object, doc3: Object, fn?: (err: any, res1: T, res2: T, res3: T) => void): 'Invalid Record' & void;
+   
+    //     count(conditions: Object, callback?: (err: any, count: number) => void): Query<number>;
+
+    // }
+
+    // export interface Query<T> {
+    //     lean(): Query<ObjectOmit<T, StringOmit<keyof Document, '_id'>>>;
+    //     lean(bool : true): Query<ObjectOmit<T, StringOmit<keyof Document, '_id'>>>;
+    //     lean(bool? : true): Query<ObjectOmit<T, StringOmit<keyof Document, '_id'>>>;
+    //     lean(bool? : undefined): Query<ObjectOmit<T, StringOmit<keyof Document, '_id'>>>;
+    // }
+
+    // export interface Document {
+    //     save<T>(callback?: (err: any, res: MakeIdRequired<T>) => void): void;
+    // }
+}
+
+export type ICPT<T> = {
     
     ___CPTSymbol : T
     //[___CPTSymbol] : T
 }
 
-type RecusivePick<Object extends Record<string, any>,
+export type RecusivePick<Object extends Record<string, any>,
 Condition extends Record<string, any> | string | number | boolean, 
 StopCondition extends Record<string, any> | ICPT<any> | undefined = undefined,
 StopConditionEnhanced = string | boolean | number | Date | StopCondition> =
@@ -183,26 +280,26 @@ it will need to use
 
 // type ArrayTypes = RecordInputTypeFormat<any, any, any, any> | ArrayInputTypeFormat | RefInputTypeFormat;
 
-type TsTypesPrimatives = boolean | number | string | Date; 
+export type TsTypesPrimatives = boolean | number | string | Date; 
 
-type ID = 'T' | 'R' | 'AR' | 'AN' | 'Ref' | 'S'
+export type ID = 'T' | 'R' | 'AR' | 'AN' | 'Ref' | 'S'
 
-type ITSShapes = 
+export type ITSShapes = 
 IShapeTSType<any, any, any, any> 
 | IShapeContainers
 | IShapeTSRef<any, any, any, any>
 | IShapeTSSchema<any, any, any, any>
 
 
-type IShapeContainers = IShapeTSRecord<any, any, any, any> | IShapeTSArrayNeasted<any, any, any, any> | IShapeTSArrayRecord<any, any, any, any>
-type IShapeContainersID = IShapeTSRecord<any, any, any, any>['__ID'] | IShapeTSArrayNeasted<any, any, any, any>['__ID'] | IShapeTSArrayRecord<any, any, any, any>['__ID']
+export type IShapeContainers = IShapeTSRecord<any, any, any, any> | IShapeTSArrayNeasted<any, any, any, any> | IShapeTSArrayRecord<any, any, any, any>
+export type IShapeContainersID = IShapeTSRecord<any, any, any, any>['__ID'] | IShapeTSArrayNeasted<any, any, any, any>['__ID'] | IShapeTSArrayRecord<any, any, any, any>['__ID']
 
-type IShapeRefContainers = IShapeContainers | IShapeTSRef<any, any, any, any>;//IShapeTSSchema
-type IShapeRefContainersID = IShapeContainersID | IShapeTSRef<any, any, any, any>['__ID']
+export type IShapeRefContainers = IShapeContainers | IShapeTSRef<any, any, any, any>;//IShapeTSSchema
+export type IShapeRefContainersID = IShapeContainersID | IShapeTSRef<any, any, any, any>['__ID']
 
-type Neasted = IShapeContainers | undefined;
+export type Neasted = IShapeContainers | undefined;
 
-interface IShape<TID extends ID, TNeasted>{
+export interface IShape<TID extends ID, TNeasted>{
     id: TID;
     neasted : TNeasted
 }
@@ -212,7 +309,7 @@ interface IShape<TID extends ID, TNeasted>{
 // modifiers when minipulating referances or neasted schemas.
 // with unow, if eerything was option, would be quite interesting, as just have
 // an auxliarty type into which everything can be mixed in.
-interface ITSShapeModifiers<
+export interface ITSShapeModifiers<
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable> {
@@ -221,7 +318,7 @@ TNullable extends _Nullable> {
     __Nullable: TNullable;
 }
 
-interface ITSShape<T, TID extends ID,
+export interface ITSShape<T, TID extends ID,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable
@@ -231,7 +328,7 @@ TNullable extends _Nullable
     __ID: TID;
 }
 
-class Shape<TShape extends ITSShape<any, any, any, any, any>> implements IShape<TShape['__ID'], TShape['neasted'] >
+export class Shape<TShape extends ITSShape<any, any, any, any, any>> implements IShape<TShape['__ID'], TShape['neasted'] >
 {
     constructor(public id: TShape['__ID'], public neasted : TShape['neasted'] | undefined = undefined)
     {
@@ -242,26 +339,26 @@ class Shape<TShape extends ITSShape<any, any, any, any, any>> implements IShape<
     }
 }
 
-type IShapeTSTypeConstraint = IShapeTSType<IShapeTSTypeExtends, any, any, any>;
+export type IShapeTSTypeConstraint = IShapeTSType<IShapeTSTypeExtends, any, any, any>;
 
-type IShapeTSTypeExtends = boolean | number | string | Date;
+export type IShapeTSTypeExtends = boolean | number | string | Date;
 
-interface IShapeTSType<T extends IShapeTSTypeExtends,
+export interface IShapeTSType<T extends IShapeTSTypeExtends,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable> extends ITSShape<T, 'T', TRequired, TReadonly, TNullable> {
     __tsType : T;
 }
 
-function ShapeTSType<T extends IShapeTSTypeExtends>()
+export function ShapeTSType<T extends IShapeTSTypeExtends>()
 {
     return new Shape<IShapeTSType<T, any, any, any>>('T').TSTypeCastUp();
 }
 
 //type IShapeRecordExtends = Record<string, ITSShapes> | null
-type IShapeRecordExtends = Record<string, ITSShape<any, ID, any, any, any>> | null
+export type IShapeRecordExtends = Record<string, ITSShape<any, ID, any, any, any>> | null
 
-interface IShapeTSRecord<T extends IShapeRecordExtends,
+export interface IShapeTSRecord<T extends IShapeRecordExtends,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable> extends ITSShape<T, 'R', TRequired, TReadonly, TNullable>
@@ -269,15 +366,15 @@ TNullable extends _Nullable> extends ITSShape<T, 'R', TRequired, TReadonly, TNul
     __tsType : T;
 }
 
-function ShapeTSRecord<T extends IShapeRecordExtends>(rec : T)
+export function ShapeTSRecord<T extends IShapeRecordExtends>(rec : T)
 {
     return new Shape<IShapeTSRecord<T, any, any, any>>('R', rec).TSTypeCastUp();
 }
 
-type IShapeArrayNeastedExtendsID = 'T' | 'S' | 'AN' | 'AR' | 'Ref'
-type IShapeArrayNeastedExtends = ITSShape<any, IShapeArrayNeastedExtendsID, any, any, any>//IShapeTSType<any> | IShapeTSRef<any> | IShapeTSSchema<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>;
+export type IShapeArrayNeastedExtendsID = 'T' | 'S' | 'AN' | 'AR' | 'Ref'
+export type IShapeArrayNeastedExtends = ITSShape<any, IShapeArrayNeastedExtendsID, any, any, any>//IShapeTSType<any> | IShapeTSRef<any> | IShapeTSSchema<any> | IShapeTSArrayNeasted<any> | IShapeTSArrayRecord<any>;
 
-interface IShapeTSArrayNeasted<T extends IShapeArrayNeastedExtends,
+export interface IShapeTSArrayNeasted<T extends IShapeArrayNeastedExtends,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable> extends ITSShape<any, 'AN', TRequired, TReadonly, TNullable>
@@ -285,14 +382,14 @@ TNullable extends _Nullable> extends ITSShape<any, 'AN', TRequired, TReadonly, T
     __tsType : {w:T};
 }
 
-function ShapeTSArray<T extends IShapeArrayNeastedExtends>(record : T)
+export function ShapeTSArray<T extends IShapeArrayNeastedExtends>(record : T)
 {
     return new Shape<IShapeTSArrayNeasted<T, any, any, any>>('AN', record).TSTypeCastUp();
 }
 
-type IShapeTSArrayRecordExtends = Record<string, ITSShape<any, ID, any, any, any>> | null;
+export type IShapeTSArrayRecordExtends = Record<string, ITSShape<any, ID, any, any, any>> | null;
 
-interface IShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends,
+export interface IShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable> extends ITSShape<T, 'AR', TRequired, TReadonly, TNullable>
@@ -300,12 +397,12 @@ TNullable extends _Nullable> extends ITSShape<T, 'AR', TRequired, TReadonly, TNu
     __tsType : T;
 }
 
-function ShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends>(record : T)
+export function ShapeTSArrayRecord<T extends IShapeTSArrayRecordExtends>(record : T)
 {
     return new Shape<IShapeTSArrayRecord<T , any, any, any>>('AR', record).TSTypeCastUp();
 }
 
-interface IShapeTSRef<T extends ISchemaParts<any, any, any, any, any, any, any, any, any, any>,
+export interface IShapeTSRef<T extends ISchemaParts<any, any, any, any, any, any, any, any, any, any>,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable> extends ITSShape<T,'Ref', TRequired, TReadonly, TNullable>
@@ -324,13 +421,13 @@ TNullable extends _Nullable> extends ITSShape<T,'Ref', TRequired, TReadonly, TNu
 // the runtime type, which is what previously happened.
 // The right hand side of the schema wil be captured on the right.
 // lets just get this all working.
-function ShapeTSRef<T extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>,
+export function ShapeTSRef<T extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>,
 >()
 {
     return new Shape<IShapeTSRef<T, any, any, any>>('Ref').TSTypeCastUp();
 }
 
-interface IShapeTSSchema<T extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>,
+export interface IShapeTSSchema<T extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>,
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable>
@@ -339,7 +436,7 @@ extends ITSShape<T, 'S', TRequired, TReadonly, TNullable>
     __tsType : T;
 }
 
-function ShapeTSSchema<T extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>>()
+export function ShapeTSSchema<T extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any>>()
 {
     return new Shape<IShapeTSSchema<T, any, any, any>>('S').TSTypeCastUp();
 }
@@ -347,22 +444,22 @@ function ShapeTSSchema<T extends ISchema<any, any, any, any, any, any, any, any,
 // type TesResult = ITSModifiersWithConstraints<any, any, any, any, any, any, any, any, any, any, IShapeTSType<number>, any> extends 
 // ITSModifiersWithConstraints<any,any,any,any,any,any,any,any,any,any, IShapeTSArrayNeasted<any>,any> ?
 // 'T' : 'F'
+export type GenAdapters = ''
+export type GenAdaptersSchemaOptions = Record<GenAdapters, Record<string, any>>;
 
-type GenAdaptersSchemaOptions = Record<GenAdapters, Record<string, any>>;
+export type GenAdaptersFieldTypesOptions = Record<GenAdapters, Record<string, any>>;
 
-type GenAdaptersFieldTypesOptions = Record<GenAdapters, Record<string, any>>;
+export type IFieldDef<Options extends GenAdaptersFieldTypesOptions> = 
+IShape<any,any> //& ITypeModifiers<any, any, any, any, any, any, any, any, any, any> & Options;
 
-type IFieldDef<Options extends GenAdaptersFieldTypesOptions> = 
-IShape<any,any> & IMTypeModifiers<any, any, any, any, any, any, any, any, any, any> & Options;
-
-type IteratorSchemaContext = {
+export type IteratorSchemaContext = {
     schema : ISchema<any, any, any, any, any, any, any, any, any, any,any, any, any>,
     parentSchema : ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any> | undefined,
     rootSchema : ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any> | undefined,
     fieldKeys: string [] // May want simple boolean to decided on things.
 }
 
-type IteratorFieldContext = {
+export type IteratorFieldContext = {
     schema : IteratorSchemaContext
     fields: {
         field : IFieldDef<any>,
@@ -371,9 +468,9 @@ type IteratorFieldContext = {
     }
 }
 
-type GenOptionsPrimatives = boolean | number | string | Function | undefined;
+export type GenOptionsPrimatives = boolean | number | string | Function | undefined;
 
-interface IGenAdapterConfig<SchemaAnotationOptions extends Record<string, GenOptionsPrimatives>, FieldAnotationOptions extends Record<string, GenOptionsPrimatives>> {
+export interface IGenAdapterConfig<SchemaAnotationOptions extends Record<string, GenOptionsPrimatives>, FieldAnotationOptions extends Record<string, GenOptionsPrimatives>> {
     
     schemaTransform: (        
         anotationOptions: SchemaAnotationOptions,
@@ -388,7 +485,7 @@ interface IGenAdapterConfig<SchemaAnotationOptions extends Record<string, GenOpt
     ) => string
 }
 
-interface ITSGenAdapterConfig<
+export interface ITSGenAdapterConfig<
 SchemaAnontationOptions extends Record<string, GenOptionsPrimatives>,
 FieldAnontationOptions extends Record<string, GenOptionsPrimatives>
 > extends IGenAdapterConfig<SchemaAnontationOptions, FieldAnontationOptions> {
@@ -396,13 +493,13 @@ FieldAnontationOptions extends Record<string, GenOptionsPrimatives>
     __tsFieldOptions: FieldAnontationOptions,
 }
 
-type GenAdapterConfiguration = Record<string, IGenAdapterConfig<any, any>>
+export type GenAdapterConfiguration = Record<string, IGenAdapterConfig<any, any>>
 
 // The schemaOptions need to be defined as typesript information and not as runtime informaiton.
 // This means that I am going to need a helper function, which takes in the runtime information
 // and then takes on some typescript constraints __tsTheOption anme.
 
-function NewAdapterConfiguration<
+export function NewAdapterConfiguration<
 SchemaOptions extends Record<string, GenOptionsPrimatives>,
 FieldOptions extends Record<string, GenOptionsPrimatives>>(config : IGenAdapterConfig<SchemaOptions, FieldOptions>)
 {
@@ -411,7 +508,7 @@ FieldOptions extends Record<string, GenOptionsPrimatives>>(config : IGenAdapterC
 
 // Typescript seem to not be able to validate function signatures
 // not much we can do about that..
-type ExtractGenAdapterConfShape<T extends Record<string,any>> = {
+export type ExtractGenAdapterConfShape<T extends Record<string,any>> = {
     [K in keyof T] : ITSGenAdapterConfig<
     T[K]['__tsSchemaOptions'] extends unknown ? Record<string,never> : T[K]['__tsSchemaOptions'],
     T[K]['__tsFieldOptions'] extends unknown ? Record<string,never> : T[K]['__tsFieldOptions']
@@ -429,15 +526,15 @@ type ExtractGenAdapterConfShape<T extends Record<string,any>> = {
 
 // }
 
-type AdaptorConfigurationSchemaOptions<T extends Record<string, ITSGenAdapterConfig<any, any>>> = {
+export type AdaptorConfigurationSchemaOptions<T extends Record<string, ITSGenAdapterConfig<any, any>>> = {
  [K in keyof T] : T[K]['__tsSchemaOptions']
 }
 
-type AdaptorConfigurationFieldOptions<T extends Record<string, ITSGenAdapterConfig<any, any>>> = {
+export type AdaptorConfigurationFieldOptions<T extends Record<string, ITSGenAdapterConfig<any, any>>> = {
     [K in keyof T] : T[K]['__tsFieldOptions']
 }
    
-class SchemaGenerator<AdaptorConfigurations extends Record<string, ITSGenAdapterConfig<any, any>>,
+export class SchemaGenerator<AdaptorConfigurations extends Record<string, ITSGenAdapterConfig<any, any>>,
 SchemaOptions = AdaptorConfigurationSchemaOptions<AdaptorConfigurations>,
 FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
 >
@@ -599,16 +696,16 @@ FieldOptions = AdaptorConfigurationFieldOptions<AdaptorConfigurations>
     }
 }   
 
-type TypesPrimative = 'Boolean' | 'Number' | 'String' | 'Date' | 'Record' | 'ArrayNeasted' | 'ArrayRecord' | 'RefType' | 'Schema' | 'ObjectIdString' | undefined
+export type TypesPrimative = 'Boolean' | 'Number' | 'String' | 'Date' | 'Record' | 'ArrayNeasted' | 'ArrayRecord' | 'RefType' | 'Schema' | 'ObjectIdString' | undefined
 
-type _Required = 'Req' | 'Op'
-type _Readonly = 'Get' | 'Set'
-type _Nullable = 'Nullable' | 'Value'
-type _Default = TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined
-type _RefType = ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any> | undefined 
-type _OptionsAnontations = Record<string, any>
+export type _Required = 'Req' | 'Op'
+export type _Readonly = 'Get' | 'Set'
+export type _Nullable = 'Nullable' | 'Value'
+export type _Default = TsTypesPrimatives | Array<never> | Array<Record<string,TsTypesPrimatives>> | Record<string, TsTypesPrimatives> | null | undefined
+export type _RefType = ISchema<any, any, any, any, any, any, any, any, any, any, any, any, any> | undefined 
+export type _OptionsAnontations = Record<string, any>
 
-interface IModifiers<TOptions extends _OptionsAnontations> extends IShape<ID, any>
+export interface IModifiers<TOptions extends _OptionsAnontations> extends IShape<ID, any>
 {
     id : ID,
     neasted : any;  // This can be better typed later on.
@@ -621,7 +718,7 @@ interface IModifiers<TOptions extends _OptionsAnontations> extends IShape<ID, an
     options : TOptions | undefined;
 }
 
-interface ITSModifiers<
+export interface ITSModifiers<
     TShapeID extends ID,
     TRequired extends _Required,
     TReadonly extends _Readonly,
@@ -653,7 +750,7 @@ interface ITSModifiers<
 
 
 
-interface ITSModifiersWithConstraints<
+export interface ITSModifiersWithConstraints<
     TShapeID extends ID,
     TRequired extends _Required,
     TReadonly extends _Readonly,
@@ -694,7 +791,7 @@ interface ITSModifiersWithConstraints<
 // > = TShape & ITSModifiersWithConstraints<TOptionsAnotations, TShape, TRequired, TReadonly, TNullable, TDefault, TRefType,
 // RequiredConstraint, ReadonlyConstraint, NullableConstraint, DefaultConstraint, RefTypeConstraint>
 
-function NewModifiers<TAvaliableOptions extends _OptionsAnontations,
+export function NewModifiers<TAvaliableOptions extends _OptionsAnontations,
     TShape extends ITSShape<any, any, any, any, any>
     >(shape : TShape, type : TypesPrimative, __options : TAvaliableOptions)
     {
@@ -764,7 +861,7 @@ function NewModifiers<TAvaliableOptions extends _OptionsAnontations,
 // the the change.
 // How ever, if this is for neasted types, then we are required to prset the RequiredConstraints
 // As they should be pass thought.
-interface IModifiersFunctions<
+export interface IModifiersFunctions<
 TShapeID extends ID,
 TRequired extends _Required,
 TReadonly extends _Readonly,
@@ -790,7 +887,7 @@ TAvaliableOptions extends _OptionsAnontations>
     ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonly, TNullable, DValue, TRefType, TShapeIDConstraint, TRequiredConstraint, TReadonlyConstraint, TNullable, TDefaultConstraint, TRefTypeConstraint, TShape, TAvaliableOptions>
 }
 
-type ITSShapeModifiersFunWithConstraintsSimple<
+export type ITSShapeModifiersFunWithConstraintsSimple<
 TShapeID extends ID,
 TRequired extends _Required,
 TReadonly extends _Readonly,
@@ -843,7 +940,7 @@ TShapeIDConstraint, RequiredConstraint, ReadonlyConstraint, NullableConstraint, 
 
 // }
 
-class Modifiers<
+export class Modifiers<
 TRequired extends _Required,
 TReadonly extends _Readonly,
 TNullable extends _Nullable,
@@ -902,7 +999,7 @@ IModifiersFunctions<any, TRequired, TReadonly, TNullable, TDefault, TRefType, an
         return this as any;
     }
 
-    public Readonly() : ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, 'Get', TNullable, TDefault, TRefType, TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions,>
+    public Readonly() : ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, 'Get', TNullable, TDefault, TRefType, TShapeID, TRequired, TReadonly, TNullable, TDefault, TRefType, TShape, TAvaliableOptions>
     {
         this.readonly = 'Get';
         return this as any;
@@ -916,7 +1013,7 @@ IModifiersFunctions<any, TRequired, TReadonly, TNullable, TDefault, TRefType, an
 }
 
 
-interface ITSModifiersRecord<
+export interface ITSModifiersRecord<
 TShapeID extends ID,
 TShape extends ITSShape<any,any, any, any, any>,
 TRequired extends _Required,
@@ -951,7 +1048,7 @@ Record<string, ITSShapeModifiersFunWithConstraints<TShapeID, TRequired, TReadonl
 
 // } 
 
-type INeastedSchemaRecord = Record<string, (ITSModifiersWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any, any, IShapeContainers | IShapeTSSchema<any>>)>
+export type INeastedSchemaRecord = Record<string, (ITSModifiersWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any, any, IShapeContainers | IShapeTSSchema<any, any,any, any>>)>
 
 type ExtractRecordModfierConstraints<T extends Record<string, ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any, any, any>>, 
 Modifier extends '__ID' | '__Required' | '__Readonly' | '__Nullable' | '__Default' | '__RefType',
@@ -960,7 +1057,7 @@ ModifierConstraint extends '__IDConstraints' | '__RequiredConstraints' | '__Read
 }[keyof T]
 
 
-interface ISchema<
+export interface ISchema<
     Name extends string,
     Id extends string,
     ModRD extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Set', any, undefined>,
@@ -1006,7 +1103,7 @@ interface ISchema<
         __SchemaOptions : SchemaOptions        
 }
 
-class Schema<
+export class Schema<
 Name extends string,
 Id extends string,
 ModRD extends ITSModifiersRecord<any, ITSShapes,'Req', 'Set', any, undefined>,
@@ -1017,7 +1114,7 @@ ReadRD extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Get', any, undefined>,
 ReadRND extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Get', undefined, undefined>,
 ReadOD extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Get', undefined, undefined>,
 ReadOND extends ITSModifiersRecord<any, ITSShapes, 'Op', 'Get', undefined, undefined>,
-ModRef extends ITSModifiersRecord<IShapeRefContainersID, any, any, any, any, any>,,
+ModRef extends ITSModifiersRecord<IShapeRefContainersID, any, any, any, any, any>,
 NeastedSchemas extends INeastedSchemaRecord,
 SchemaOptions extends Record<string,any> | undefined>
 implements ISchema<Name, Id, ModRD, ModRND, ModOD, ModOND, ReadRD, ReadRND, ReadOD, ReadOND, ModRef, NeastedSchemas, SchemaOptions>
@@ -1041,7 +1138,7 @@ implements ISchema<Name, Id, ModRD, ModRND, ModOD, ModOND, ReadRD, ReadRND, Read
     }
 }
 
-interface ISchemaPartial<
+export interface ISchemaPartial<
 TPartialName extends string,
 Name extends string,
 Id extends string,
@@ -1061,7 +1158,7 @@ extends ISchema<Name, Id, ModRD, ModRND, ModOD, ModOND, ReadRD, ReadRND, ReadOD,
     partialName : TPartialName,
 }
 
-class SchemaPartial<
+export class SchemaPartial<
 TPartialName extends string,
 BaseSchema extends ISchema<any, any, any, any, any, any, any, any, any, any, any, any, SchemaOptions>,
 ModRD extends ITSModifiersRecord<any, ITSShapes, 'Req', 'Set', any, undefined>,
@@ -1099,7 +1196,7 @@ implements ISchema<BaseSchema['__Name'], BaseSchema['__Id'], ModRD, ModRND, ModO
 }
 
 
-type SchemaOptions = {
+export type SchemaOptions = {
     autoIndex?: any,
     bufferCommands?: any,
     capped?: any,
@@ -1125,7 +1222,7 @@ type SchemaOptions = {
     storeSubdocValidationError?: any,
 }
 
-type SchemaFieldOptionsAll = {
+export type SchemaFieldOptionsAll = {
     select?: boolean,
     validate?: Function, 
     get?: Function,
@@ -1134,183 +1231,183 @@ type SchemaFieldOptionsAll = {
 }
 
 
-const adapter = {
-    'Mongoose': NewAdapterConfiguration<SchemaOptions, SchemaFieldOptionsAll>({
-    schemaTransform : {} as any,
-    fieldTransform : {} as (
-        key: string,
-        options: SchemaFieldOptionsAll,
-        iteratorContext: IteratorFieldContext,
-        neastedFieldTransformContents: string | undefined
-    ) => string
-    })
-};
+// const adapter = {
+//     'Mongoose': NewAdapterConfiguration<SchemaOptions, SchemaFieldOptionsAll>({
+//     schemaTransform : {} as any,
+//     fieldTransform : {} as (
+//         key: string,
+//         options: SchemaFieldOptionsAll,
+//         iteratorContext: IteratorFieldContext,
+//         neastedFieldTransformContents: string | undefined
+//     ) => string
+//     })
+// };
 
 
-const GSchema = new SchemaGenerator(adapter);
+// const GSchema = new SchemaGenerator(adapter);
 
-const mongooseRunTime = GSchema.Generate('Mongoose', [SchemaA]);
+// const mongooseRunTime = GSchema.Generate('Mongoose', [SchemaA]);
 
-const schemaARight = GSchema.NewSchema('RightSchema', '', {},{},{},{},{},{},{},{},{},{});
+// const schemaARight = GSchema.NewSchema('RightSchema', '', {},{},{},{},{},{},{},{},{},{});
 
-const schemaA = GSchema.NewSchema('collectionName','', {
-    a : GSchema.Boolean().Required().Nullable().Default(null).Anotations({'Mongoose':{select:true}}),
-    b : GSchema.Number().Required(),
-    c : GSchema.String().Required().Nullable().Default(''),
-    neasted : GSchema.Record({
-        nA : GSchema.Boolean().Required(),
-        neasted : GSchema.Record({
-            NNe : GSchema.String().Required(),
-            NNf : GSchema.Number().Required()
-        }).Required(),
-    }).Required(),
-    // The extaction forms of this are not perfect, because I assumed, its primative
-    // but it is not neaasry a primative.
-    arrayPrimative : GSchema.Array(GSchema.Number().Required()).Required(),
-    // arrayofRecord : GSchema.Array(GSchema.Record({
-    //     a : GSchema.Boolean()
-    // })).Required(),// Must rather use ArrayRecord
-    arrayArray : GSchema.Array(GSchema.Array(GSchema.Number().Required())).Required(),
-   //, arrayArrayRecord : GSchema.ArrayRecord(GSchema.Number().Required()).Required(), -- This should be Invalid.
-    arrayRecord : GSchema.ArrayRecord({
-        a: GSchema.Number().Required(),
-        b: GSchema.Record({
-            c: GSchema.Number().Required()
-        }).Required(),
-    }).Required()
-    // arrayRecordRecord : GSchema.ArrayRecord(GSchema.Record({
-    //     a: GSchema.Number().Required()
-    // }).Required()).Required(),
+// const schemaA = GSchema.NewSchema('collectionName','', {
+//     a : GSchema.Boolean().Required().Nullable().Default(null).Anotations({'Mongoose':{select:true}}),
+//     b : GSchema.Number().Required(),
+//     c : GSchema.String().Required().Nullable().Default(''),
+//     neasted : GSchema.Record({
+//         nA : GSchema.Boolean().Required(),
+//         neasted : GSchema.Record({
+//             NNe : GSchema.String().Required(),
+//             NNf : GSchema.Number().Required()
+//         }).Required(),
+//     }).Required(),
+//     // The extaction forms of this are not perfect, because I assumed, its primative
+//     // but it is not neaasry a primative.
+//     arrayPrimative : GSchema.Array(GSchema.Number().Required()).Required(),
+//     // arrayofRecord : GSchema.Array(GSchema.Record({
+//     //     a : GSchema.Boolean()
+//     // })).Required(),// Must rather use ArrayRecord
+//     arrayArray : GSchema.Array(GSchema.Array(GSchema.Number().Required())).Required(),
+//    //, arrayArrayRecord : GSchema.ArrayRecord(GSchema.Number().Required()).Required(), -- This should be Invalid.
+//     arrayRecord : GSchema.ArrayRecord({
+//         a: GSchema.Number().Required(),
+//         b: GSchema.Record({
+//             c: GSchema.Number().Required()
+//         }).Required(),
+//     }).Required()
+//     // arrayRecordRecord : GSchema.ArrayRecord(GSchema.Record({
+//     //     a: GSchema.Number().Required()
+//     // }).Required()).Required(),
 
-    //,refType : GSchema.RefType(schemaARight).Required()// Invalid - But not pretty to debug the message, because of the type
-    // capturing.. Mabye later, could just be a name list were they are all first regsitered, so that
-    // We can reduce the list name to , difficault, because would be no ways to validate things, until runtime, which not what is wanted.
-},{
-    //c : GSchema.Boolean().Required().Default(false), // Invalid Default false - Good
-    //d : GSchema.Number().Required().Default(34), // Invalid Default false - Good
-    e : GSchema.Number().Required().Nullable().Anotations({'Mongoose' : {}}),
-    neasted : GSchema.Record({
-        NNa : GSchema.Boolean().Required(),
-        NArray : GSchema.Array(GSchema.Boolean().Required()).Required(),
-        NArrayRrecord : GSchema.ArrayRecord({
-            NARa : GSchema.Number().Required(),
-            NARb : GSchema.String().Required(),
-            NAR : GSchema.Record({}).Required(),
-            NARA : GSchema.Array(GSchema.Number().Required()).Required()
-        }).Required()
-    }).Required()  // Any Record
-},{
+//     //,refType : GSchema.RefType(schemaARight).Required()// Invalid - But not pretty to debug the message, because of the type
+//     // capturing.. Mabye later, could just be a name list were they are all first regsitered, so that
+//     // We can reduce the list name to , difficault, because would be no ways to validate things, until runtime, which not what is wanted.
+// },{
+//     //c : GSchema.Boolean().Required().Default(false), // Invalid Default false - Good
+//     //d : GSchema.Number().Required().Default(34), // Invalid Default false - Good
+//     e : GSchema.Number().Required().Nullable().Anotations({'Mongoose' : {}}),
+//     neasted : GSchema.Record({
+//         NNa : GSchema.Boolean().Required(),
+//         NArray : GSchema.Array(GSchema.Boolean().Required()).Required(),
+//         NArrayRrecord : GSchema.ArrayRecord({
+//             NARa : GSchema.Number().Required(),
+//             NARb : GSchema.String().Required(),
+//             NAR : GSchema.Record({}).Required(),
+//             NARA : GSchema.Array(GSchema.Number().Required()).Required()
+//         }).Required()
+//     }).Required()  // Any Record
+// },{
 
-},{},{},{},{},{},{
-    //primative : GSchema.Boolean(),
-    refType : GSchema.RefType(schemaARight).Required(),
-    neasted : GSchema.Record({
-        //Na : GSchema.Number().Required() // Need to fix constraints from here again.*********************************************************************
-        Nb : GSchema.RefType(schemaARight).Required()
-    }).Required()
-},{},{Mongoose:{collation:'',}});
+// },{},{},{},{},{},{
+//     //primative : GSchema.Boolean(),
+//     refType : GSchema.RefType(schemaARight).Required(),
+//     neasted : GSchema.Record({
+//         //Na : GSchema.Number().Required() // Need to fix constraints from here again.*********************************************************************
+//         Nb : GSchema.RefType(schemaARight).Required()
+//     }).Required()
+// },{},{Mongoose:{collation:'',}});
 
-const Neasted__ = GSchema.Record({
-    Na : GSchema.Number().Required(),
-    Nb : GSchema.RefType(schemaARight).Required()
-}).Required();
-
-
-type res = typeof Neasted__['__RefTypeConstraints'];
-
-type EROM<Mod extends ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any, any, any>, T extends any> = ({
-    'Req' : T 
-    'Op' : T | undefined
-})[Mod['__Required']];
-
-type ESRec<T extends ITSModifiersRecord<any, any, any, any, any, any>> = {
-    [P in keyof T] : 
-    ({
-        'T' : ApplyMods<T[P], T[P]['__tsType']>,
-        'R' : ApplyMods<T[P], ESRec<T[P]['__tsType']>>,
-        'AN' : ApplyMods<T[P],ESRec<T[P]['__tsType']>['w'][]>,
-        'AR' : ApplyMods<T[P],ESRec<T[P]['__tsType']>[]>
-        //'Ref' : 'Invalid Option here'
-        //'S' : 'Invalid Option Here'
-    })[T[P]['__ID']]
-}
+// const Neasted__ = GSchema.Record({
+//     Na : GSchema.Number().Required(),
+//     Nb : GSchema.RefType(schemaARight).Required()
+// }).Required();
 
 
-type TSchema = typeof schemaA['__ModRD']//['a']['__ID'];
+// type res = typeof Neasted__['__RefTypeConstraints'];
 
-type TSSchema = ESRec<TSchema>
-const tsSchema : TSSchema = {
-    a : true,
-    b : 234,
-    c : '',
-    neasted : {
-        nA :true,
-        neasted : {
-            NNe :'',
-            NNf : 234
-        }
-    },
-    arrayPrimative: [1],
-    arrayArray : [[1]],
-    arrayRecord: [{ 
-        a : 324,
-        b : {
-            c : 324
-        }
-    }]
+// type EROM<Mod extends ITSShapeModifiersFunWithConstraints<any, any, any, any, any, any, any, any, any, any, any, any, any, any>, T extends any> = ({
+//     'Req' : T 
+//     'Op' : T | undefined
+// })[Mod['__Required']];
+
+// type ESRec<T extends ITSModifiersRecord<any, any, any, any, any, any>> = {
+//     [P in keyof T] : 
+//     ({
+//         'T' : ApplyMods<T[P], T[P]['__tsType']>,
+//         'R' : ApplyMods<T[P], ESRec<T[P]['__tsType']>>,
+//         'AN' : ApplyMods<T[P],ESRec<T[P]['__tsType']>['w'][]>,
+//         'AR' : ApplyMods<T[P],ESRec<T[P]['__tsType']>[]>
+//         //'Ref' : 'Invalid Option here'
+//         //'S' : 'Invalid Option Here'
+//     })[T[P]['__ID']]
+// }
+
+
+// type TSchema = typeof schemaA['__ModRD']//['a']['__ID'];
+
+// type TSSchema = ESRec<TSchema>
+// const tsSchema : TSSchema = {
+//     a : true,
+//     b : 234,
+//     c : '',
+//     neasted : {
+//         nA :true,
+//         neasted : {
+//             NNe :'',
+//             NNf : 234
+//         }
+//     },
+//     arrayPrimative: [1],
+//     arrayArray : [[1]],
+//     arrayRecord: [{ 
+//         a : 324,
+//         b : {
+//             c : 324
+//         }
+//     }]
         
-}
+// }
 
-// Layer 2 were we want the typing speed improvements
-// were the model definition will extra this informaiton.
-// What we could do is the full type type out here, but then check that
-// Schema conforms to that, but the simpified 
-const modelsdA = model('collectionName', Schema);
+// // Layer 2 were we want the typing speed improvements
+// // were the model definition will extra this informaiton.
+// // What we could do is the full type type out here, but then check that
+// // Schema conforms to that, but the simpified 
+// const modelsdA = model('collectionName', Schema);
 
-// This basically what the model would be doing up front.
-// If we wanted to speed things up and not do the type extraction
-// from 
-//type SchemaA = ExtractTSSchema<typeof schemaA>;
+// // This basically what the model would be doing up front.
+// // If we wanted to speed things up and not do the type extraction
+// // from 
+// //type SchemaA = ExtractTSSchema<typeof schemaA>;
 
-type ESRefId<T extends ITSModifiersRecord<any, any, any, any, any, any>> =
-{
-    [P in keyof T] : 
-    ({
-        'T' : 'Invalid Option Here'
-        'R' : EROM<T[P], ESRedId<T[P]['__tsType']>>
-        'AN' : EROM<T[P], ESRedId<T[P]['__tsType']>['w'][]>
-        'AR' : EROM<T[P], ESRedId<T[P]['__tsType']>[]>
-        'Ref' : T[P]['__tsType']['__ID']
-        'S' : ESRedId<T[P]['__tsType']['__ModRef']>
-    })[T[P]['__ID']]
-}
+// type ESRefId<T extends ITSModifiersRecord<any, any, any, any, any, any>> =
+// {
+//     [P in keyof T] : 
+//     ({
+//         'T' : 'Invalid Option Here'
+//         'R' : EROM<T[P], ESRedId<T[P]['__tsType']>>
+//         'AN' : EROM<T[P], ESRedId<T[P]['__tsType']>['w'][]>
+//         'AR' : EROM<T[P], ESRedId<T[P]['__tsType']>[]>
+//         'Ref' : T[P]['__tsType']['__ID']
+//         'S' : ESRedId<T[P]['__tsType']['__ModRef']>
+//     })[T[P]['__ID']]
+// }
 
-type ESSRec<T extends ITSModifiersRecord<any, any, any, any, any, any>,
-Path extends '__ModRD' | '__ModRND' | '__ModOD' | '__ModOND' | '__ReadRD' | '__ReadRND' | '__ReadOD' | '__ReadOND' | '__ModRef'> = {
-    [P in keyof T] : 
-    ({
-        'T' : EROM<T[P], T[P]['__tsType']>,
-        'R' : EROM<T[P], ESSRec<T[P]['__tsType'], Path>>,
-        'AN' : EROM<T[P],ESSRec<T[P]['__tsType'], Path>['w'][]>,
-        'AR' : EROM<T[P],ESSRec<T[P]['__tsType'], Path>[]>
-        'Ref' : T[P]// Leave untouched for futher passing.
-        'S' : ESSRec<T[P]['__tsType'][Path], Path>
-    })[T[P]['__ID']]
-}
+// type ESSRec<T extends ITSModifiersRecord<any, any, any, any, any, any>,
+// Path extends '__ModRD' | '__ModRND' | '__ModOD' | '__ModOND' | '__ReadRD' | '__ReadRND' | '__ReadOD' | '__ReadOND' | '__ModRef'> = {
+//     [P in keyof T] : 
+//     ({
+//         'T' : EROM<T[P], T[P]['__tsType']>,
+//         'R' : EROM<T[P], ESSRec<T[P]['__tsType'], Path>>,
+//         'AN' : EROM<T[P],ESSRec<T[P]['__tsType'], Path>['w'][]>,
+//         'AR' : EROM<T[P],ESSRec<T[P]['__tsType'], Path>[]>
+//         'Ref' : T[P]// Leave untouched for futher passing.
+//         'S' : ESSRec<T[P]['__tsType'][Path], Path>
+//     })[T[P]['__ID']]
+// }
 
-type ESRefs<T extends ITSModifiersRecord<any, any, any, any, any, any>, Paths extends Record<string,any>> =
-{
-    [P in keyof T] : P extends keyof Paths ? 
-    ({
-        'T' : 'Invalid Option Here'
-        'R' : EROM<T[P], ESRefs<T[P]['__tsType'], Paths>>
-        'AN' : EROM<T[P], ESRefs<T[P]['__tsType'], Paths>['w'][]>
-        'AR' : EROM<T[P], ESRefs<T[P]['__tsType'], Paths>[]>
-        'Ref' : P extends keyof Paths ? T[P]['__tsType'] : never
-        'S' : ESRefs<T[P]['__tsType']['__ModRef']>
-    })[T[P]['__ID']]
-    : never
-}
+// type ESRefs<T extends ITSModifiersRecord<any, any, any, any, any, any>, Paths extends Record<string,any>> =
+// {
+//     [P in keyof T] : P extends keyof Paths ? 
+//     ({
+//         'T' : 'Invalid Option Here'
+//         'R' : EROM<T[P], ESRefs<T[P]['__tsType'], Paths>>
+//         'AN' : EROM<T[P], ESRefs<T[P]['__tsType'], Paths>['w'][]>
+//         'AR' : EROM<T[P], ESRefs<T[P]['__tsType'], Paths>[]>
+//         'Ref' : P extends keyof Paths ? T[P]['__tsType'] : never
+//         'S' : ESRefs<T[P]['__tsType']['__ModRef']>
+//     })[T[P]['__ID']]
+//     : never
+// }
 
 
 
@@ -1425,11 +1522,6 @@ type ESRefs<T extends ITSModifiersRecord<any, any, any, any, any, any>, Paths ex
 //             IDS extends 'T' ? T[K]['__tsType']['__Id'] : unknown
 //     })[T[K]['__ID']]
 // }
-
-type uuu =   Record<string,never> extends unknown ? 'T' :'F'
-
-type uuuuu = keyof unknown extends never ? 'T' : 'F';
-
 // // Required to still add support for nullable and undefined.
 // type ExtractMRefTypes<T extends Record<string, any>,
 // Path extends Record<string,any>,
@@ -1509,22 +1601,22 @@ type uuuuu = keyof unknown extends never ? 'T' : 'F';
 // }
 
 
-type ModReq<Mod extends ITSShapeModifiers<any, any, any>, T extends any> = ({
+export type ModReq<Mod extends ITSShapeModifiers<any, any, any>, T extends any> = ({
     'Req' : T 
     'Op' : T | undefined
 })[Mod['__Required']];
 
-type ModNull<Mod extends ITSShapeModifiers<any, any, any>, T extends any> = ({
+export type ModNull<Mod extends ITSShapeModifiers<any, any, any>, T extends any> = ({
     'Nullable' : T | null
     'Value' : T
 })[Mod['__Nullable']];
 
-type ApplyMods<Mod extends ITSShapeModifiers<any, any, any>, T extends any> = ModReq<Mod, ModNull<Mod, T>>
+export type ApplyMods<Mod extends ITSShapeModifiers<any, any, any>, T extends any> = ModReq<Mod, ModNull<Mod, T>>
 
 // Required to still add support for nullable and undefined.
-type ExtractMRefTypes<T extends Record<string, any>,
+export type ExtractMRefTypes<T extends Record<string, any>,
 Path extends Record<string,any>,
-IDS extends 'T' | 'F',
+IDS extends 'T' | 'F' | 'E',
 Paths extends any = Path,
 KeysOfPaths extends keyof Paths = keyof Paths> =
 {
@@ -1533,12 +1625,12 @@ KeysOfPaths extends keyof Paths = keyof Paths> =
         'T' : 'Invalid Option Here'
         'R' : ApplyMods<T[K], ExtractMRefTypes<T[K]['__tsType'], {}, IDS, Paths[K]>>
         // This is the slight complication...
-        'AN' : ApplyMods<T[K], ExtractMRefTypes<T[K]['__tsType'], {}, IDS, K extends KeysOfPaths ? {w:Paths[K]} : {}>['w']>//{w:Paths[K]}, IDS>['w'] // The problem here is that the wrapper,
+        'AN' : ApplyMods<T[K], ExtractMRefTypes<T[K]['__tsType'], {}, IDS, K extends KeysOfPaths ? {w:Paths[K]} : {}>['w']> []//{w:Paths[K]}, IDS>['w'] // The problem here is that the wrapper,
         // causes the key to match, in this case the key is w..
         // which means the way in which we compare the key is a problem.
         // the only otherway to handle this is with look ahead, 
         // or in this cases
-        'AR' : ApplyMods<T[K], ExtractMRefTypes<T[K]['__tsType'], {}, IDS, Paths[K]>>
+        'AR' : ApplyMods<T[K], ExtractMRefTypes<T[K]['__tsType'], {}, IDS, Paths[K]>> []
         'Ref' : 
                 // K extends KeysOfPaths ? 
                 //     keyof Paths[K] extends never ?
@@ -1555,7 +1647,9 @@ KeysOfPaths extends keyof Paths = keyof Paths> =
                       //  : T[K]['__tsType']['__Id'] // Look Head for 
                 //: 
                 MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]>
-                :  IDS extends 'T' ? T[K]['__tsType']['__Id'] : unknown >
+                :  IDS extends 'T' ? T[K]['__tsType']['__Id'] : 
+                IDS extends 'E' ? T[K]['__tsType']['__Id'] | ExtractMRefTypesStr<T[K]['__tsType']['__ModRef'], never, IDS> : 
+                unknown >
 
 
                 // If we have a fake key, which matches, is there another way in  next iteration, when key matches
@@ -1634,23 +1728,24 @@ KeysOfPaths extends keyof Paths = keyof Paths> =
 //     })[T[K]['__ID']]
 // }
 
-type ExtractMRefTypesStr<T extends Record<string, any>, Paths extends string, IDS extends 'T' | 'F'> =
+export type ExtractMRefTypesStr<T extends Record<string, any>, Paths extends string, IDS extends 'T' | 'F' | 'E'> =
 {
     [K in keyof T] : 
     ({
         'T' : 'Invalid Option Here'
         'R' : ApplyMods<T[K], ExtractMRefTypesStr<T[K]['__tsType'], never, IDS>>
-        'AN' : ApplyMods<T[K], ExtractMRefTypesStr<T[K]['__tsType'], K extends Paths ? 'w' : '', IDS>['w']>
-        'AR' : ApplyMods<T[K], ExtractMRefTypesStr<T[K]['__tsType'], never, IDS>>
+        'AN' : ApplyMods<T[K], ExtractMRefTypesStr<T[K]['__tsType'], K extends Paths ? 'w' : '', IDS>['w']> []
+        'AR' : ApplyMods<T[K], ExtractMRefTypesStr<T[K]['__tsType'], never, IDS>> []
         'Ref' : ApplyMods<T[K], K extends Paths ? MResults<T[K]['__tsType']> & 
              ExtractMRefTypesStr<T[K]['__tsType']['__ModRef'], never, IDS>
-        :  IDS extends 'T' ? T[K]['__tsType']['__Id'] : unknown >
+        :  IDS extends 'T' ? T[K]['__tsType']['__Id'] : 
+        IDS extends 'E' ? T[K]['__tsType']['__Id'] | ExtractMRefTypesStr<T[K]['__tsType']['__ModRef'], never, IDS> :  unknown >
     })[T[K]['__ID']]
 }
 
 // The thing about this validator is that would only be usefully to validate the value.
 // to be correct, because all keys have to be optional anyway.
-type ExtractValidate<T extends Record<string, any>,
+export type ExtractValidate<T extends Record<string, any>,
 Paths extends Record<string, any>,
 KeysOfPaths extends keyof Paths = keyof Paths> =
 {
@@ -1665,24 +1760,30 @@ KeysOfPaths extends keyof Paths = keyof Paths> =
     : never
 }
 
-type MRequired<T extends Record<string, any>> = 
+export type MRequired<T extends Record<string, any>> = 
 {
     [K in keyof T] -?: NonNullable<T[K]>
 }
 
-interface ModelRecordTSRefType extends Record<string, ModelRecordTSRefType | IShapeTSRef<any, any, any, any>>
+export interface ModelRecordTSRefType extends Record<string, ModelRecordTSRefType | IShapeTSRef<any, any, any, any>>
 {
 }
 
-type MPrimatives = boolean | number | string | Date;
+export type MPrimatives = boolean | number | string | Date;
 
-interface IMModelRecordTsTypes<T extends Record<string,any>> extends Record<string, IMModelRecordTsTypes<any> | MPrimatives>
+export interface IMModelRecordTsTypes extends Record<string, IMModelRecordTsTypes | any>
 {
 
 }
 
+interface  HHH { 
+    a : string
+}
 
-interface IMTSModifiersRecord<
+type uuu = HHH extends IMModelRecordTsTypes
+? 'T' :'F'
+
+export interface IMTSModifiersRecord<
 TModelParts extends {}
 > extends
 Record<string, undefined 
@@ -1697,7 +1798,7 @@ Record<string, undefined
 }
 
 
-interface IMTSModifiersRefRecord extends
+export interface IMTSModifiersRefRecord extends
 Record<string, IShapeContainers | IShapeTSRef<any, any, any, any> | IMTSModifiersRefRecord>
 {
 } 
@@ -1707,16 +1808,16 @@ Record<string, IShapeContainers | IShapeTSRef<any, any, any, any> | IMTSModifier
 
 // See if I can make mutiple different version of ModelRecordTsType, that check Required, Optional, Readonly
 // But this can only really be done in the latest typesript versions.
-interface ISchemaParts<
-Id extends string, 
-ModRD extends IMModelRecordTsTypes<any>,
-ModRND extends IMModelRecordTsTypes<any>,
-ModOD extends IMModelRecordTsTypes<any>,
-ModOND extends IMModelRecordTsTypes<any>,
-ReadRD extends IMModelRecordTsTypes<any>,
-ReadRND extends IMModelRecordTsTypes<any>,
-ReadOD extends IMModelRecordTsTypes<any>,
-ReadOND extends IMModelRecordTsTypes<any>,
+export interface ISchemaParts<
+Id, 
+ModRD extends IMModelRecordTsTypes,
+ModRND extends IMModelRecordTsTypes,
+ModOD extends IMModelRecordTsTypes,
+ModOND extends IMModelRecordTsTypes,
+ReadRD extends IMModelRecordTsTypes,
+ReadRND extends IMModelRecordTsTypes,
+ReadOD extends IMModelRecordTsTypes,
+ReadOND extends IMModelRecordTsTypes,
 ModRef extends IMTSModifiersRefRecord> // Use the populates or extraction method... but should be removed as soon as it is not required.
 {
     __Id: Id;
@@ -1731,16 +1832,16 @@ ModRef extends IMTSModifiersRefRecord> // Use the populates or extraction method
     __ModRef: ModRef;
 }
 
-interface IMModelParts<
-Id extends string, 
-ModRD extends IMModelRecordTsTypes<any>,
-ModRND extends IMModelRecordTsTypes<any>,
-ModOD extends IMModelRecordTsTypes<any>,
-ModOND extends IMModelRecordTsTypes<any>,
-ReadRD extends IMModelRecordTsTypes<any>,
-ReadRND extends IMModelRecordTsTypes<any>,
-ReadOD extends IMModelRecordTsTypes<any>,
-ReadOND extends IMModelRecordTsTypes<any>,
+export interface IMModelParts<
+Id, 
+ModRD extends IMModelRecordTsTypes,
+ModRND extends IMModelRecordTsTypes,
+ModOD extends IMModelRecordTsTypes,
+ModOND extends IMModelRecordTsTypes,
+ReadRD extends IMModelRecordTsTypes,
+ReadRND extends IMModelRecordTsTypes,
+ReadOD extends IMModelRecordTsTypes,
+ReadOND extends IMModelRecordTsTypes,
 ModRefIds extends IMTSModifiersRecord<string> | undefined,      // Used to spesify it must have these fields, irrelavant if modRef is populated, only there for sub sections.
 ModRefPop extends Record<string, any> | string,    // Can add in a specially modifier.   // User to spesify it msut have there fields irrelacant if Mod Ref is populated, only there for sub sections.
 ModRef extends IMTSModifiersRefRecord> // Use the populates or extraction method... but should be removed as soon as it is not required.
@@ -1770,12 +1871,61 @@ ModRef
     __ModRef: ModRef;
 }
 
-type MRecordId<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+export type MRecordId<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> =  RecordId<TModelParts['__Id']>
+
+export type RecordId<ID> = 
 {
-    _id : TModelParts['__Id']
+    _id : ID
 }
 
-type MNewRecord<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+
+export type RecordKeysResult<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+'_id' |
+Extract<keyof TModelParts['__ModOD'], string> |
+Extract<keyof TModelParts['__ModOND'], string> |
+Extract<keyof TModelParts['__ModRD'], string> |
+Extract<keyof TModelParts['__ModRND'], string> |
+Extract<keyof TModelParts['__ReadRD'], string> |
+Extract<keyof TModelParts['__ReadRND'], string> |
+Extract<keyof TModelParts['__ReadOD'], string> |
+Extract<keyof TModelParts['__ReadOND'], string> |
+Extract<keyof TModelParts['__ModRef'], string>
+
+
+export type RecordResult<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+{
+    _id : TModelParts['__Id']
+} &
+TModelParts['__ModOD'] &
+TModelParts['__ModOND'] &
+TModelParts['__ModRD'] &
+TModelParts['__ModRND'] &
+TModelParts['__ReadRD'] &
+TModelParts['__ReadRND'] &
+TModelParts['__ReadOD'] &
+TModelParts['__ReadOND'] &
+ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'>
+
+
+export type RecordKeysUpdate<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+keyof TModelParts['__ModOD'] |
+keyof TModelParts['__ModOND'] |
+keyof TModelParts['__ModRD'] |
+keyof TModelParts['__ModRND'] |
+keyof TModelParts['__ModRef']
+
+export type RecordUpdate<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+TModelParts['__ModOD'] &
+TModelParts['__ModOND'] &
+TModelParts['__ModRD'] &
+TModelParts['__ModRND'] &
+ExtractMRefTypesStr<TModelParts['__ModRef'], never, 'T'>
+
+export type MNewRecord<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+{
+    _id? : TModelParts['__Id']
+}   
+&
     TModelParts['__ModOD'] & 
     TModelParts['__ModOND'] & 
     Partial<TModelParts['__ModRD']> & 
@@ -1785,14 +1935,17 @@ type MNewRecord<TModelParts extends IMModelParts<any, any, any, any, any, any, a
     TModelParts['__ReadOD'] & 
     TModelParts['__ReadOND']
 
-type MUpdate<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+export type MUpdate<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+{
+    _id? : TModelParts['__Id']
+} &
     Partial<TModelParts['__ModRD']> &   // Clearly loose things at times, mongo can only update a full document, which means don't need the partial here.
     Partial<TModelParts['__ModRND']> &  // Same as the satment above, so I could simplify things. This is not the end of the world. Just cross check it with partials.
    // This meant that I main giong to differentiate between readonly and mod fields, in mods fields those that have defaults.
     TModelParts['__ModOD'] &
     TModelParts['__ModOND']
 
-type MResults<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+export type MResults<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
     MRecordId<TModelParts> &
     TModelParts['__ModRD'] &
     TModelParts['__ModRND'] &
@@ -1869,7 +2022,7 @@ export type ExtractPathValidator<T extends any, Keys extends Record<string,any>>
 // TSchema['__ModRef'] & ESSNoResRef<TMSchema['__NeastedSchemas'],'__ModRef'>
 // >;
 
-interface ModelRecordTsTypes<TS extends TsTypesPrimatives> extends Record<string, TS | ModelRecordTsTypes<any>>
+export interface ModelRecordTsTypes<TS extends TsTypesPrimatives> extends Record<string, TS | ModelRecordTsTypes<any>>
 {
 }
 
@@ -1880,8 +2033,8 @@ declare module 'mongoose'
 //     ModelExtracted extends IModelParts<string, any, any, any, any, any, any,any, any, any, {}, any> = IModelPartsFromSchema<TMSchema>
 //     > (name: string, schema?: Schema, collection?: string, skipInit?: boolean): IModel<ModelExtracted>
 
-    function model<ModelExtracted extends IMModelParts<string, any, any, any, any, any, any, any, any, any, {}, any>
-    > (name: string, schema?: mongoose.Schema, collection?: string, skipInit?: boolean): IModel<ModelExtracted>
+     function model<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>
+    > (name: string, schema?: mongoose.Schema, collection?: string, skipInit?: boolean): IModel<TModelParts>
 
     export module Types {
 
@@ -1973,12 +2126,11 @@ TPopulate extends Record<string, any> | string,
 ArrayOfResults extends 'A' | 'O' = 'O',
 Primative extends undefined | unknown = undefined,
 Lean extends 'T' | 'F' = 'F',
-ResultRecord = TModelParts['__ModRefIds'] extends undefined ? MResults<TModelParts> : MResults<TModelParts> & TModelParts['__ModRefIds'],
+ResultRecord = MRecordId<TModelParts> & (TModelParts['__ModRefIds'] extends undefined ? MResults<TModelParts> : MResults<TModelParts> & TModelParts['__ModRefIds']),
 RecordTransformed = 
 //TModelParts['__ModRefIds'] extends undefined ? ResultRecord :
 TPopulate extends string ? 
 ResultRecord & ExtractMRefTypesStr<TModelParts['__ModRef'], TPopulate, TModelParts['__ModRefIds'] extends undefined ? 'T' :'F'> : 
-keyof TPopulate extends never ? ResultRecord : 
 TPopulate extends Record<string, any> ? ResultRecord & ExtractMRefTypes<TModelParts['__ModRef'], TPopulate, TModelParts['__ModRefIds'] extends undefined ? 'T' :'F'>
 : 'Invalid Option here'
 > = Lean extends 'T' ? Primative extends undefined ? 
@@ -1988,20 +2140,33 @@ TPopulate extends Record<string, any> ? ResultRecord & ExtractMRefTypes<TModelPa
         : Primative
     : ArrayOfResults extends 'O' ? 
         Primative extends undefined ?
-            RecordTransformed & DocumentEnhanced<TModelParts, ''>
-            : Primative & DocumentEnhanced<TModelParts, ''>
-        : Array<RecordTransformed & DocumentEnhanced<TModelParts, ''>>
+            RecordTransformed & DocumentEnhanced<TModelParts, {}> & IDocumentModel & MRecordId<TModelParts>
+            : Primative & DocumentEnhanced<TModelParts, {}> & IDocumentModel & MRecordId<TModelParts>
+        : Array<RecordTransformed & DocumentEnhanced<TModelParts, {}>> & IDocumentModel & MRecordId<TModelParts>
 
 
-interface IModel<TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>,
-_NewRecordDocument = MNewRecord<TModelParts>,
-_ResultRecord = MResults<TModelParts>,
-_ResultRecordNewDocument = _ResultRecord & DocumentNewEnhanced<TModelParts>,
-_ResultRecordDocument = _ResultRecord & DocumentEnhanced<TModelParts, ''>,
-_ResultRecordDocumentKeys extends keyof _ResultRecordDocument = keyof _ResultRecordDocument>
+type QueryRecord<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+    ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MResults<TModelParts>
+
+type QueryNewRecord<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+    ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MNewRecord<TModelParts>
+
+type QueryUpdateRecord<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+    Partial<ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'>> & MUpdate<TModelParts>
+        
+type QueryNewDocumentResults<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MResults<TModelParts> & DocumentEnhanced<TModelParts, {}> & IDocumentModel
+
+type QueryDocumentResults<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MResults<TModelParts> & DocumentEnhanced<TModelParts, {}> & IDocumentModel
+
+type QueryResults<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MResults<TModelParts>
+
+export interface IModel<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>>
 {
-    newType : _NewRecordDocument;
-    new(doc?: _NewRecordDocument, fields?: Object, skipInit?: boolean): _ResultRecordNewDocument;
+    newType : QueryNewRecord<TModelParts>;
+    new(doc?: QueryNewRecord<TModelParts>, fields?: Object, skipInit?: boolean): QueryNewDocumentResults<TModelParts>;
 
 
     // This is required to overide the underlying hidden Model, in less you feel like copy and pasting everything to this level.
@@ -2011,11 +2176,11 @@ _ResultRecordDocumentKeys extends keyof _ResultRecordDocument = keyof _ResultRec
     // Issues apply the path constraints here recusively for some reason...
     deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: string) : QueryEnhanced<TModelParts, Paths>;
 
-    deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: Array<keyof Paths>) : QueryEnhanced<TModelParts, Paths>;
+    deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: Array<string>) : QueryEnhanced<TModelParts, Paths>;
 
-    create(doc: _NewRecordDocument, fn?: (err: any, res: MResults<TModelParts> & DocumentNewEnhanced<TModelParts>) => void): Promise<_ResultRecordNewDocument>;
-    create(doc1: _NewRecordDocument, doc2: _NewRecordDocument, fn?: (err: any, res1: _ResultRecordNewDocument, res2: _ResultRecordNewDocument) => void): Promise<_ResultRecordNewDocument[]>;
-    create(doc1: _NewRecordDocument, doc2: _NewRecordDocument, doc3: _NewRecordDocument, fn?: (err: any, res1: _ResultRecordNewDocument, res2: _ResultRecordNewDocument, res3: _ResultRecordNewDocument) => void): Promise<_ResultRecordNewDocument[]>;
+    create(doc: QueryNewRecord<TModelParts>, fn?: (err: any, res: MResults<TModelParts> & DocumentEnhanced<TModelParts, {}>) => void): Promise<QueryNewDocumentResults<TModelParts>>;
+    create(doc1: QueryNewRecord<TModelParts>, doc2: QueryNewRecord<TModelParts>, fn?: (err: any, res1: QueryNewDocumentResults<TModelParts>, res2: QueryNewDocumentResults<TModelParts>) => void): Promise<QueryNewDocumentResults<TModelParts>[]>;
+    create(doc1: QueryNewRecord<TModelParts>, doc2: QueryNewRecord<TModelParts>, doc3: QueryNewRecord<TModelParts>, fn?: (err: any, res1: QueryNewDocumentResults<TModelParts>, res2: QueryNewDocumentResults<TModelParts>, res3: QueryNewDocumentResults<TModelParts>) => void): Promise<QueryNewDocumentResults<TModelParts>[]>;
     
 
     // Not finished...
@@ -2036,37 +2201,37 @@ _ResultRecordDocumentKeys extends keyof _ResultRecordDocument = keyof _ResultRec
     aggregate(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: any, res: any[]) => void): 'Invalid Record' & void;
  
     
-    findById(id: TModelParts['__Id'], callback?: (err: any, res: _ResultRecordDocument) => void) : QueryEnhanced<TModelParts>;
+    findById(id: TModelParts['__Id'], callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void) : QueryEnhanced<TModelParts>;
             
     find(): QueryEnhanced<TModelParts, {}, 'A'>;
     // I haven't taken the array wrapping into arroud for transform, I will need to strip that.
-    find(cond: Object, callback?: (err: any, res: _ResultRecordDocument[]) => void): QueryEnhanced<TModelParts, {}, 'A'>;
-    find(cond: Object, fields: Object, callback?: (err: any, res: _ResultRecordDocument[]) => void): QueryEnhanced<TModelParts, {}, 'A'>;
-    find(cond: Object, fields: Object, options: Object, callback?: (err: any, res: _ResultRecordDocument[]) => void): QueryEnhanced<TModelParts, {}, 'A'>;
-    findById(id: TModelParts['__Id'], callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    findById(id: TModelParts['__Id'], fields: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    findById(id: TModelParts['__Id'], fields: Object, options: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    findByIdAndRemove(id: TModelParts['__Id'], callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    findByIdAndRemove(id: TModelParts['__Id'], options: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    findByIdAndUpdate(id: TModelParts['__Id'], update: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    findByIdAndUpdate(id: TModelParts['__Id'], update: Object, options: FindAndUpdateOption, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    findOne(cond?: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    findOne(cond: Object, fields: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    findOne(cond: Object, fields: Object, options: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    findOneAndRemove(cond: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    findOneAndRemove(cond: Object, options: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    findOneAndUpdate(cond: Object, update: Object, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    findOneAndUpdate(cond: Object, update: Object, options: FindAndUpdateOption, callback?: (err: any, res: _ResultRecordDocument) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    find(cond: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>[]) => void): QueryEnhanced<TModelParts, {}, 'A'>;
+    find(cond: Object, fields: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>[]) => void): QueryEnhanced<TModelParts, {}, 'A'>;
+    find(cond: Object, fields: Object, options: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>[]) => void): QueryEnhanced<TModelParts, {}, 'A'>;
+    findById(id: TModelParts['__Id'], callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findById(id: TModelParts['__Id'], fields: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findById(id: TModelParts['__Id'], fields: Object, options: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findByIdAndRemove(id: TModelParts['__Id'], callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findByIdAndRemove(id: TModelParts['__Id'], options: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findByIdAndUpdate(id: TModelParts['__Id'], update: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findByIdAndUpdate(id: TModelParts['__Id'], update: Object, options: FindAndUpdateOption, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOne(cond?: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOne(cond: Object, fields: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOne(cond: Object, fields: Object, options: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOneAndRemove(cond: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOneAndRemove(cond: Object, options: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOneAndUpdate(cond: Object, update: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    findOneAndUpdate(cond: Object, update: Object, options: FindAndUpdateOption, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, {}, 'O'>;
 
     //populate<U>(doc: U, options: Object, callback?: (err: any, res: U) => void): Promise<U>;
     //populate<U>(doc: U[], options: Object, callback?: (err: any, res: U[]) => void): Promise<U[]>;
 
     // These schema may need to change but I will have to look that up.
-    update(cond: Object, update: MUpdate<TModelParts>, callback?: (err: any, affectedRows: number, raw: any) => void): QueryEnhanced<TModelParts, {}, 'O'>;
-    update(cond: Object, update: MUpdate<TModelParts>, options: Object, callback?: (err: any, affectedRows: number, raw: any) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    update(cond: Object, update: {$pull?:Object, $set?:Object, $addToSet?: Object} | QueryUpdateRecord<TModelParts>, callback?: (err: any, affectedRows: number, raw: any) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    update(cond: Object, update: {$pull?:Object, $set?:Object, $addToSet?: Object} | QueryUpdateRecord<TModelParts>, options: Object, callback?: (err: any, affectedRows: number, raw: any) => void): QueryEnhanced<TModelParts, {}, 'O'>;
     remove(cond: Object, callback?: (err: any) => void): Query<{}>;
 
-    save(callback?: (err: any, result: _ResultRecordDocument, numberAffected: number) => void): QueryEnhanced<TModelParts, {}, 'O'>;
+    save(callback?: (err: any, result: QueryDocumentResults<TModelParts>, numberAffected: number) => void): QueryEnhanced<TModelParts, {}, 'O'>;
 
     // Need to look into this.
     //where(path: string, val?: Object): Query<T[]>;
@@ -2078,35 +2243,38 @@ _ResultRecordDocumentKeys extends keyof _ResultRecordDocument = keyof _ResultRec
 
     $where(condition?: string): QueryEnhanced<TModelParts, {}, 'O'>;
 
-    $where(funCondition: (this: (_ResultRecord)) => boolean): QueryEnhanced<TModelParts, {}, 'O'>;
+    $where(funCondition: (this: (QueryRecord<TModelParts>)) => boolean): QueryEnhanced<TModelParts, {}, 'O'>;
 }
 
 
-export type SchemaResultsDocumentModel<TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>> = MResults<TModelParts> & DocumentEnhanced<TModelParts>
+// export type SchemaResultsDocumentModel<TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>> = MResults<TModelParts> & DocumentEnhanced<TModelParts>
 
 export interface DocumentNewEnhanced<TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>>
 {
-    __TModelParts : TModelParts;
+    //__TModelParts : TModelParts;
     
-    save(callback?: (err: any, res: MResults<TModelParts> & DocumentNewEnhanced<TModelParts>) => void): void;
+    save(callback?: (err: any, res: MResults<TModelParts> & DocumentEnhanced<TModelParts, {}>) => void): void;
 
     // Might needs some other form here going to use results, we shall see.
     equals<docType extends MResults<TModelParts>>(doc: docType): boolean;
 
     // Think the following should stil be relavent to newaly create records.
-    invalidate<K extends keyof  MResults<TModelParts>>(path: K, errorMsg: string, value: any): void;
-    invalidate<K extends keyof  MResults<TModelParts>>(path: K, error: Error, value: any): void;
+    invalidate<K extends keyof  RecordKeysResult<TModelParts>>(path: K, errorMsg: string, value: any): void;
+    invalidate<K extends keyof  RecordKeysResult<TModelParts>>(path: K, error: Error, value: any): void;
 
     // These methods validators, need to run on the normal stuff, ohwell.
     // invalidate<Paths extends ExtractPickValidate<Schema,Paths>>(path: string, errorMsg: string, value: any): void;
     // invalidate<Paths extends ExtractPickValidate<Schema,Paths>>(path: string, error: Error, value: any): void;
 
-    set<K extends keyof MUpdate<TModelParts>>(path: K, val: MUpdate<TModelParts>[K], options?: Object): void;
+    set<K extends keyof RecordKeysUpdate<TModelParts>>(path: K, val: RecordUpdate<TModelParts>[K], options?: Object): void;
     //set<Paths extends ExtractPickValidate<Schema,Paths>> (path: string, val: any, options?: Object): void;
     set<Paths extends Record<string,any>, Missing extends 'Missing Field'> (path: string, val: any, options?: Object): void;
-    set(value: Partial<MUpdate<TModelParts>>): void;
+    set(value: Partial<RecordUpdate<TModelParts>>): void;
 
     validate(cb: (err: any) => void): void;
+
+    toJSON(options?: Object): QueryResults<TModelParts>;
+    toObject(options?: Object): QueryResults<TModelParts>;
 
     isNew: boolean;
     errors: Object;
@@ -2114,18 +2282,15 @@ export interface DocumentNewEnhanced<TModelParts extends IMModelParts<string, an
 }
 
 
-export interface DocumentEnhanced<TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>,
-DeepPopulate extends Record<string, any> | string,
-_NewRecordDocument = MNewRecord<TModelParts>,
-_ResultRecord = MResults<TModelParts>,
-_ResultRecordNewDocument = _ResultRecord & DocumentNewEnhanced<TModelParts>> //extends Document
+export interface DocumentEnhanced<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>,
+DeepPopulate extends Record<string, any> | string> //extends Document
 {
-    __TModelParts : TModelParts;
-    __TDeepPopulate : DeepPopulate;
+   // __TModelParts : TModelParts;
+    //__TDeepPopulate : DeepPopulate;
 
-    save(callback?: (err: any, res: _ResultRecord & DocumentEnhanced<TModelParts, ''>) => void): void;
+    save(callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): void;
 
-    equals<docType extends _ResultRecord>(doc: docType): boolean;
+    equals<docType extends RecordResult<TModelParts>>(doc: docType): boolean;
 
     populate<K extends Extract<keyof TModelParts['__ModRef'], string>>(path: K, callback?: 
         (err: any, res: QueryResultsDocumentModel<TModelParts, DeepPopulate | K>) => void): DocumentEnhanced<TModelParts, DeepPopulate | K>
@@ -2138,7 +2303,7 @@ _ResultRecordNewDocument = _ResultRecord & DocumentNewEnhanced<TModelParts>> //e
     deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: string, 
     callback?: (err: any, res: QueryResultsDocumentModel<TModelParts, Paths>) => void) : void
 
-    deepPopulate<Paths extends  ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: Array<keyof Paths>, 
+    deepPopulate<Paths extends  ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: Array<string>, 
         callback?: (err: any, res: QueryResultsDocumentModel<TModelParts, Paths>) => void) : void    
 
     // QueryEnhanced<RawSchema, SchemaReadOnly, TransformRaw<SchemaPartial,Paths>, Lean>;
@@ -2147,33 +2312,39 @@ _ResultRecordNewDocument = _ResultRecord & DocumentNewEnhanced<TModelParts>> //e
 
     update<T>(doc: Object, options: Object, callback: (err: any, affectedRows: number, raw: any) => void): QueryEnhanced<TModelParts>;
 
-    toJSON(options?: Object): MResults<TModelParts>;
-    toObject(options?: Object): MResults<TModelParts>;
+    toJSON(options?: Object): QueryResults<TModelParts>;
+    toObject(options?: Object): QueryResults<TModelParts>;
 
-    invalidate<Paths extends keyof MUpdate<TModelParts>>(path: string, errorMsg: string, value: any): void;
-    invalidate<Paths extends keyof MUpdate<TModelParts>>(path: string, error: Error, value: any): void;
+    validate(cb: (err: any) => void): void;
+
+    invalidate<Paths extends RecordKeysUpdate<TModelParts>>(path: string, errorMsg: string, value: any): void;
+    invalidate<Paths extends RecordKeysUpdate<TModelParts>>(path: string, error: Error, value: any): void;
 
     invalidate(path: string, errorMsg: string, value: any): void;
     invalidate(path: string, error: Error, value: any): void;
 
-    invalidate<K extends keyof MUpdate<TModelParts>>(path: K, errorMsg: string, value: any): void;
-    invalidate<K extends keyof MUpdate<TModelParts>>(path: K, error: Error, value: any): void;
+    invalidate<K extends RecordKeysUpdate<TModelParts>>(path: K, errorMsg: string, value: any): void;
+    invalidate<K extends RecordKeysUpdate<TModelParts>>(path: K, error: Error, value: any): void;
 
-    invalidate<Paths extends keyof MResults<TModelParts>>(path: string, errorMsg: string, value: any): void;
-    invalidate<Paths extends keyof MResults<TModelParts>>(path: string, error: Error, value: any): void;
+    invalidate<Paths extends RecordKeysUpdate<TModelParts>>(path: string, errorMsg: string, value: any): void;
+    invalidate<Paths extends RecordKeysUpdate<TModelParts>>(path: string, error: Error, value: any): void;
 
-    set<K extends keyof MUpdate<TModelParts>>(path: K, val: MUpdate<TModelParts>[K], options?: Object): void;
+    set<K extends RecordKeysUpdate<TModelParts>>(path: K, val: MUpdate<TModelParts>[K], options?: Object): void;
     set<Paths extends MUpdate<TModelParts>> (path: string, val: any, options?: Object): void;
     set<Paths extends Record<string,any>, Missing extends 'Missing Field'> (path: string, val: any, options?: Object): void;
     set(value: MUpdate<TModelParts>): void;
 
-    get<K extends keyof MResults<TModelParts>>(path: string, type?: new(...args: any[]) => any): any;
+    get<K extends ''>(path: string, type?: new(...args: any[]) => any): any;
     //get(path: string, type?: new(...args: any[]) => any): any;
+
+    isNew: boolean;
+    errors: Object;
+    schema: Object;
 }
 
 export interface QueryEnhanced<
-TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>,
-DeepPopulate extends Record<string, any> | string = '',
+TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>,
+DeepPopulate extends Record<string, any> | string = {},
 ArrayOfResults extends 'A' | 'O' = 'O',
 Primative extends unknown | undefined = undefined,
 Lean extends 'T' |'F' = 'F',
@@ -2221,7 +2392,7 @@ Lean extends 'T' |'F' = 'F',
     deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: string) :
     QueryEnhanced<TModelParts, Paths, ArrayOfResults, Primative, Lean>;
 
-    deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: Array<keyof Paths>) :
+    deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: Array<string>) :
     QueryEnhanced<TModelParts, Paths, ArrayOfResults, Primative, Lean>;
 
 
@@ -2232,11 +2403,11 @@ Lean extends 'T' |'F' = 'F',
     //  distinct(criteria: Query<T>, field: string, callback?: (err: any, res: T) => void): Query<T>;
 
 
-    distinct<K extends keyof MResults<TModelParts>>(field: K, callback?: (err: any, res: MResults<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, DeepPopulate, 'A', MResults<TModelParts>[K], Lean>;
-    distinct<K extends keyof MResults<TModelParts> = never>(field: string, callback?: (err: any, res: MResults<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, DeepPopulate,'A', MResults<TModelParts>[K], Lean>;
+    distinct<K extends RecordKeysResult<TModelParts>>(field: K, callback?: (err: any, res: RecordResult<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, DeepPopulate, 'A', MResults<TModelParts>[K], Lean>;
+    distinct<K extends RecordKeysResult<TModelParts> = never>(field: string, callback?: (err: any, res: RecordResult<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, DeepPopulate,'A', MResults<TModelParts>[K], Lean>;
 
-    distinct<K extends keyof MResults<TModelParts>>(conditions: Object,field: K,callback?: (err: any, res: MResults<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, DeepPopulate,'A', MResults<TModelParts>[K], Lean>
-    distinct<K extends keyof MResults<TModelParts> = never>(conditions: Object, field: string,  callback?: (err: any, res: MResults<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, DeepPopulate,'A', MResults<TModelParts>[K], Lean>;
+    distinct<K extends RecordKeysResult<TModelParts>>(conditions: Object,field: K,callback?: (err: any, res: RecordResult<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, DeepPopulate,'A', MResults<TModelParts>[K], Lean>
+    distinct<K extends RecordKeysResult<TModelParts> = never>(conditions: Object, field: string,  callback?: (err: any, res: RecordResult<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, DeepPopulate,'A', MResults<TModelParts>[K], Lean>;
 
 
     // Typiclally all of these should start from scratch again, were Lean should be reset.
@@ -2314,14 +2485,14 @@ Lean extends 'T' |'F' = 'F',
 
     limit(val: number): QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
-    // select<K extends keyof MResults<TModelParts>>(arg: K):
-    //     QueryEnhanced<TModelParts, DeepPopulate, 'O', Pick<MResults<TModelParts>, K> & {_id:ObjectGetValue<MResults<TModelParts>, '_id'>}, Lean>;
+    select<K extends RecordKeysResult<TModelParts>>(arg: K):
+         QueryEnhanced<TModelParts, DeepPopulate, 'O', Pick<RecordResult<TModelParts>, K> & {_id:TModelParts['__Id']}, Lean>;
 
-    //select<Paths extends ExtractTranformValidate<Schema,Paths>>(arg: string):
-    //    QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, 'O', Primative, Lean>;
+    select<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(arg: string):
+        QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
-    //select<Paths extends ExtractTranformValidate<Schema,Paths>>(arg: Object):
-    //   QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>
+    select<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(arg: Object):
+       QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>
 
     where(path?: string, val?: any): 
         QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
@@ -2352,11 +2523,9 @@ Lean extends 'T' |'F' = 'F',
     exists(val?: boolean): QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
     exists(path: string, val?: boolean): QueryEnhanced<TModelParts, DeepPopulate, 'O', Primative, Lean>;
 
-    $where(condition?: string): 
-    QueryEnhanced<TModelParts, DeepPopulate, 'O'>;
+    $where(condition?: string): QueryEnhanced<TModelParts, DeepPopulate, 'O'>;
 
-    $where(funCondition: (this: (QueryResultsDocumentModel<TModelParts, DeepPopulate, 'O', undefined, 'T'>)) => boolean): 
-    QueryEnhanced<TModelParts, DeepPopulate, 'O'>;
+    $where(funCondition: (this: (QueryRecord<TModelParts>)) => boolean): QueryEnhanced<TModelParts, DeepPopulate, 'O'>;
 
     /*
     lt(val: number): Query<T>;
@@ -2367,153 +2536,153 @@ Lean extends 'T' |'F' = 'F',
 }
 
 
-type IModB = IMModelParts<string, {
-    modBRD : 'RequiredDefault'
-}, {
-    modBRND  : 'RequiredNoDefault'
-}, {
-    modBOD  : 'OptionalDefault'
-}, {
-    modBOND  : 'OptionalNoDefault'
-}, {
-   readonly ReadBRD  : 'RequiredDefault'
-}, {
-    readonly ReadBRND  : 'RequiredNoDefault'
-}, {
-    readonly ReadBOD  : 'OptionalDefault'
-}, {
-    readonly ReadBOND  : 'OptionalNoDefault'
-}, {
-    refB : string,
-    refNeastedB : string,
-    refNeastedBUndefined : string,
-    refNeastedBArrayUndefined : Array<string>
-},
-{},
-{
-    refB: IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
-    refNeastedB : IShapeTSArrayNeasted<IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>, 'Req', 'Get', 'Nullable'>, 
-    refNeastedBRecord : IShapeTSArrayRecord<{
-        ref : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>
-    }, 'Req', 'Get', 'Nullable'>,
-    refBB : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
-}>;
+// type IModB = IMModelParts<string, {
+//     modBRD : 'RequiredDefault'
+// }, {
+//     modBRND  : 'RequiredNoDefault'
+// }, {
+//     modBOD  : 'OptionalDefault'
+// }, {
+//     modBOND  : 'OptionalNoDefault'
+// }, {
+//    readonly ReadBRD  : 'RequiredDefault'
+// }, {
+//     readonly ReadBRND  : 'RequiredNoDefault'
+// }, {
+//     readonly ReadBOD  : 'OptionalDefault'
+// }, {
+//     readonly ReadBOND  : 'OptionalNoDefault'
+// }, {
+//     refB : string,
+//     refNeastedB : string,
+//     refNeastedBUndefined : string,
+//     refNeastedBArrayUndefined : Array<string>
+// },
+// {},
+// {
+//     refB: IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
+//     refNeastedB : IShapeTSArrayNeasted<IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>, 'Req', 'Get', 'Nullable'>, 
+//     refNeastedBRecord : IShapeTSArrayRecord<{
+//         ref : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>
+//     }, 'Req', 'Get', 'Nullable'>,
+//     refBB : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
+// }>;
 
-const modelB = {} as IModel<IModB>
+// const modelB = {} as IModel<IModB>
 
-type ModelAParts = IMModelParts<string, {
-    modRD : 'RequiredDefault', 
-}, {
-    modRND  : 'RequiredNoDefault'
-}, {
-    modOD  : 'OptionalDefault'
-}, {
-    modOND  : 'OptionalNoDefault'
-}, {
-   readonly ReadRD  : 'RequiredDefault'
-}, {
-    readonly ReadRND  : 'RequiredNoDefault'
-}, {
-    readonly ReadOD  : 'OptionalDefault'
-}, {
-    readonly ReadOND  : 'OptionalNoDefault'
-}, 
-    undefined,
-{},
-{
-    refA : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
-    refNeastedA : IShapeTSArrayNeasted<IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>, 'Op', 'Get', 'Nullable'>, // this requires lookahead.
-    refNeastedArrayRecord : IShapeTSArrayRecord<{
-        ref : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>
-    }, 'Req', 'Get', 'Nullable'>,
-    refNeastedRecord : IShapeTSRecord<{
-        ref : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>
-    }, 'Req', 'Get', 'Nullable'>,
-    refAA : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
-}>
+// type ModelAParts = IMModelParts<string, {
+//     modRD : 'RequiredDefault', 
+// }, {
+//     modRND  : 'RequiredNoDefault'
+// }, {
+//     modOD  : 'OptionalDefault'
+// }, {
+//     modOND  : 'OptionalNoDefault'
+// }, {
+//    readonly ReadRD  : 'RequiredDefault'
+// }, {
+//     readonly ReadRND  : 'RequiredNoDefault'
+// }, {
+//     readonly ReadOD  : 'OptionalDefault'
+// }, {
+//     readonly ReadOND  : 'OptionalNoDefault'
+// }, 
+//     undefined,
+// {},
+// {
+//     refA : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
+//     refNeastedA : IShapeTSArrayNeasted<IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>, 'Op', 'Get', 'Nullable'>, // this requires lookahead.
+//     refNeastedArrayRecord : IShapeTSArrayRecord<{
+//         ref : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>
+//     }, 'Req', 'Get', 'Nullable'>,
+//     refNeastedRecord : IShapeTSRecord<{
+//         ref : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>
+//     }, 'Req', 'Get', 'Nullable'>,
+//     refAA : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
+// }>
 
-const modelA = {} as IModel<ModelAParts>
+// const modelA = {} as IModel<ModelAParts>
 
 
-//modelA.update({id: ''},{}) // This is working.
+// //modelA.update({id: ''},{}) // This is working.
 
-// type rrr = ExtractValidate<{
-//     refA : IShapeTSRef<IModB>,
-//     refNeastedA : IShapeTSArrayNeasted<mm>, // this requires lookahead.
-//     refNeastedRecord : IShapeTSArrayRecord<{
-//         ref : IShapeTSRef<IModB>
-//     }>,
-//     refAA : IShapeTSRef<IModB>,
-// },{}>
+// // type rrr = ExtractValidate<{
+// //     refA : IShapeTSRef<IModB>,
+// //     refNeastedA : IShapeTSArrayNeasted<mm>, // this requires lookahead.
+// //     refNeastedRecord : IShapeTSArrayRecord<{
+// //         ref : IShapeTSRef<IModB>
+// //     }>,
+// //     refAA : IShapeTSRef<IModB>,
+// // },{}>
 
-type results = ExtractMRefTypesStr<ModelAParts['__ModRef'], 'refA' | 'refAA' | 'refNeastedA','T'>;
+// type results = ExtractMRefTypesStr<ModelAParts['__ModRef'], 'refA' | 'refAA' | 'refNeastedA','T'>;
 
-const test : results = {
-    refA:{
+// const test : results = {
+//     refA:{
     
-    }
-}
+//     }
+// }
 
-const res : results;
+// const res : results;
 
-res!.refNeastedRecord!.ref
-
-
-type rrrrr = ExtractMRefTypes<ModelAParts['__ModRef'], {refA:{refB:{refBB:{refNeastedBRecord:{ref:{}}}}, refNeastedRecord:{ref:{}}}, refNeastedA:{
-    refNeastedBRecord:{ref:{}}
-}, refAA:{
-    refB:{}
-}, refNeastedRecord:{ref:{refAA:{}}}}, 'F'>
-
-const rrrr : rrrrr = {
-refA: {
-refB
-}
-
-}
-rrrr!.refNeastedRecord!.ref!.
-rrrr!.refA = null
-rrrr!.refNeastedA!.refNeastedBRecord!.ref!.refNeastedBRecord!.ref;
-rrrr.refA.refB.refBB.refNeastedBRecord.ref.refNeastedBRecord.ref;
-rrrr.refAA.refB.refNeastedBRecord.ref;
-rrrr.refNeastedRecord.ref.refNeastedBRecord.ref;
+// res!.refNeastedRecord!.ref
 
 
+// type rrrrr = ExtractMRefTypes<ModelAParts['__ModRef'], {refA:{refB:{refBB:{refNeastedBRecord:{ref:{}}}}, refNeastedRecord:{ref:{}}}, refNeastedA:{
+//     refNeastedBRecord:{ref:{}}
+// }, refAA:{
+//     refB:{}
+// }, refNeastedRecord:{ref:{refAA:{}}}}, 'F'>
 
+// const rrrr : rrrrr = {
+// refA: {
+// refB
+// }
 
-type uuuu = Record<string,never> extends typeof rrrr.refNeastedA ? 'T' :'F'
+// }
+// rrrr!.refNeastedRecord!.ref!.
+// rrrr!.refA = null
+// rrrr!.refNeastedA!.refNeastedBRecord!.ref!.refNeastedBRecord!.ref;
+// rrrr.refA.refB.refBB.refNeastedBRecord.ref.refNeastedBRecord.ref;
+// rrrr.refAA.refB.refNeastedBRecord.ref;
+// rrrr.refNeastedRecord.ref.refNeastedBRecord.ref;
 
 
 
-modelA.findById('').populate('refA').lean(false).exec(function (err, results) {
 
-    test(results)
-});
-
-
-modelA.deepPopulate<{refA:{}, refAA:{}}>('refA').lean(false).exec(function (err, results) {
-
-    results.refNeastedA = 2323
-
-    test(results)
-});
+// type uuuu = Record<string,never> extends typeof rrrr.refNeastedA ? 'T' :'F'
 
 
 
-function test <T extends DocumentEnhanced<ModelAParts,''>>(rec : T)//ModelAParts & {__ModRefIds:{a:{}}},''>>(rec : T)
-{
+// modelA.findById('').populate('refA').lean(false).exec(function (err, results) {
 
-    testA(rec);
-
-    rec.save(function(err, results) {
-        results.save();
-    });
-}
+//     test(results)
+// });
 
 
-function testA<T extends DocumentEnhanced<ModelAParts,''>>(rec : T)
-{
-    rec..exec(function(err, results) {
-        results.save();
-    });
-}
+// modelA.deepPopulate<{refA:{}, refAA:{}}>('refA').lean(false).exec(function (err, results) {
+
+//     results.refNeastedA = 2323
+
+//     test(results)
+// });
+
+
+
+// function test <T extends DocumentEnhanced<ModelAParts,''>>(rec : T)//ModelAParts & {__ModRefIds:{a:{}}},''>>(rec : T)
+// {
+
+//     testA(rec);
+
+//     rec.save(function(err, results) {
+//         results.save();
+//     });
+// }
+
+
+// function testA<T extends DocumentEnhanced<ModelAParts,''>>(rec : T)
+// {
+//     rec..exec(function(err, results) {
+//         results.save();
+//     });
+// }
