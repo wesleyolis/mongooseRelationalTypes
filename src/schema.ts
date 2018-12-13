@@ -1555,7 +1555,7 @@ KeysOfPaths extends keyof Paths = keyof Paths> =
                       //  : T[K]['__tsType']['__Id'] // Look Head for 
                 //: 
                 MResults<T[K]['__tsType']> & ExtractMRefTypes<T[K]['__tsType']['__ModRef'], {}, IDS,  Paths[K]>
-                : T[K]['__tsType']['__Id']>
+                :  IDS extends 'T' ? T[K]['__tsType']['__Id'] : unknown >
 
 
                 // If we have a fake key, which matches, is there another way in  next iteration, when key matches
@@ -1644,7 +1644,7 @@ type ExtractMRefTypesStr<T extends Record<string, any>, Paths extends string, ID
         'AR' : ApplyMods<T[K], ExtractMRefTypesStr<T[K]['__tsType'], never, IDS>>
         'Ref' : ApplyMods<T[K], K extends Paths ? MResults<T[K]['__tsType']> & 
              ExtractMRefTypesStr<T[K]['__tsType']['__ModRef'], never, IDS>
-        : T[K]['__tsType']['__Id']>
+        :  IDS extends 'T' ? T[K]['__tsType']['__Id'] : unknown >
     })[T[K]['__ID']]
 }
 
@@ -1786,8 +1786,9 @@ type MNewRecord<TModelParts extends IMModelParts<any, any, any, any, any, any, a
     TModelParts['__ReadOND']
 
 type MUpdate<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
-    Partial<TModelParts['__ModRD']> &
-    Partial<TModelParts['__ModRND']> &
+    Partial<TModelParts['__ModRD']> &   // Clearly loose things at times, mongo can only update a full document, which means don't need the partial here.
+    Partial<TModelParts['__ModRND']> &  // Same as the satment above, so I could simplify things. This is not the end of the world. Just cross check it with partials.
+   // This meant that I main giong to differentiate between readonly and mod fields, in mods fields those that have defaults.
     TModelParts['__ModOD'] &
     TModelParts['__ModOND']
 
@@ -1955,6 +1956,15 @@ export type ObjectGetValue<O extends Record<string,any>, K extends string> = O[K
 // It going to be much better that if someone want to use gards and handle both that the expclity spesify that in
 // __ModRefIds. I can't see a reason why not to do that there not a common case anyways.
 // Cool lets get on with things I guess..
+// The other problem with this it that the modifiers will be lost, that is a problem.
+// which means how do we preseve the modifiers, mmm..
+// parrallel datastructure, were results type is pick and then wrapped with the existing modifiers.
+// that is the only way this going to work.
+// It would also be dowable.
+// deepPopulate, populdate, RefModifiers going to leave for now.
+// just id's in the results. Then update the C# generator at layer 2
+// So that I can get some performance and results out, from the theoretically much simplifier
+// approached the the really slow implementation, that things evolved into.
 
       
 // Need to just decided on how and when to apply the transform.
@@ -1967,13 +1977,10 @@ ResultRecord = TModelParts['__ModRefIds'] extends undefined ? MResults<TModelPar
 RecordTransformed = 
 //TModelParts['__ModRefIds'] extends undefined ? ResultRecord :
 TPopulate extends string ? 
-//ResultRecord & 
-TModelParts['__ModRef'] :
-//ExtractMRefTypesStr<TModelParts['__ModRef'], TPopulate,'T'> :// TModelParts['__ModRefIds'] extends undefined ? 'T' :'F'> : 
+ResultRecord & ExtractMRefTypesStr<TModelParts['__ModRef'], TPopulate, TModelParts['__ModRefIds'] extends undefined ? 'T' :'F'> : 
 keyof TPopulate extends never ? ResultRecord : 
-TPopulate extends Record<string, any> ? ResultRecord & ExtractMRefTypes<TModelParts['__ModRef'], TPopulate,'T'>//, TModelParts['__ModRefIds'] extends undefined ? 'T' :'F'>
-: 
-'Invalid Option here'
+TPopulate extends Record<string, any> ? ResultRecord & ExtractMRefTypes<TModelParts['__ModRef'], TPopulate, TModelParts['__ModRefIds'] extends undefined ? 'T' :'F'>
+: 'Invalid Option here'
 > = Lean extends 'T' ? Primative extends undefined ? 
         ArrayOfResults extends 'O' ? 
             RecordTransformed
@@ -2416,7 +2423,10 @@ type ModelAParts = IMModelParts<string, {
 {
     refA : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
     refNeastedA : IShapeTSArrayNeasted<IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>, 'Op', 'Get', 'Nullable'>, // this requires lookahead.
-    refNeastedRecord : IShapeTSArrayRecord<{
+    refNeastedArrayRecord : IShapeTSArrayRecord<{
+        ref : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>
+    }, 'Req', 'Get', 'Nullable'>,
+    refNeastedRecord : IShapeTSRecord<{
         ref : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>
     }, 'Req', 'Get', 'Nullable'>,
     refAA : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
@@ -2449,7 +2459,7 @@ const res : results;
 res!.refNeastedRecord!.ref
 
 
-type rrrrr = ExtractMRefTypes<ModelAParts['__ModRef'], {refA:{refB:{refBB:{refNeastedBRecord:{ref:{}}}}}, refNeastedA:{
+type rrrrr = ExtractMRefTypes<ModelAParts['__ModRef'], {refA:{refB:{refBB:{refNeastedBRecord:{ref:{}}}}, refNeastedRecord:{ref:{}}}, refNeastedA:{
     refNeastedBRecord:{ref:{}}
 }, refAA:{
     refB:{}
@@ -2461,6 +2471,7 @@ refB
 }
 
 }
+rrrr!.refNeastedRecord!.ref!.
 rrrr!.refA = null
 rrrr!.refNeastedA!.refNeastedBRecord!.ref!.refNeastedBRecord!.ref;
 rrrr.refA.refB.refBB.refNeastedBRecord.ref.refNeastedBRecord.ref;
