@@ -183,48 +183,48 @@ type uu =  NarrowsPathKeys<'b', [['b']], '0', '0'>
 
 // doesn't work wrapping 'w' issues, works at top level, because I am alreayd wrapping arrrays..
 // how to fix this..
-export type ExtractRelationShipTypeFromArray<T extends any, Paths extends {[index:string] : any}, Depth extends string, PathKeys extends string>
- = T extends Array<infer I> ? 
-    I extends Record<string, any> ? 
-        ExtractRelationshipType<I, Paths, Depth, PathKeys> [] 
-        :  
-        //ExtractRelationshipTypeItem<'', {}, [[]], '0', ''> []
+// export type ExtractRelationShipTypeFromArray<T extends any, Paths extends {[index:string] : any}, Depth extends string, PathKeys extends string>
+//  = T extends Array<infer I> ? 
+//     I extends Record<string, any> ? 
+//         ExtractRelationshipType<I, Paths, Depth, PathKeys> [] 
+//         :  
+//         //ExtractRelationshipTypeItem<'', {}, [[]], '0', ''> []
         
-    :
-    ExtractRelationshipType<T, Paths, Depth, PathKeys>
+//     :
+//     ExtractRelationshipType<T, Paths, Depth, PathKeys>
 
-export type ExtractRelationshipTypeItem<K extends string, T extends any, Paths extends {[index:string] : any}, Depth extends string = '0', Keys extends string = keyof ExtractArrayItems<Paths>, iterate extends {[index:string] : string} = itemElements> = 
+// export type ExtractRelationshipTypeItem<K extends string, T extends any, Paths extends {[index:string] : any}, Depth extends string = '0', Keys extends string = keyof ExtractArrayItems<Paths>, iterate extends {[index:string] : string} = itemElements> = 
     
-    NarrowsPathKeys<K, Paths, Depth, Keys> extends '' ?         
-        Depth extends '2' ? K & 'T' & T[K] :    
-        T[K] extends Ref<any, any> ?
-            T[K]['RefId'] 
-        : ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth], ''>
+//     NarrowsPathKeys<K, Paths, Depth, Keys> extends '' ?         
+//         Depth extends '2' ? K & 'T' & T[K] :    
+//         T[K] extends Ref<any, any> ?
+//             T[K]['RefId'] 
+//         : ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth], ''>
         
-    :
-    T[K] extends Ref<any, any> ? 
-        ExtractRelationShipTypeFromArray<T[K]['RefImplem'], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> 
-    : ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> 
+//     :
+//     T[K] extends Ref<any, any> ? 
+//         ExtractRelationShipTypeFromArray<T[K]['RefImplem'], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> 
+//     : ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> 
 
 
-// Need to add array iteration support, add  supports for arrays..
-export type ExtractRelationshipType<T extends any, Paths extends {[index:string] : any}, Depth extends string = '0', Keys extends string = keyof ExtractArrayItems<Paths>, iterate extends {[index:string] : string} = itemElements> = 
-{
-    [K in keyof T] : ExtractRelationshipTypeItem<K, T, Paths, Depth, Keys>
-/*
+// // Need to add array iteration support, add  supports for arrays..
+// export type ExtractRelationshipType<T extends any, Paths extends {[index:string] : any}, Depth extends string = '0', Keys extends string = keyof ExtractArrayItems<Paths>, iterate extends {[index:string] : string} = itemElements> = 
+// {
+//     [K in keyof T] : ExtractRelationshipTypeItem<K, T, Paths, Depth, Keys>
+// /*
 
-    NarrowsPathKeys<K, Paths, Depth, Keys> extends '' ?         
-        Depth extends '2' ? K & 'T' & T[K] :    
-        T[K] extends Ref<any, any> ?
-            //K & 'T' & T[K]
-            T[K]['RefId'] 
-        : ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth], ''>
+//     NarrowsPathKeys<K, Paths, Depth, Keys> extends '' ?         
+//         Depth extends '2' ? K & 'T' & T[K] :    
+//         T[K] extends Ref<any, any> ?
+//             //K & 'T' & T[K]
+//             T[K]['RefId'] 
+//         : ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth], ''>
         
-    :
-    T[K] extends Ref<any, any> ? 
-        ExtractRelationShipTypeFromArray<T[K]['RefImplem'], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> 
-    : ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> */
-}
+//     :
+//     T[K] extends Ref<any, any> ? 
+//         ExtractRelationShipTypeFromArray<T[K]['RefImplem'], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> 
+//     : ExtractRelationShipTypeFromArray<T[K], Paths, iterate[Depth], NarrowsPathKeys<K, Paths, Depth, Keys>> */
+// }
 
 type SchemaArrayTest = {
     e : 'e'    
@@ -240,29 +240,29 @@ type SchemaArray = {
     }
 }
 
-type rrr = ExtractRelationshipType<SchemaArray, [['b','e']
-//,['c','e']
-]>
+// type rrr = ExtractRelationshipType<SchemaArray, [['b','e']
+// //,['c','e']
+// ]>
 
-const mm : rrr = {
-   // a : 1,
-    /*b : {
-        e :
-        //'B-E'
-        {
-            e :
-            'e'
-        }
-    },*/
-    c : {
-        e:
-        'C-E'
-       /* {
-            e :
-            'e'
-        }*/
-    }
-}
+// const mm : rrr = {
+//    // a : 1,
+//     /*b : {
+//         e :
+//         //'B-E'
+//         {
+//             e :
+//             'e'
+//         }
+//     },*/
+//     c : {
+//         e:
+//         'C-E'
+//        /* {
+//             e :
+//             'e'
+//         }*/
+//     }
+// }
 
 /*
 
@@ -376,7 +376,7 @@ export type itemElements = {
     '19' : '20'
 }
 
-export type ExtractArrayItems<T> = ObjectOmit<T, keyof Array<never>>
+//export type ExtractArrayItems<T> = ObjectOmit<T, keyof Array<never>>
 
 export type ObjectOmit<T, K extends string> = {
     [P in 
@@ -445,36 +445,36 @@ Paths extends '' ? ExtractRelationshipTypeKeyRefIf<T>
 }
 
 
-const MongooseTypes = {
-    String : () => void,
-    Boolean : () => void
-}
+// const MongooseTypes = {
+//     String : () => void,
+//     Boolean : () => void
+// }
 
-var schema = new Schema({
-    name:    String,
-    binary:  Buffer,
-    living:  Boolean,
-    updated: { type: Date, default: Date.now },
-    age:     { type: Number, min: 18, max: 65 },
-    mixed:   Schema.Types.Mixed,
-    _someId: Schema.Types.ObjectId,
-    decimal: Schema.Types.Decimal128,
-    array: [],
-    ofString: [String],
-    ofNumber: [Number],
-    ofDates: [Date],
-    ofBuffer: [Buffer],
-    ofBoolean: [Boolean],
-    ofMixed: [Schema.Types.Mixed],
-    ofObjectId: [Schema.Types.ObjectId],
-    ofArrays: [[]],
-    ofArrayOfNumbers: [[Number]],
-    nested: {
-      stuff: { type: String, lowercase: true, trim: true }
-    },
-    map: Map,
-    mapOfString: {
-      type: Map,
-      of: String
-    }
-  })
+// var schema = new Schema({
+//     name:    String,
+//     binary:  Buffer,
+//     living:  Boolean,
+//     updated: { type: Date, default: Date.now },
+//     age:     { type: Number, min: 18, max: 65 },
+//     mixed:   Schema.Types.Mixed,
+//     _someId: Schema.Types.ObjectId,
+//     decimal: Schema.Types.Decimal128,
+//     array: [],
+//     ofString: [String],
+//     ofNumber: [Number],
+//     ofDates: [Date],
+//     ofBuffer: [Buffer],
+//     ofBoolean: [Boolean],
+//     ofMixed: [Schema.Types.Mixed],
+//     ofObjectId: [Schema.Types.ObjectId],
+//     ofArrays: [[]],
+//     ofArrayOfNumbers: [[Number]],
+//     nested: {
+//       stuff: { type: String, lowercase: true, trim: true }
+//     },
+//     map: Map,
+//     mapOfString: {
+//       type: Map,
+//       of: String
+//     }
+//   })

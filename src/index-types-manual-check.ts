@@ -107,7 +107,7 @@ function CapturePath<S extends {}, P extends Array<Array<string>>>(path : P) : E
 }
 
 const CapturePathCaseA = CapturePath([['']]); // results in never [][], which we need to design our system to handle.
-CapturePathCaseA.
+//CapturePathCaseA.
 
 // Good only let primary keys.
 let caseNoJoins : ExtractRelationshipType<LeftSchema, [never]> = {
