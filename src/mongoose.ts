@@ -2173,12 +2173,12 @@ ResultRecord = MRecordId<TModelParts> & (TModelParts['__ModRefIds'] extends unde
 RecordTransformed =  ResultRecord & ExtractMRefTypes<TModelParts['__ModRef'], TDeepPopulate, TPopulate, TModelParts['__ModRefIds'] extends undefined ? 'T' :'F'>
 > = Lean extends 'T' ? Primative extends undefined ? 
         ArrayOfResults extends 'O' ? 
-            RecordTransformed
+            RecordTransformed | null
         : Array<RecordTransformed>
         : Primative
     : ArrayOfResults extends 'O' ? 
-        Primative extends undefined ?
-            RecordTransformed & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel & MRecordId<TModelParts>
+        Primative extends undefined | null ?
+            RecordTransformed & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel & MRecordId<TModelParts> | null // unless you have the throw plug in, but then errors are not as clean as java and other languages, so stick to null, throws for all crazy case, then don't have direct interogate error message and tightly couple the system
             : Primative & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel & MRecordId<TModelParts>
         : Array<RecordTransformed & DocumentEnhanced<TModelParts, '',{}> & IDocumentModel & MRecordId<TModelParts>>
 
@@ -2196,7 +2196,7 @@ type QueryNewDocumentResults<TModelParts extends IMModelParts<any, any, any, any
 ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MResults<TModelParts> & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel
 
 type QueryDocumentResults<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
-ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MResults<TModelParts> & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel
+ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MResults<TModelParts> & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel | null | undefined
 
 type QueryResults<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
 ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MResults<TModelParts>
