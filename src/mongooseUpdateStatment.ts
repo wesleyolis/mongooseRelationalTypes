@@ -1,5 +1,3 @@
-import { AnyARecord, AnyAaaaRecord } from "dns";
-
 export interface NextIter
 {
   '0': '1',
@@ -215,8 +213,7 @@ export interface MUpdateStatment<T extends Record<any, any>> extends MUpdateStat
 // Should Rather use the builder pattern with a class here, that gets initialized as then return new object with methods on it for update.
 export function update(op : keyof MUpdateStatment<any>, updateStatement : MUpdateStatmentFor<any>, args : IArguments, value : any) : void
 {
-  const updatePath = Array.prototype.slice.call(arguments, 1);
-  updatePath.pop();
+  const updatePath = Array.prototype.slice.call(arguments, 1, arguments.length - 2);
   
   const updateStrPath = updatePath.join('.'); 
 
