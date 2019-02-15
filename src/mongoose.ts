@@ -1,11 +1,11 @@
 import * as Mongoose from 'mongoose'
-// import { MDocument } from './mongoose';
 import { Model as MonModel, Document, Query, Types, model } from "mongoose";
-// import { Aggregate } from 'mongoose';
+import { FindAndUpdateOption } from 'mongoose';
 import * as UpdateStatment from './mongooseUpdateStatment';
 export {UpdateStatment};
 
 import { MUpdateStatmentFor } from './mongooseUpdateStatment';
+
 
 export type ObjectId = Mongoose.Types.ObjectId;
 
@@ -19,6 +19,12 @@ export interface IDocumentModel
 {
     id: string;
 }
+
+export type ToJson<T extends any> = T extends infer U | undefined ? U extends GenOptionsPrimatives ? U : keyof U extends keyof Date ? string :
+U extends Record<string, any> ?
+{
+  [K in keyof U] : U[K] extends GenOptionsPrimatives ? U[K] : keyof U[K] extends keyof Date ? string : ToJson<U[K]>
+}: never : never;
 
 // export type OidOrStringRaw = IPlainType<ObjectId | string>;
 
@@ -36,6 +42,84 @@ declare module 'mongoose'
         }
     }
 
+    // export type QueryIdRequired<T> = Query<MakeIdRequired<T>>
+    // export type MakeIdRequired<T> = ObjectOmit<T,'id'> & {
+    //     id : string
+    // }
+
+    // export type MakeRecord<T> = ObjectOmit<T, StringOmit<keyof Document,'_id'>>
+
+    // export type MakeNewRecordDoc<T> = ObjectOmit<T, StringOmit<keyof Document, 'id'>>
+
+    // export type MakeResultRecordDoc<T> = ObjectOmit<T, '_id' | 'id'>
+
+    // export interface Model<T extends Document>
+    // //extends NodeJS.EventEmitter 
+    // {
+    //     newType : MakeNewRecordDoc<T>;
+
+    //     new(doc?: MakeNewRecordDoc<T>, fields?: Object, skipInit?: boolean): MakeResultRecordDoc<T>;
+
+    //     new(doc?: Object, fields?: Object, skipInit?: boolean): 'Invalid Record' & void;
+
+    //     aggregate<X>(...aggregations: Object[]): Aggregate<X[]>;
+    //     aggregate<X>(aggregation: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
+    //     aggregate<X>(aggregation1: Object, aggregation2: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
+    //     aggregate<X>(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
+
+    //     aggregate(...aggregations: Object[]): 'Invalid Record' & void;
+    //     aggregate(aggregation: Object, callback: (err: any, res: T[]) => void): 'Invalid Record' & void;
+    //     aggregate(aggregation1: Object, aggregation2: Object, callback: (err: any, res: T[]) => void): 'Invalid Record' & void;
+    //     aggregate(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: any, res: T[]) => void): 'Invalid Record' & void;
+        
+    //     distinct<X>(field: string, callback?: (err: any, res: X[]) => void): Query<X[]>;
+    //     distinct<X>(field: string, conditions: Object, callback?: (err: any, res: X[]) => void): Query<X[]>;
+
+    //     distinct(field: string, callback?: (err: any, res: T[]) => void): 'Invalid Record' & void;
+    //     distinct(field: string, conditions: Object, callback?: (err: any, res: T[]) => void): 'Invalid Record' & void;
+
+    //     findById(id: string | ObjectId, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findById(id: string | ObjectId, fields: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findById(id: string | ObjectId, fields: Object, options: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findByIdAndRemove(id: string | ObjectId, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findByIdAndRemove(id: string | ObjectId, options: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findByIdAndUpdate(id: string | ObjectId, update: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findByIdAndUpdate(id: string | ObjectId, update: Object, options: FindAndUpdateOption, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    
+    //     // sdsdfsdf
+    //     find(): QueryIdRequired<T[]>;
+    //     find(cond: Object, callback?: (err: any, res: MakeIdRequired<T>[]) => void): QueryIdRequired<T[]>;
+    //     find(cond: Object, fields: Object, callback?: (err: any, res: MakeIdRequired<T>[]) => void): QueryIdRequired<T[]>;
+    //     find(cond: Object, fields: Object, options: Object, callback?: (err: any, res: MakeIdRequired<T>[]) => void): QueryIdRequired<T[]>;
+        
+    //     findOne(cond?: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findOne(cond: Object, fields: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findOne(cond: Object, fields: Object, options: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+
+    //     create(doc: MakeRecord<T>, fn?: (err: any, res: MakeIdRequired<T>) => void): Promise<QueryIdRequired<T>>;
+    //     create(doc1: MakeRecord<T>, doc2: Object, fn?: (err: any, res1: MakeIdRequired<T>, res2: MakeIdRequired<T>) => void): Promise<QueryIdRequired<T>[]>;
+    //     create(doc1: MakeRecord<T>, doc2: Object, doc3: Object, fn?: (err: any, res1: MakeIdRequired<T>, res2: MakeIdRequired<T>, res3: MakeIdRequired<T>) => void): Promise<QueryIdRequired<T>[]>;
+    
+    //     // Could here never here, but it doesn't work. so a message and void would be better as the person knows what actually wrong.
+    //     // since the compiler doen't actually sort things out properly.
+    //     create(doc: Object, fn?: (err: any, res: T) => void) : 'Invalid Record' & void;
+    //     create(doc1: Object, doc2: Object, fn?: (err: any, res1: T, res2: T) => void): 'Invalid Record' & void;
+    //     create(doc1: Object, doc2: Object, doc3: Object, fn?: (err: any, res1: T, res2: T, res3: T) => void): 'Invalid Record' & void;
+   
+    //     count(conditions: Object, callback?: (err: any, count: number) => void): Query<number>;
+
+    // }
+
+    // export interface Query<T> {
+    //     lean(): Query<ObjectOmit<T, StringOmit<keyof Document, '_id'>>>;
+    //     lean(bool : true): Query<ObjectOmit<T, StringOmit<keyof Document, '_id'>>>;
+    //     lean(bool? : true): Query<ObjectOmit<T, StringOmit<keyof Document, '_id'>>>;
+    //     lean(bool? : undefined): Query<ObjectOmit<T, StringOmit<keyof Document, '_id'>>>;
+    // }
+
+    // export interface Document {
+    //     save<T>(callback?: (err: any, res: MakeIdRequired<T>) => void): void;
+    // }
 }
 
 export type ICPT<T> = {
@@ -2076,7 +2160,7 @@ declare module 'mongoose'
 //     > (name: string, schema?: Schema, collection?: string, skipInit?: boolean): IModel<ModelExtracted>
 
      function model<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>
-    > (name: string, schema?: Schema, collection?: string, skipInit?: boolean): IModel<TModelParts>
+    > (name: string, schema?: mongoose.Schema, collection?: string, skipInit?: boolean): IModel<TModelParts>
 
     export module Types {
 
@@ -2163,6 +2247,27 @@ export type ObjectGetValue<O extends Record<string,any>, K extends string> = O[K
 
       
 // Need to just decided on how and when to apply the transform.
+
+
+export type QueryResultsDocumentModelNotNullable<TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>,
+TPopulate extends string,
+TDeepPopulate extends Record<string, any>,
+ArrayOfResults extends 'A' | 'O' = 'O',
+Primative extends undefined | unknown = undefined,
+Lean extends 'T' | 'F' = 'F',
+ResultRecord = MRecordId<TModelParts> & (TModelParts['__ModRefIds'] extends undefined ? MResults<TModelParts> : MResults<TModelParts> & TModelParts['__ModRefIds']),
+RecordTransformed =  ResultRecord & ExtractMRefTypes<TModelParts['__ModRef'], TDeepPopulate, TPopulate, TModelParts['__ModRefIds'] extends undefined ? 'T' :'F'>
+> = Lean extends 'T' ? Primative extends undefined ? 
+        ArrayOfResults extends 'O' ? 
+            RecordTransformed | null
+        : Array<RecordTransformed>
+        : Primative
+    : ArrayOfResults extends 'O' ? 
+        Primative extends undefined ?
+            RecordTransformed & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel & MRecordId<TModelParts> | null
+            : Primative & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel & MRecordId<TModelParts>
+        : Array<RecordTransformed & DocumentEnhanced<TModelParts, '',{}> & IDocumentModel & MRecordId<TModelParts>>
+
 export type QueryResultsDocumentModel<TModelParts extends IMModelParts<string, any, any, any, any, any, any, any, any, any, any, any>,
 TPopulate extends string,
 TDeepPopulate extends Record<string, any>,
@@ -2177,11 +2282,10 @@ RecordTransformed =  ResultRecord & ExtractMRefTypes<TModelParts['__ModRef'], TD
         : Array<RecordTransformed>
         : Primative
     : ArrayOfResults extends 'O' ? 
-        Primative extends undefined | null ?
-            RecordTransformed & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel & MRecordId<TModelParts> | null // unless you have the throw plug in, but then errors are not as clean as java and other languages, so stick to null, throws for all crazy case, then don't have direct interogate error message and tightly couple the system
+        Primative extends undefined ?
+            RecordTransformed & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel & MRecordId<TModelParts> | null
             : Primative & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel & MRecordId<TModelParts>
         : Array<RecordTransformed & DocumentEnhanced<TModelParts, '',{}> & IDocumentModel & MRecordId<TModelParts>>
-
 
 type QueryRecord<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
     ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MResults<TModelParts>
@@ -2195,8 +2299,10 @@ type QueryUpdateRecord<TModelParts extends IMModelParts<any, any, any, any, any,
 type QueryNewDocumentResults<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
 ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MResults<TModelParts> & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel
 
-type QueryDocumentResults<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
-ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MResults<TModelParts> & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel | null | undefined
+type QueryDocumentResults<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = QueryDocumentResultsNotNullable<TModelParts> | null
+
+type QueryDocumentResultsNotNullable<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
+ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MResults<TModelParts> & DocumentEnhanced<TModelParts,'', {}> & IDocumentModel
 
 type QueryResults<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>> = 
 ExtractMRefTypesStr<TModelParts['__ModRef'],'','T'> & MResults<TModelParts>
@@ -2229,7 +2335,7 @@ export interface IModel<TModelParts extends IMModelParts<any, any, any, any, any
     // distinct<K extends _ResultRecordDocumentKeys>(field: K, conditions: Object, callback?: (err: any, res: _ResultRecordDocument[K][]) => void): QueryEnhanced<Schema[K][],{},Schema[K][]>
     // distinct<K extends _ResultRecordDocumentKeys = never>(field: string, conditions: Object, callback?: (err: any, res: _ResultRecordDocument[K][]) => void): QueryEnhanced<Schema[K][],{},Schema[K][]>;
 
-   // aggregate<X>(...aggregations: Object[]): mongoose.Aggregate<X[]>;
+    aggregate<X>(...aggregations: Object[]): mongoose.Aggregate<X[]>;
     aggregate<X>(aggregation: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
     aggregate<X>(aggregation1: Object, aggregation2: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
     aggregate<X>(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
@@ -2244,23 +2350,23 @@ export interface IModel<TModelParts extends IMModelParts<any, any, any, any, any
             
     find(): QueryEnhanced<TModelParts, '', {}, 'A'>;
     // I haven't taken the array wrapping into arroud for transform, I will need to strip that.
-    find(cond: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>[]) => void): QueryEnhanced<TModelParts, '', {}, 'A'>;
-    find(cond: Object, fields: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>[]) => void): QueryEnhanced<TModelParts, '', {}, 'A'>;
-    find(cond: Object, fields: Object, options: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>[]) => void): QueryEnhanced<TModelParts, '', {}, 'A'>;
+    find(cond: Object, callback?: (err: any, res: QueryDocumentResultsNotNullable<TModelParts>[]) => void): QueryEnhanced<TModelParts, '', {}, 'A'>;
+    find(cond: Object, fields: Object, callback?: (err: any, res: QueryDocumentResultsNotNullable<TModelParts>[]) => void): QueryEnhanced<TModelParts, '', {}, 'A'>;
+    find(cond: Object, fields: Object, options: Object, callback?: (err: any, res: QueryDocumentResultsNotNullable<TModelParts>[]) => void): QueryEnhanced<TModelParts, '', {}, 'A'>;
     findById(id: TModelParts['__Id'], callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
     findById(id: TModelParts['__Id'], fields: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
     findById(id: TModelParts['__Id'], fields: Object, options: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
     findByIdAndRemove(id: TModelParts['__Id'], callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
     findByIdAndRemove(id: TModelParts['__Id'], options: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
     findByIdAndUpdate(id: TModelParts['__Id'], update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findByIdAndUpdate(id: TModelParts['__Id'], update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: any, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
+    findByIdAndUpdate(id: TModelParts['__Id'], update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: FindAndUpdateOption, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
     findOne(cond?: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
     findOne(cond: Object, fields: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
     findOne(cond: Object, fields: Object, options: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
     findOneAndRemove(cond: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
     findOneAndRemove(cond: Object, options: Object, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
     findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: any, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
+    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: FindAndUpdateOption, callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
 
     //populate<U>(doc: U, options: Object, callback?: (err: any, res: U) => void): Promise<U>;
     //populate<U>(doc: U[], options: Object, callback?: (err: any, res: U[]) => void): Promise<U[]>;
@@ -2270,7 +2376,7 @@ export interface IModel<TModelParts extends IMModelParts<any, any, any, any, any
     update(cond: Object, update: {$pull?:Object, $set?:Object, $addToSet?: Object} | QueryUpdateRecord<TModelParts> | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: Object, callback?: (err: any, affectedRows: number, raw: any) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
     remove(cond: Object, callback?: (err: any) => void): Query<{}>;
 
-    save(callback?: (err: any, result: QueryDocumentResults<TModelParts>, numberAffected: number) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
+    save(callback?: (err: any, result: QueryDocumentResultsNotNullable<TModelParts>, numberAffected: number) => void): QueryEnhanced<TModelParts, '', {}, 'O'>;
 
     // Need to look into this.
     //where(path: string, val?: Object): Query<T[]>;
@@ -2292,7 +2398,7 @@ export interface DocumentNewEnhanced<TModelParts extends IMModelParts<string, an
 {
     //__TModelParts : TModelParts;
     
-    save(callback?: (err: any, res: MResults<TModelParts> & DocumentEnhanced<TModelParts, '', {}>) => void): Promise<MResults<TModelParts> & DocumentEnhanced<TModelParts, '', {}>>;
+    save(callback?: (err: any, res: QueryDocumentResultsNotNullable<TModelParts>) => void): Promise<QueryDocumentResultsNotNullable<TModelParts>>;
 
     // Might needs some other form here going to use results, we shall see.
     equals<docType extends MResults<TModelParts>>(doc: docType): boolean;
@@ -2312,7 +2418,7 @@ export interface DocumentNewEnhanced<TModelParts extends IMModelParts<string, an
 
     validate(cb: (err: any) => void): void;
 
-    toJSON(options?: Object): QueryResults<TModelParts>;
+    toJSON(options?: Object): ToJson<QueryResults<TModelParts>>;
     toObject(options?: Object): QueryResults<TModelParts>;
 
     isNew: boolean;
@@ -2328,7 +2434,7 @@ DeepPopulate extends Record<string, any>> //extends Document
    // __TModelParts : TModelParts;
     //__TDeepPopulate : DeepPopulate;
 
-    save(callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void): Promise<QueryDocumentResults<TModelParts>>;
+    save(callback?: (err: any, res: QueryDocumentResultsNotNullable<TModelParts>) => void): Promise<QueryDocumentResultsNotNullable<TModelParts>>;
 
     equals<docType extends RecordResult<TModelParts>>(doc: docType): boolean;
 
@@ -2346,14 +2452,12 @@ DeepPopulate extends Record<string, any>> //extends Document
     deepPopulate<Paths extends  ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: Array<string>, 
         callback?: (err: any, res: QueryResultsDocumentModel<TModelParts, TPopulate, Paths>) => void) : void    
 
-    // QueryEnhanced<RawSchema, SchemaReadOnly, TransformRaw<SchemaPartial,Paths>, Lean>;
-
     remove<T>(callback?: (err: any) => void): QueryEnhanced<TModelParts>;
 
     update<T>(doc: Object, options: Object, callback: (err: any, affectedRows: number, raw: any) => void): QueryEnhanced<TModelParts>;
 
-    toJSON(options?: Object): QueryResultsDocumentModel<TModelParts, TPopulate, DeepPopulate, 'O', undefined, 'T'>;
-    toObject(options?: Object): QueryResultsDocumentModel<TModelParts, TPopulate, DeepPopulate>;
+    toJSON(options?: Object): ToJson<QueryResultsDocumentModelNotNullable<TModelParts, TPopulate, DeepPopulate, 'O', undefined, 'T'>>;
+    toObject(options?: Object): QueryResultsDocumentModelNotNullable<TModelParts, TPopulate, DeepPopulate, 'O', undefined, 'T'>;
 
     validate(cb: (err: any) => void): void;
 
@@ -2403,10 +2507,6 @@ Lean extends 'T' |'F' = 'F',
     exec(operation: Function, callback?: (err: any, res: QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>) => void):
     Promise<QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>>;
 
-    // populate<K extends keyof TModelParts['__ModRefIds'], Sel extends keyof TransformPartial<SchemaPartial,K>[K]>
-    // (path: K, select: Sel, match?: Object, options?: Object):
-    // QueryEnhanced<RawSchema, {}, ObjectKeyPick<TransformPartial<SchemaPartial,K>,K,Sel>, ArrayOfResults, Primative, Lean>;
-
     populate<K extends Extract<keyof TModelParts['__ModRef'], string>>(path: K, select: undefined, match?: Object, options?: Object):
     QueryEnhanced<TModelParts, Populate | K, DeepPopulate, ArrayOfResults, Primative, Lean>;
 
@@ -2437,7 +2537,6 @@ Lean extends 'T' |'F' = 'F',
     QueryEnhanced<TModelParts, Populate, Paths, ArrayOfResults, Primative, Lean>;
 
 
-    //  QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, ArrayOfResults ,'T'>;
     //  distinct(callback?: (err: any, res: T) => void): Query<T>;
     //  distinct(field: string, callback?: (err: any, res: T) => void): Query<T>;
     //  distinct(criteria: Object, field: string, callback?: (err: any, res: T) => void): Query<T>;
@@ -2483,7 +2582,7 @@ Lean extends 'T' |'F' = 'F',
     findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, callback?: (err: any, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>;
-    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: any, callback?: (err: any, res: 
+    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: FindAndUpdateOption, callback?: (err: any, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>;
 
@@ -2575,5 +2674,176 @@ Lean extends 'T' |'F' = 'F',
     lte(path: string, val: number): Query<T>;
     */
 }
+
+
+// type IModB = IMModelParts<string, {
+//     modBRD : 'RequiredDefault'
+// }, {
+//     modBRND  : 'RequiredNoDefault'
+// }, {
+//     modBOD  : 'OptionalDefault'
+// }, {
+//     modBOND  : 'OptionalNoDefault'
+// }, {
+//    readonly ReadBRD  : 'RequiredDefault'
+// }, {
+//     readonly ReadBRND  : 'RequiredNoDefault'
+// }, {
+//     readonly ReadBOD  : 'OptionalDefault'
+// }, {
+//     readonly ReadBOND  : 'OptionalNoDefault'
+// }, {
+//     refB : string,
+//     refNeastedB : string,
+//     refNeastedBUndefined : string,
+//     refNeastedBArrayUndefined : Array<string>
+// },
+// {},
+// {
+//     refB: IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
+//     refNeastedB : IShapeTSArrayNeasted<IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>, 'Req', 'Get', 'Nullable'>, 
+//     refNeastedBRecord : IShapeTSArrayRecord<{
+//         ref : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>
+//     }, 'Req', 'Get', 'Nullable'>,
+//     refBB : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
+// }>;
+
+// const modelB = {} as IModel<IModB>
+
+// type ModelAParts = IMModelParts<string, {
+//     modRD : 'RequiredDefault', 
+// }, {
+//     modRND  : 'RequiredNoDefault'
+// }, {
+//     modOD  : 'OptionalDefault'
+// }, {
+//     modOND  : 'OptionalNoDefault'
+// }, {
+//    readonly ReadRD  : 'RequiredDefault'
+// }, {
+//     readonly ReadRND  : 'RequiredNoDefault'
+// }, {
+//     readonly ReadOD  : 'OptionalDefault'
+// }, {
+//     readonly ReadOND  : 'OptionalNoDefault'
+// }, 
+//     undefined,
+// {},
+// {
+//     refA : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
+//     refNeastedA : IShapeTSArrayNeasted<IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>, 'Op', 'Get', 'Nullable'>, // this requires lookahead.
+//     refNeastedArrayRecord : IShapeTSArrayRecord<{
+//         ref : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>
+//     }, 'Req', 'Get', 'Nullable'>,
+//     refNeastedRecord : IShapeTSRecord<{
+//         ref : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>
+//     }, 'Req', 'Get', 'Nullable'>,
+//     refAA : IShapeTSRef<IModB, 'Req', 'Get', 'Nullable'>,
+// }>
+
+// const modelA = {} as IModel<ModelAParts>
+
+
+// //modelA.update({id: ''},{}) // This is working.
+
+// // type rrr = ExtractValidate<{
+// //     refA : IShapeTSRef<IModB>,
+// //     refNeastedA : IShapeTSArrayNeasted<mm>, // this requires lookahead.
+// //     refNeastedRecord : IShapeTSArrayRecord<{
+// //         ref : IShapeTSRef<IModB>
+// //     }>,
+// //     refAA : IShapeTSRef<IModB>,
+// // },{}>
+
+// type results = ExtractMRefTypesStr<ModelAParts['__ModRef'], 'refA' | 'refAA' | 'refNeastedA','T'>;
+
+// const test : results = {
+//     refA:{
+    
+//     }
+// }
+
+// const res : results;
+
+// res!.refNeastedRecord!.ref
+
+
+// type rrrrr = ExtractMRefTypes<ModelAParts['__ModRef'], {refA:{refB:{refBB:{refNeastedBRecord:{ref:{}}}}, refNeastedRecord:{ref:{}}}, refNeastedA:{
+//     refNeastedBRecord:{ref:{}}
+// }, refAA:{
+//     refB:{}
+// }, refNeastedRecord:{ref:{refAA:{}}}}, 'F'>
+
+// const rrrr : rrrrr = {
+// refA: {
+// refB
+// }
+
+// }
+// rrrr!.refNeastedRecord!.ref!.
+// rrrr!.refA = null
+// rrrr!.refNeastedA!.refNeastedBRecord!.ref!.refNeastedBRecord!.ref;
+// rrrr.refA.refB.refBB.refNeastedBRecord.ref.refNeastedBRecord.ref;
+// rrrr.refAA.refB.refNeastedBRecord.ref;
+// rrrr.refNeastedRecord.ref.refNeastedBRecord.ref;
+
+
+
+
+// type uuuu = Record<string,never> extends typeof rrrr.refNeastedA ? 'T' :'F'
+
+
+
+// modelA.findById('').populate('refA').lean(false).exec(function (err, results) {
+
+//     test(results)
+// });
+
+
+// modelA.deepPopulate<{refA:{}, refAA:{}}>('refA').lean(false).exec(function (err, results) {
+
+//     results.refNeastedA = 2323
+
+//     test(results)
+// });
+
+
+
+// function test <T extends DocumentEnhanced<ModelAParts,''>>(rec : T)//ModelAParts & {__ModRefIds:{a:{}}},''>>(rec : T)
+// {
+
+//     testA(rec);
+
+//     rec.save(function(err, results) {
+//         results.save();
+//     });
+// }
+
+
+// function testA<T extends DocumentEnhanced<ModelAParts,''>>(rec : T)
+// {
+//     rec..exec(function(err, results) {
+//         results.save();
+//     });
+// // }
+// db.FinancialProduct.findById(id).populate('lookups').populate('jurisdiction')
+// .populate<'neasted', {documentRequirements:{documentTypes:{}}}>('documentRequirements.documentTypes')
+
+/*
+
+export type IFinancialProductModRefSchema = {
+  company: IShapeTSRef<RefSchema.ICompanySchemaModelParts, 'Req', 'Set', 'Value'>;
+  documentRequirements: IShapeTSArrayNeasted<IShapeTSRef<RefSchema.IDocumentRequirementSchemaModelParts, 'Req', 'Set', 'Value'>,'Req', 'Get', 'Value'>;
+  financialTransactionConfigurationSet: IShapeTSRef<RefSchema.IFinancialTransactionConfigurationSetSchemaModelParts, 'Op', 'Set', 'Value'>;
+  interestRate: IShapeTSRecord<
+{
+    deriver: IShapeTSRef<RefSchema.IFunctionLibrarySchemaModelParts, 'Req', 'Set', 'Value'>;
+  }, 'Req', 'Set', 'Value'>
+;
+  jurisdiction: IShapeTSRef<RefSchema.IJurisdictionSchemaModelParts, 'Req', 'Set', 'Value'>;
+  lookups: IShapeTSArrayNeasted<IShapeTSRef<RefSchema.ILookupSchemaModelParts, 'Req', 'Set', 'Value'>,'Req', 'Get', 'Value'>;
+  messageTemplate: IShapeTSArrayNeasted<IShapeTSRef<RefSchema.IMessageTemplateSchemaModelParts, 'Req', 'Set', 'Value'>,'Req', 'Get', 'Value'>;
+}
+*/
 
 
