@@ -172,3 +172,17 @@ schema.findById('...').deepPopuldate<{neastedliteralObject:neastedRef{}}>('neast
 // We types we allow them to work to gather so can use populate or 
 
 ```
+
+# New Record
+```
+const updateModel = model<ISchemaModelParts<...>(SchemaName);
+
+const newRecord: typeof updateModel.newType = {
+// All the required fields, those with defaults are optional here.
+}
+updteModel.new(newRecord).exec().then(function(results){
+    results.populate('FieldA')..
+    result.save().then
+});
+
+```
