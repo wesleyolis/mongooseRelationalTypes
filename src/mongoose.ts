@@ -62,50 +62,50 @@ declare module 'mongoose'
     //     new(doc?: Object, fields?: Object, skipInit?: boolean): 'Invalid Record' & void;
 
     //     aggregate<X>(...aggregations: Object[]): Aggregate<X[]>;
-    //     aggregate<X>(aggregation: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
-    //     aggregate<X>(aggregation1: Object, aggregation2: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
-    //     aggregate<X>(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
+    //     aggregate<X>(aggregation: Object, callback: (err: Error, res: X[]) => void): Promise<X[]>;
+    //     aggregate<X>(aggregation1: Object, aggregation2: Object, callback: (err: Error, res: X[]) => void): Promise<X[]>;
+    //     aggregate<X>(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: Error, res: X[]) => void): Promise<X[]>;
 
     //     aggregate(...aggregations: Object[]): 'Invalid Record' & void;
-    //     aggregate(aggregation: Object, callback: (err: any, res: T[]) => void): 'Invalid Record' & void;
-    //     aggregate(aggregation1: Object, aggregation2: Object, callback: (err: any, res: T[]) => void): 'Invalid Record' & void;
-    //     aggregate(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: any, res: T[]) => void): 'Invalid Record' & void;
+    //     aggregate(aggregation: Object, callback: (err: Error, res: T[]) => void): 'Invalid Record' & void;
+    //     aggregate(aggregation1: Object, aggregation2: Object, callback: (err: Error, res: T[]) => void): 'Invalid Record' & void;
+    //     aggregate(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: Error, res: T[]) => void): 'Invalid Record' & void;
         
-    //     distinct<X>(field: string, callback?: (err: any, res: X[]) => void): Query<X[]>;
-    //     distinct<X>(field: string, conditions: Object, callback?: (err: any, res: X[]) => void): Query<X[]>;
+    //     distinct<X>(field: string, callback?: (err: Error, res: X[]) => void): Query<X[]>;
+    //     distinct<X>(field: string, conditions: Object, callback?: (err: Error, res: X[]) => void): Query<X[]>;
 
-    //     distinct(field: string, callback?: (err: any, res: T[]) => void): 'Invalid Record' & void;
-    //     distinct(field: string, conditions: Object, callback?: (err: any, res: T[]) => void): 'Invalid Record' & void;
+    //     distinct(field: string, callback?: (err: Error, res: T[]) => void): 'Invalid Record' & void;
+    //     distinct(field: string, conditions: Object, callback?: (err: Error, res: T[]) => void): 'Invalid Record' & void;
 
-    //     findById(id: string | ObjectId, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
-    //     findById(id: string | ObjectId, fields: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
-    //     findById(id: string | ObjectId, fields: Object, options: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
-    //     findByIdAndRemove(id: string | ObjectId, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
-    //     findByIdAndRemove(id: string | ObjectId, options: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
-    //     findByIdAndUpdate(id: string | ObjectId, update: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
-    //     findByIdAndUpdate(id: string | ObjectId, update: Object, options: FindAndUpdateOption, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findById(id: string | ObjectId, callback?: (err: Error, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findById(id: string | ObjectId, fields: Object, callback?: (err: Error, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findById(id: string | ObjectId, fields: Object, options: Object, callback?: (err: Error, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findByIdAndRemove(id: string | ObjectId, callback?: (err: Error, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findByIdAndRemove(id: string | ObjectId, options: Object, callback?: (err: Error, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findByIdAndUpdate(id: string | ObjectId, update: Object, callback?: (err: Error, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findByIdAndUpdate(id: string | ObjectId, update: Object, options: FindAndUpdateOption, callback?: (err: Error, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
     
     //     // sdsdfsdf
     //     find(): QueryIdRequired<T[]>;
-    //     find(cond: Object, callback?: (err: any, res: MakeIdRequired<T>[]) => void): QueryIdRequired<T[]>;
-    //     find(cond: Object, fields: Object, callback?: (err: any, res: MakeIdRequired<T>[]) => void): QueryIdRequired<T[]>;
-    //     find(cond: Object, fields: Object, options: Object, callback?: (err: any, res: MakeIdRequired<T>[]) => void): QueryIdRequired<T[]>;
+    //     find(cond: Object, callback?: (err: Error, res: MakeIdRequired<T>[]) => void): QueryIdRequired<T[]>;
+    //     find(cond: Object, fields: Object, callback?: (err: Error, res: MakeIdRequired<T>[]) => void): QueryIdRequired<T[]>;
+    //     find(cond: Object, fields: Object, options: Object, callback?: (err: Error, res: MakeIdRequired<T>[]) => void): QueryIdRequired<T[]>;
         
-    //     findOne(cond?: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
-    //     findOne(cond: Object, fields: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
-    //     findOne(cond: Object, fields: Object, options: Object, callback?: (err: any, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findOne(cond?: Object, callback?: (err: Error, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findOne(cond: Object, fields: Object, callback?: (err: Error, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
+    //     findOne(cond: Object, fields: Object, options: Object, callback?: (err: Error, res: MakeIdRequired<T>) => void): QueryIdRequired<T>;
 
-    //     create(doc: MakeRecord<T>, fn?: (err: any, res: MakeIdRequired<T>) => void): Promise<QueryIdRequired<T>>;
-    //     create(doc1: MakeRecord<T>, doc2: Object, fn?: (err: any, res1: MakeIdRequired<T>, res2: MakeIdRequired<T>) => void): Promise<QueryIdRequired<T>[]>;
-    //     create(doc1: MakeRecord<T>, doc2: Object, doc3: Object, fn?: (err: any, res1: MakeIdRequired<T>, res2: MakeIdRequired<T>, res3: MakeIdRequired<T>) => void): Promise<QueryIdRequired<T>[]>;
+    //     create(doc: MakeRecord<T>, fn?: (err: Error, res: MakeIdRequired<T>) => void): Promise<QueryIdRequired<T>>;
+    //     create(doc1: MakeRecord<T>, doc2: Object, fn?: (err: Error, res1: MakeIdRequired<T>, res2: MakeIdRequired<T>) => void): Promise<QueryIdRequired<T>[]>;
+    //     create(doc1: MakeRecord<T>, doc2: Object, doc3: Object, fn?: (err: Error, res1: MakeIdRequired<T>, res2: MakeIdRequired<T>, res3: MakeIdRequired<T>) => void): Promise<QueryIdRequired<T>[]>;
     
     //     // Could here never here, but it doesn't work. so a message and void would be better as the person knows what actually wrong.
     //     // since the compiler doen't actually sort things out properly.
-    //     create(doc: Object, fn?: (err: any, res: T) => void) : 'Invalid Record' & void;
-    //     create(doc1: Object, doc2: Object, fn?: (err: any, res1: T, res2: T) => void): 'Invalid Record' & void;
-    //     create(doc1: Object, doc2: Object, doc3: Object, fn?: (err: any, res1: T, res2: T, res3: T) => void): 'Invalid Record' & void;
+    //     create(doc: Object, fn?: (err: Error, res: T) => void) : 'Invalid Record' & void;
+    //     create(doc1: Object, doc2: Object, fn?: (err: Error, res1: T, res2: T) => void): 'Invalid Record' & void;
+    //     create(doc1: Object, doc2: Object, doc3: Object, fn?: (err: Error, res1: T, res2: T, res3: T) => void): 'Invalid Record' & void;
    
-    //     count(conditions: Object, callback?: (err: any, count: number) => void): Query<number>;
+    //     count(conditions: Object, callback?: (err: Error, count: number) => void): Query<number>;
 
     // }
 
@@ -117,7 +117,7 @@ declare module 'mongoose'
     // }
 
     // export interface Document {
-    //     save<T>(callback?: (err: any, res: MakeIdRequired<T>) => void): void;
+    //     save<T>(callback?: (err: Error, res: MakeIdRequired<T>) => void): void;
     // }
 }
 
@@ -2316,6 +2316,20 @@ export type PickObjectValue<O extends Record<string, any>, Path extends Array<st
   PickObjectValue<O[TPath[Iter]], Path, Iterator[Iter]>
 }[Iter]
 
+export interface MFindAndUpdateOption {
+  new?: boolean;
+  upsert?: boolean;
+  sort?: Object;
+  select?: Object;
+  multi?: boolean;
+  strict?: boolean;
+}
+
+// This can be improved.. just don't know were I have field all the types
+// that I did for conditions now, because the I could just copy and past them.
+// probably on my pc.
+export type MFindAndUpdateCondition = Record<string, any> | string;
+
 export interface IModel<TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>>
 {
     rootKeyNameType: keyof RecordKeysResult<TModelParts>;
@@ -2334,104 +2348,110 @@ export interface IModel<TModelParts extends IMModelParts<any, any, any, any, any
 
     deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: Array<string>) : QueryEnhanced<TModelParts, '', Paths>;
 
-    create(doc: QueryNewRecord<TModelParts>, fn?: (err: any, res: MResults<TModelParts> & DocumentEnhanced<TModelParts, '',  {}>) => void): Promise<QueryNewDocumentResults<TModelParts>>;
-    create(doc1: QueryNewRecord<TModelParts>, doc2: QueryNewRecord<TModelParts>, fn?: (err: any, res1: QueryNewDocumentResults<TModelParts>, res2: QueryNewDocumentResults<TModelParts>) => void): Promise<QueryNewDocumentResults<TModelParts>[]>;
-    create(doc1: QueryNewRecord<TModelParts>, doc2: QueryNewRecord<TModelParts>, doc3: QueryNewRecord<TModelParts>, fn?: (err: any, res1: QueryNewDocumentResults<TModelParts>, res2: QueryNewDocumentResults<TModelParts>, res3: QueryNewDocumentResults<TModelParts>) => void): Promise<QueryNewDocumentResults<TModelParts>[]>;
+    create(doc: QueryNewRecord<TModelParts>, fn?: (err: Error, res: MResults<TModelParts> & DocumentEnhanced<TModelParts, '',  {}>) => void): Promise<QueryNewDocumentResults<TModelParts>>;
+    create(doc1: QueryNewRecord<TModelParts>, doc2: QueryNewRecord<TModelParts>, fn?: (err: Error, res1: QueryNewDocumentResults<TModelParts>, res2: QueryNewDocumentResults<TModelParts>) => void): Promise<QueryNewDocumentResults<TModelParts>[]>;
+    create(doc1: QueryNewRecord<TModelParts>, doc2: QueryNewRecord<TModelParts>, doc3: QueryNewRecord<TModelParts>, fn?: (err: Error, res1: QueryNewDocumentResults<TModelParts>, res2: QueryNewDocumentResults<TModelParts>, res3: QueryNewDocumentResults<TModelParts>) => void): Promise<QueryNewDocumentResults<TModelParts>[]>;
     
 
     // Not finished...
     // distincts are lean in the callback by definition
-    // distinct<K extends _ResultRecordDocumentKeys>(field: K, callback?: (err: any, res: _ResultRecordDocument[K][]) => void): QueryEnhanced<Schema[K][],{},Schema[K][]>;
-    // distinct<K extends _ResultRecordDocumentKeys = never>(field: string, callback?: (err: any, res: _ResultRecordDocument[K][]) => void): QueryEnhanced<Schema[K][],{},Schema[K][]>;
-    // distinct<K extends _ResultRecordDocumentKeys>(field: K, conditions: Object, callback?: (err: any, res: _ResultRecordDocument[K][]) => void): QueryEnhanced<Schema[K][],{},Schema[K][]>
-    // distinct<K extends _ResultRecordDocumentKeys = never>(field: string, conditions: Object, callback?: (err: any, res: _ResultRecordDocument[K][]) => void): QueryEnhanced<Schema[K][],{},Schema[K][]>;
+    // distinct<K extends _ResultRecordDocumentKeys>(field: K, callback?: (err: Error, res: _ResultRecordDocument[K][]) => void): QueryEnhanced<Schema[K][],{},Schema[K][]>;
+    // distinct<K extends _ResultRecordDocumentKeys = never>(field: string, callback?: (err: Error, res: _ResultRecordDocument[K][]) => void): QueryEnhanced<Schema[K][],{},Schema[K][]>;
+    // distinct<K extends _ResultRecordDocumentKeys>(field: K, conditions: Object, callback?: (err: Error, res: _ResultRecordDocument[K][]) => void): QueryEnhanced<Schema[K][],{},Schema[K][]>
+    // distinct<K extends _ResultRecordDocumentKeys = never>(field: string, conditions: Object, callback?: (err: Error, res: _ResultRecordDocument[K][]) => void): QueryEnhanced<Schema[K][],{},Schema[K][]>;
 
-    aggregate<X>(...aggregations: Object[]): mongoose.Aggregate<X[]>;
-    aggregate<X>(aggregation: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
-    aggregate<X>(aggregation1: Object, aggregation2: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
-    aggregate<X>(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: any, res: X[]) => void): Promise<X[]>;
+    aggregate<X = QueryDocumentResultsNotNullable<TModelParts>>(...aggregations: Object[]): Aggregate<X>;
+
+    aggregate<X = QueryDocumentResultsNotNullable<TModelParts>>(aggregation: Object): Promise<X[]>;
+    aggregate<X = QueryDocumentResultsNotNullable<TModelParts>>(aggregation: Object, callback: ((err: Error, res: X[]) => void) | undefined): Promise<X[]>;
+
+    aggregate<X = QueryDocumentResultsNotNullable<TModelParts>>(aggregation1: Object, aggregation2: Object): Promise<X[]>;
+    aggregate<X = QueryDocumentResultsNotNullable<TModelParts>>(aggregation1: Object, aggregation2: Object, callback: (err: Error, res: X[]) => void): void;
+    aggregate<X = QueryDocumentResultsNotNullable<TModelParts>>(aggregation1: Object, aggregation2: Object, callback: ((err: Error, res: X[]) => void) | undefined): Promise<X[]>;
+
+    aggregate<X = QueryDocumentResultsNotNullable<TModelParts>>(aggregation1: Object, aggregation2: Object, aggregation3: Object): Promise<X[]>;
+    aggregate<X = QueryDocumentResultsNotNullable<TModelParts>>(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: Error, res: X[]) => void): void;
+    aggregate<X = QueryDocumentResultsNotNullable<TModelParts>>(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: ((err: Error, res: X[]) => void) | undefined): Promise<X[]>;
 
     aggregate(...aggregations: Object[]): 'Invalid Record' & void;
-    aggregate(aggregation: Object, callback: (err: any, res: any[]) => void): 'Invalid Record' & void;
-    aggregate(aggregation1: Object, aggregation2: Object, callback: (err: any, res: any[]) => void): 'Invalid Record' & void;
-    aggregate(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: any, res: any[]) => void): 'Invalid Record' & void;
+    aggregate(aggregation: Object, callback: (err: Error, res: any[]) => void): 'Invalid Record' & void;
+    aggregate(aggregation1: Object, aggregation2: Object, callback: (err: Error, res: any[]) => void): 'Invalid Record' & void;
+    aggregate(aggregation1: Object, aggregation2: Object, aggregation3: Object, callback: (err: Error, res: any[]) => void): 'Invalid Record' & void;
  
     
-    // findById(id: TModelParts['__Id'], callback?: (err: any, res: QueryDocumentResults<TModelParts>) => void) : QueryEnhanced<TModelParts>;
+    // findById(id: TModelParts['__Id'], callback?: (err: Error, res: QueryDocumentResults<TModelParts>) => void) : QueryEnhanced<TModelParts>;
             
     find(): QueryEnhanced<TModelParts, '', {}, 'A'>;
     // I haven't taken the array wrapping into arroud for transform, I will need to strip that.
-    find(cond: Object): QueryEnhanced<TModelParts, '', {}, 'A'>;
-    find<TCallBack extends ((err: any, res: QueryDocumentResultsNotNullable<TModelParts>[]) => void) | undefined>(cond: Object, callback: TCallBack): TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'A'> : void;
-   
-    find(cond: Object, fields: Object): QueryEnhanced<TModelParts, '', {}, 'A'>;
-    find<TCallBack extends ((err: any, res: QueryDocumentResultsNotNullable<TModelParts>[]) => void) | undefined>(cond: Object, fields: Object, callback: TCallBack):TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'A'> : void;
-    
-    find(cond: Object, fields: Object, options: Object): QueryEnhanced<TModelParts, '', {}, 'A'>;
-    find<TCallBack extends ((err: any, res: QueryDocumentResultsNotNullable<TModelParts>[]) => void) | undefined>(cond: Object, fields: Object, options: Object, callback: TCallBack): TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'A'> :  void;
-    
-    
+
+    find(cond: Record<string,any>): QueryEnhanced<TModelParts, '', {}, 'A'>;
+    find(cond: Object, fields: never): QueryEnhanced<TModelParts, '', {}, 'A'>;
+    find(cond: Object, callback: (err: Error, res: QueryDocumentResultsNotNullable<TModelParts>[]) => void): void;
+    find(cond: Object, fields: MFindAndUpdateCondition): QueryEnhanced<TModelParts, '', {}, 'A'>;
+    find(cond: Object, fields: MFindAndUpdateCondition, callback: (err: Error, res: QueryDocumentResultsNotNullable<TModelParts>[]) => void): void;
+    find(cond: Object, fields: MFindAndUpdateCondition, options: Object): QueryEnhanced<TModelParts, '', {}, 'A'>;
+    find(cond: Object, fields: MFindAndUpdateCondition, options: MFindAndUpdateOption, callback: (err: Error, res: QueryDocumentResultsNotNullable<TModelParts>[]) => void): void;
+
     findById(id: TModelParts['__Id']): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findById<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(id: TModelParts['__Id'], callback: TCallBack): TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
-    
-    findById(id: TModelParts['__Id'], fields: Object): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findById<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(id: TModelParts['__Id'], fields: Object, callback?: TCallBack): TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
-    
-    findById(id: TModelParts['__Id'], fields: Object, options: Object): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findById<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(id: TModelParts['__Id'], fields: Object, options: Object, callback?: TCallBack): TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
+    findById(id: TModelParts['__Id'], callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
+    findById(id: TModelParts['__Id'], fields: MFindAndUpdateCondition): QueryEnhanced<TModelParts, '', {}, 'O'>;
+    findById(id: TModelParts['__Id'], fields: MFindAndUpdateCondition, callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
+    findById(id: TModelParts['__Id'], fields: MFindAndUpdateCondition, options: MFindAndUpdateOption): QueryEnhanced<TModelParts, '', {}, 'O'>;
+    findById(id: TModelParts['__Id'], fields: MFindAndUpdateCondition, options: MFindAndUpdateOption, callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
+
+
     
     findByIdAndRemove(id: TModelParts['__Id']): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findByIdAndRemove<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(id: TModelParts['__Id'], callback: TCallBack): TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
+    findByIdAndRemove(id: TModelParts['__Id'], callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
+    findByIdAndRemove(id: TModelParts['__Id'], options: MFindAndUpdateOption): QueryEnhanced<TModelParts, '', {}, 'O'>;
+    findByIdAndRemove(id: TModelParts['__Id'], options: MFindAndUpdateOption, callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
     
-    findByIdAndRemove(id: TModelParts['__Id'], options: Object): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findByIdAndRemove<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(id: TModelParts['__Id'], options: Object, callback: TCallBack): TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
-        
     findByIdAndUpdate(id: TModelParts['__Id'], update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findByIdAndUpdate<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(id: TModelParts['__Id'], update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, callback: TCallBack):  TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
-    
-    findByIdAndUpdate(id: TModelParts['__Id'], update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: FindAndUpdateOption): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findByIdAndUpdate<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(id: TModelParts['__Id'], update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: FindAndUpdateOption, callback: TCallBack):  TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
-    
+    findByIdAndUpdate(id: TModelParts['__Id'], update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
+    findByIdAndUpdate(id: TModelParts['__Id'], update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: MFindAndUpdateOption): QueryEnhanced<TModelParts, '', {}, 'O'>;
+    findByIdAndUpdate(id: TModelParts['__Id'], update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: MFindAndUpdateOption, callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
+
     findOne(): QueryEnhanced<TModelParts, '', {}, 'O'>;
 
     findOne(cond: Object): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findOne<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(cond: Object, callback: TCallBack): TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
-    
-    findOne(cond: Object, fields: Object): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findOne<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(cond: Object, fields: Object, callback: TCallBack): TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
-    
-    findOne(cond: Object, fields: Object, options: Object): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findOne<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(cond: Object, fields: Object, options: Object, callback: TCallBack): TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
-    
-    findOneAndRemove(cond: Object): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findOneAndRemove<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(cond: Object, callback: TCallBack): TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
-    findOneAndRemove(cond: Object, options: Object): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findOneAndRemove<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(cond: Object, options: Object, callback: TCallBack): TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
-    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findOneAndUpdate<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, callback: TCallBack):  TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
-    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: FindAndUpdateOption): QueryEnhanced<TModelParts, '', {}, 'O'>;
-    findOneAndUpdate<TCallBack extends ((err: any, res: QueryDocumentResults<TModelParts>) => void) | undefined>(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: FindAndUpdateOption, callback: TCallBack):  TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
+    findOne(cond: Object, callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
+    findOne(cond: Object, fields: MFindAndUpdateCondition): QueryEnhanced<TModelParts, '', {}, 'O'>;
+    findOne(cond: Object, fields: MFindAndUpdateCondition, callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
+    findOne(cond: Object, fields: MFindAndUpdateCondition, options: MFindAndUpdateOption): QueryEnhanced<TModelParts, '', {}, 'O'>;
+    findOne(cond: Object, fields: MFindAndUpdateCondition, options: MFindAndUpdateOption, callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
 
-    //populate<U>(doc: U, options: Object, callback?: (err: any, res: U) => void): Promise<U>;
-    //populate<U>(doc: U[], options: Object, callback?: (err: any, res: U[]) => void): Promise<U[]>;
+    findOneAndRemove(cond: Object): QueryEnhanced<TModelParts, '', {}, 'O'>;
+    findOneAndRemove(cond: Object, callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
+    findOneAndRemove(cond: Object, options: Object): QueryEnhanced<TModelParts, '', {}, 'O'>;
+    findOneAndRemove(cond: Object, options: MFindAndUpdateOption, callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
+    
+    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>): QueryEnhanced<TModelParts, '', {}, 'O'>;
+    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
+    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: MFindAndUpdateOption): QueryEnhanced<TModelParts, '', {}, 'O'>;
+    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: MFindAndUpdateOption, callback: (err: Error, res: QueryDocumentResults<TModelParts>) => void): void;
+
+    //populate<U>(doc: U, options: Object, callback?: (err: Error, res: U) => void): Promise<U>;
+    //populate<U>(doc: U[], options: Object, callback?: (err: Error, res: U[]) => void): Promise<U[]>;
 
     // These schema may need to change but I will have to look that up.
+   
     update(cond: Object, update: {$pull?:Object, $set?:Object, $addToSet?: Object} | QueryUpdateRecord<TModelParts> | MUpdateStatmentFor<MUpdateStatment<TModelParts>>):QueryEnhanced<TModelParts, '', {}, 'O', number, 'T'>;
-    update<TCallBack extends ((err: Error, affectedRows: number) => void) | undefined>(cond: Object, update: {$pull?:Object, $set?:Object, $addToSet?: Object} | QueryUpdateRecord<TModelParts> | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, callback: TCallBack): TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O', number, 'T'> : void;
-    update(cond: Object, update: {$pull?:Object, $set?:Object, $addToSet?: Object} | QueryUpdateRecord<TModelParts> | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: Object) : QueryEnhanced<TModelParts, '', {}, 'O', number, 'T'>;
-    update<TCallBack extends ((err: Error, affectedRows: number) => void) | undefined>(cond: Object, update: {$pull?:Object, $set?:Object, $addToSet?: Object} | QueryUpdateRecord<TModelParts> | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: Object, callback:TCallBack) : TCallBack extends undefined ? QueryEnhanced<TModelParts, '', {}, 'O', number, 'T'> : void;
+    update(cond: Object, update: {$pull?:Object, $set?:Object, $addToSet?: Object} | QueryUpdateRecord<TModelParts> | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, callback: (err: Error, affectedRows: number) => void): void;
+    update(cond: Object, update: {$pull?:Object, $set?:Object, $addToSet?: Object} | QueryUpdateRecord<TModelParts> | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: MFindAndUpdateOption) : QueryEnhanced<TModelParts, '', {}, 'O', number, 'T'>;
+    update(cond: Object, update: {$pull?:Object, $set?:Object, $addToSet?: Object} | QueryUpdateRecord<TModelParts> | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: MFindAndUpdateOption, callback:(err: Error, affectedRows: number) => void): void;
+    
     remove(cond: Object, callback?: (err: any) => void): Query<{}>;
 
     save(): QueryEnhanced<TModelParts, '', {}, 'O'>;
 
-    save<TCallBack extends ((err: any, result: QueryDocumentResultsNotNullable<TModelParts>, numberAffected: number) => void) | undefined>(callback: TCallBack): undefined extends TCallBack ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
+    save<TCallBack extends ((err: Error, result: QueryDocumentResultsNotNullable<TModelParts>, numberAffected: number) => void) | undefined>(callback: TCallBack): undefined extends TCallBack ? QueryEnhanced<TModelParts, '', {}, 'O'> : void;
     // Need to look into this.
     //where(path: string, val?: Object): Query<T[]>;
 
     // These can be broken up even better, to improve performance.
-    count(callback?: (err: any, count: number) => void): QueryEnhanced<TModelParts, '', {}, 'O', number>;
+    count(callback?: (err: Error, count: number) => void): QueryEnhanced<TModelParts, '', {}, 'O', number>;
 
-    count(criteria: Object, callback?: (err: any, count: number) => void): QueryEnhanced<TModelParts, '', {}, 'O', number>;
+    count(criteria: Object, callback?: (err: Error, count: number) => void): QueryEnhanced<TModelParts, '', {}, 'O', number>;
 
     $where(condition?: string): QueryEnhanced<TModelParts, '', {}, 'O'>;
 
@@ -2447,7 +2467,7 @@ export interface DocumentNewEnhanced<TModelParts extends IMModelParts<string, an
     
     save(): Promise<QueryDocumentResultsNotNullable<TModelParts>>;
 
-    save<TCallBack extends ((err: any, res: QueryDocumentResultsNotNullable<TModelParts>) => void) | undefined>(callback: TCallBack): undefined extends TCallBack ? Promise<QueryDocumentResultsNotNullable<TModelParts>> : void;
+    save<TCallBack extends ((err: Error, res: QueryDocumentResultsNotNullable<TModelParts>) => void) | undefined>(callback: TCallBack): undefined extends TCallBack ? Promise<QueryDocumentResultsNotNullable<TModelParts>> : void;
 
 
     // Might needs some other form here going to use results, we shall see.
@@ -2486,29 +2506,29 @@ DeepPopulate extends Record<string, any>> //extends Document
 
     save(): Promise<QueryDocumentResultsNotNullable<TModelParts>>;
 
-    save<TCallBack extends ((err: any, res: QueryDocumentResultsNotNullable<TModelParts>) => void) | undefined>(callback: TCallBack): undefined extends TCallBack ? Promise<QueryDocumentResultsNotNullable<TModelParts>> : void;
+    save<TCallBack extends ((err: Error, res: QueryDocumentResultsNotNullable<TModelParts>) => void) | undefined>(callback: TCallBack): undefined extends TCallBack ? Promise<QueryDocumentResultsNotNullable<TModelParts>> : void;
 
     equals<docType extends RecordResult<TModelParts>>(doc: docType): boolean;
 
     populate<K extends Extract<keyof TModelParts['__ModRef'], string>>(path: K, callback?: 
-        (err: any, res: QueryResultsDocumentModel<TModelParts, TPopulate | K, DeepPopulate>) => void): DocumentEnhanced<TModelParts, TPopulate | K, DeepPopulate>
+        (err: Error, res: QueryResultsDocumentModel<TModelParts, TPopulate | K, DeepPopulate>) => void): DocumentEnhanced<TModelParts, TPopulate | K, DeepPopulate>
 
     // populate<Opt extends ExtractPopulateOption<SchemaPartial,Opt>>(opt: Opt, 
-    //     callback?: (err: any, res: any) => void): any
+    //     callback?: (err: Error, res: any) => void): any
 
     // // deep populate now just stops everything else, need to implemented a look at head
     // // Record<string, any> = > Record<string,Record<string(dontcare),Record<string,any>>
     deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: string, 
-    callback?: (err: any, res: QueryResultsDocumentModel<TModelParts, TPopulate, Paths>) => void) : void
+    callback?: (err: Error, res: QueryResultsDocumentModel<TModelParts, TPopulate, Paths>) => void) : void
 
     deepPopulate<Paths extends  ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: Array<string>, 
-        callback?: (err: any, res: QueryResultsDocumentModel<TModelParts, TPopulate, Paths>) => void) : void    
+        callback?: (err: Error, res: QueryResultsDocumentModel<TModelParts, TPopulate, Paths>) => void) : void    
 
     // QueryEnhanced<RawSchema, SchemaReadOnly, TransformRaw<SchemaPartial,Paths>, Lean>;
 
     remove<T>(callback?: (err: any) => void): QueryEnhanced<TModelParts>;
 
-    update<T>(doc: Object, options: Object, callback: (err: any, affectedRows: number, raw?: any) => void): QueryEnhanced<TModelParts>;
+    update<T>(doc: Object, options: Object, callback: (err: Error, affectedRows: number, raw?: any) => void): QueryEnhanced<TModelParts>;
 
     toJSON(options?: Object): ToJson<QueryResultsDocumentModelNotNullable<TModelParts, TPopulate, DeepPopulate, 'O', undefined, 'T'>>;
     toObject(options?: Object): QueryResultsDocumentModelNotNullable<TModelParts, TPopulate, DeepPopulate, 'O', undefined, 'T'>;
@@ -2540,6 +2560,32 @@ DeepPopulate extends Record<string, any>> //extends Document
     schema: Object;
 }
 
+
+export interface Aggregate<T> {
+  //constructor(...options: Object[]);
+
+  append(...options: Object[]): Aggregate<T>;
+  group(arg: Object): Aggregate<T>;
+  limit(num: number): Aggregate<T>;
+  match(arg: Object): Aggregate<T>;
+  near(parameters: Object): Aggregate<T>;
+  project(arg: string): Aggregate<T>;
+  project(arg: Object): Aggregate<T>;
+  select(filter: string): Aggregate<T>;
+  skip(num: number): Aggregate<T>;
+  sort(arg: string): Aggregate<T>;
+  sort(arg: Object): Aggregate<T>;
+  unwind(fiels: string, ...rest: string[]): Aggregate<T>;
+
+  exec(callback?: (err: any, result: T) => void): Promise<T>;
+  read(pref: string, ...tags: Object[]): Aggregate<T>;
+
+  exec(): Promise<Array<T>>;
+
+  exec<TCallBack extends ((err: Error, res: Array<T>) => void) | undefined>
+  (callback: TCallBack): undefined extends TCallBack ? Promise<Array<T>> : void;
+}
+
 export interface QueryEnhanced<
 TModelParts extends IMModelParts<any, any, any, any, any, any, any, any, any, any, any, any>,
 Populate extends string = never,
@@ -2557,18 +2603,18 @@ TWhere = never
 
     exec(): Promise<QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>>;
 
-    exec<TCallBack extends ((err: any, res: QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>) => void) | undefined>
+    exec<TCallBack extends ((err: Error, res: QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>) => void) | undefined>
     (callback: TCallBack): undefined extends TCallBack ? Promise<QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>> : void;
 
-    exec<TCallBack extends ((err: any, res: QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>) => void) | undefined>
+    exec<TCallBack extends ((err: Error, res: QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>) => void) | undefined>
     (operation: string, callback: TCallBack): undefined extends TCallBack ? Promise<QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>> : void;
    
 
-    // exec(callback?: (err: any, res: QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>) => void):
+    // exec(callback?: (err: Error, res: QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>) => void):
     // Promise<QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>>;
-    // exec(operation: string, callback?: (err: any, res: QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>) => void):
+    // exec(operation: string, callback?: (err: Error, res: QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>) => void):
     // Promise<QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>>;
-    // exec(operation: Function, callback?: (err: any, res: QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>) => void):
+    // exec(operation: Function, callback?: (err: Error, res: QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>) => void):
     // Promise<QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>>;
 
     // populate<K extends keyof TModelParts['__ModRefIds'], Sel extends keyof TransformPartial<SchemaPartial,K>[K]>
@@ -2596,7 +2642,7 @@ TWhere = never
     
     // Still required to write a partial version of this.
     //populate<Opt extends ExtractPopulateOption<SchemaPartial,Opt>>(opt: Opt, 
-    //  callback?: (err: any, res: any) => void): any
+    //  callback?: (err: Error, res: any) => void): any
 
     deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: string) :
     QueryEnhanced<TModelParts, Populate, Paths, ArrayOfResults, Primative, Lean>;
@@ -2606,63 +2652,63 @@ TWhere = never
 
 
     //  QueryEnhanced<RawSchema, SchemaReadOnly, SchemaPartial, ArrayOfResults ,'T'>;
-    //  distinct(callback?: (err: any, res: T) => void): Query<T>;
-    //  distinct(field: string, callback?: (err: any, res: T) => void): Query<T>;
-    //  distinct(criteria: Object, field: string, callback?: (err: any, res: T) => void): Query<T>;
-    //  distinct(criteria: Query<T>, field: string, callback?: (err: any, res: T) => void): Query<T>;
+    //  distinct(callback?: (err: Error, res: T) => void): Query<T>;
+    //  distinct(field: string, callback?: (err: Error, res: T) => void): Query<T>;
+    //  distinct(criteria: Object, field: string, callback?: (err: Error, res: T) => void): Query<T>;
+    //  distinct(criteria: Query<T>, field: string, callback?: (err: Error, res: T) => void): Query<T>;
 
 
-    distinct<K extends RecordKeysResult<TModelParts>>(field: K, callback?: (err: any, res: RecordResult<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, Populate, DeepPopulate, 'A', MResults<TModelParts>[K], Lean>;
-    distinct<K extends RecordKeysResult<TModelParts> = never>(field: string, callback?: (err: any, res: RecordResult<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, Populate, DeepPopulate,'A', MResults<TModelParts>[K], Lean>;
+    distinct<K extends RecordKeysResult<TModelParts>>(field: K, callback?: (err: Error, res: RecordResult<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, Populate, DeepPopulate, 'A', MResults<TModelParts>[K], Lean>;
+    distinct<K extends RecordKeysResult<TModelParts> = never>(field: string, callback?: (err: Error, res: RecordResult<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, Populate, DeepPopulate,'A', MResults<TModelParts>[K], Lean>;
 
-    distinct<K extends RecordKeysResult<TModelParts>>(conditions: Object,field: K,callback?: (err: any, res: RecordResult<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, Populate, DeepPopulate,'A', MResults<TModelParts>[K], Lean>
-    distinct<K extends RecordKeysResult<TModelParts> = never>(conditions: Object, field: string,  callback?: (err: any, res: RecordResult<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, Populate, DeepPopulate,'A', MResults<TModelParts>[K], Lean>;
+    distinct<K extends RecordKeysResult<TModelParts>>(conditions: Object,field: K,callback?: (err: Error, res: RecordResult<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, Populate, DeepPopulate,'A', MResults<TModelParts>[K], Lean>
+    distinct<K extends RecordKeysResult<TModelParts> = never>(conditions: Object, field: string,  callback?: (err: Error, res: RecordResult<TModelParts>[K][]) => void): QueryEnhanced<TModelParts, Populate, DeepPopulate,'A', MResults<TModelParts>[K], Lean>;
 
 
     // Typiclally all of these should start from scratch again, were Lean should be reset.
 
-    find(callback?: (err: any, res: 
+    find(callback?: (err: Error, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'A', Primative, Lean>) => void):
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'A', Primative, Lean>;
-    find(criteria: Object, callback?: (err: any, res: 
+    find(criteria: Object, callback?: (err: Error, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'A', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'A', Primative, Lean>;
-    findOne(callback?: (err: any, res: 
+    findOne(callback?: (err: Error, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>;
-    findOne(criteria: Object, callback?: (err: any, res: 
+    findOne(criteria: Object, callback?: (err: Error, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'O', Primative,  Lean>) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>;
-    findOneAndRemove(callback?: (err: any, res: 
+    findOneAndRemove(callback?: (err: Error, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'O', Primative,  Lean>) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', Primative,  Lean>;
-    findOneAndRemove(cond: Object, callback?: (err: any, res: 
+    findOneAndRemove(cond: Object, callback?: (err: Error, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>;
-    findOneAndRemove(cond: Object, options: Object, callback?: (err: any, res: 
+    findOneAndRemove(cond: Object, options: Object, callback?: (err: Error, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>;
-    findOneAndUpdate(callback?: (err: any, res: 
+    findOneAndUpdate(callback?: (err: Error, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>;
-    findOneAndUpdate(update: Object, callback?: (err: any, res: 
+    findOneAndUpdate(update: Object, callback?: (err: Error, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>;
-    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, callback?: (err: any, res: 
+    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, callback?: (err: Error, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>;
-    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: FindAndUpdateOption, callback?: (err: any, res: 
+    findOneAndUpdate(cond: Object, update: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: MFindAndUpdateOption, callback?: (err: Error, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>;
 
     // PRIMATIVE OPTION REQUIRED, TAKE SUBKEY PARAMETER
     //limit(val: number): Query<T>;
 
-    remove(callback?: (err: any, res: 
+    remove(callback?: (err: Error, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'O',Primative, Lean>) => void):
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>;
 
-    remove(criteria: Object, callback?: (err: any, res: 
+    remove(criteria: Object, callback?: (err: Error, res: 
         QueryResultsDocumentModel<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', Primative, Lean>;
 
@@ -2679,13 +2725,13 @@ TWhere = never
     update(criteria: Object, doc: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, callback?: (err: Error, affectedRows: number) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', number, 'T'>;
 
-    update(criteria: Object, doc: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: Object, callback?: (err: any, affectedRows: number) => void): 
+    update(criteria: Object, doc: Object | MUpdateStatmentFor<MUpdateStatment<TModelParts>>, options: Object, callback?: (err: Error, affectedRows: number) => void): 
                 QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', number, 'T'>;
 
-    count(callback?: (err: any, count: number) => void): 
+    count(callback?: (err: Error, count: number) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', number, 'T'>;
 
-    count(criteria: Object, callback?: (err: any, count: number) => void): 
+    count(criteria: Object, callback?: (err: Error, count: number) => void): 
         QueryEnhanced<TModelParts, Populate, DeepPopulate, 'O', number, 'T'>;
 
     limit(val: number): QueryEnhanced<TModelParts, Populate, DeepPopulate, ArrayOfResults, Primative, Lean>;
