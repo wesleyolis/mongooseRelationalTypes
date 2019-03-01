@@ -4,6 +4,8 @@ import { FindAndUpdateOption } from 'mongoose';
 import * as UpdateStatment from './mongooseUpdateStatment';
 export {UpdateStatment};
 
+
+import { mongoose, RawSchemas } from './index';
 import { MUpdateStatmentFor } from './mongooseUpdateStatment';
 
 export type ObjectId = Mongoose.Types.ObjectId;
@@ -2348,9 +2350,12 @@ export interface IModel<TModelParts extends IMModelParts<any, any, any, any, any
 
     deepPopulate<Paths extends ExtractValidate<TModelParts['__ModRef'], Paths>>(paths: Array<string>) : QueryEnhanced<TModelParts, '', Paths>;
 
-    create(doc: QueryNewRecord<TModelParts>, fn?: (err: Error, res: MResults<TModelParts> & DocumentEnhanced<TModelParts, '',  {}>) => void): Promise<QueryNewDocumentResults<TModelParts>>;
-    create(doc1: QueryNewRecord<TModelParts>, doc2: QueryNewRecord<TModelParts>, fn?: (err: Error, res1: QueryNewDocumentResults<TModelParts>, res2: QueryNewDocumentResults<TModelParts>) => void): Promise<QueryNewDocumentResults<TModelParts>[]>;
-    create(doc1: QueryNewRecord<TModelParts>, doc2: QueryNewRecord<TModelParts>, doc3: QueryNewRecord<TModelParts>, fn?: (err: Error, res1: QueryNewDocumentResults<TModelParts>, res2: QueryNewDocumentResults<TModelParts>, res3: QueryNewDocumentResults<TModelParts>) => void): Promise<QueryNewDocumentResults<TModelParts>[]>;
+    create(doc: QueryNewRecord<TModelParts>): Promise<QueryNewDocumentResults<TModelParts>>;
+    create(doc: QueryNewRecord<TModelParts>, fn: (err: Error, res: MResults<TModelParts> & DocumentEnhanced<TModelParts, '',  {}>) => void): void;
+    create(doc1: QueryNewRecord<TModelParts>, doc2: QueryNewRecord<TModelParts>): Promise<QueryNewDocumentResults<TModelParts>[]>;
+    create(doc1: QueryNewRecord<TModelParts>, doc2: QueryNewRecord<TModelParts>, doc3: QueryNewRecord<TModelParts>): void;
+    create(doc1: QueryNewRecord<TModelParts>, doc2: QueryNewRecord<TModelParts>, fn: (err: Error, res1: QueryNewDocumentResults<TModelParts>, res2: QueryNewDocumentResults<TModelParts>) => void): void;
+    create(doc1: QueryNewRecord<TModelParts>, doc2: QueryNewRecord<TModelParts>, doc3: QueryNewRecord<TModelParts>, fn: (err: Error, res1: QueryNewDocumentResults<TModelParts>, res2: QueryNewDocumentResults<TModelParts>, res3: QueryNewDocumentResults<TModelParts>) => void): Promise<QueryNewDocumentResults<TModelParts>[]>;
     
 
     // Not finished...
@@ -2385,7 +2390,6 @@ export interface IModel<TModelParts extends IMModelParts<any, any, any, any, any
     // I haven't taken the array wrapping into arroud for transform, I will need to strip that.
 
     find(cond: Record<string,any>): QueryEnhanced<TModelParts, '', {}, 'A'>;
-    find(cond: Object, fields: never): QueryEnhanced<TModelParts, '', {}, 'A'>;
     find(cond: Object, callback: (err: Error, res: QueryDocumentResultsNotNullable<TModelParts>[]) => void): void;
     find(cond: Object, fields: MFindAndUpdateCondition): QueryEnhanced<TModelParts, '', {}, 'A'>;
     find(cond: Object, fields: MFindAndUpdateCondition, callback: (err: Error, res: QueryDocumentResultsNotNullable<TModelParts>[]) => void): void;
@@ -2531,7 +2535,7 @@ DeepPopulate extends Record<string, any>> //extends Document
     update<T>(doc: Object, options: Object, callback: (err: Error, affectedRows: number, raw?: any) => void): QueryEnhanced<TModelParts>;
 
     toJSON(options?: Object): ToJson<QueryResultsDocumentModelNotNullable<TModelParts, TPopulate, DeepPopulate, 'O', undefined, 'T'>>;
-    toObject(options?: Object): QueryResultsDocumentModelNotNullable<TModelParts, TPopulate, DeepPopulate, 'O', undefined, 'T'>;
+    toObject(options?: Object): Exclude<QueryResultsDocumentModel<TModelParts, TPopulate, DeepPopulate, 'O', undefined, 'T'>, null>;
 
     validate(cb: (err: any) => void): void;
 
@@ -3036,5 +3040,6 @@ export type IFinancialProductModRefSchema = {
 //   //TPath[K] & K & O[TPath[Iter]] & Iterator[Iter] & 
 //   O[TPath[Iter]] & Iterator[Iter] & PickObjectValueValidator3<O[TPath[Iter]], Path>
 // }
+
 
 
